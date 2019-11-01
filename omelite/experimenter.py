@@ -9,6 +9,7 @@ from pydantic.networks import EmailStr
 @dataclass
 class Experimenter:
     """This element describes a person who performed an imaging experiment.
+
     This person may also be a user of the OME system, in which case the UserName element
     contains their login name. Experimenters may belong to one or more groups which are
     specified using one or more ExperimenterGroupRef elements.

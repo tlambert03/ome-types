@@ -2,35 +2,19 @@ from dataclasses import dataclass, field  # seems to be necessary for pyright
 from datetime import datetime, timedelta
 from typing import List, Optional, Union
 from uuid import UUID, uuid4
+from numpy import ndarray
 
 from pydantic.dataclasses import dataclass  # noqa
-from pydantic import PositiveInt
 from .channel import Channel
+from .plane import Plane
 from .experimenter import Experimenter
 from .stagelabel import StageLabel
-from .units import DimensionOrder, PixelType, UnitsLength, UnitsTime
+from .units import DimensionOrder, PixelType, UnitsLength
+from pydantic import PositiveInt, PositiveFloat, ConstrainedInt
 
 
-@dataclass
-class Plane:
-    """The Plane object holds microscope stage and image timing data for a given
-    channel/z-section/timepoint.
-    """
-
-    the_c: PositiveInt
-    the_t: PositiveInt
-    the_z: PositiveInt
-    delta_t: Optional[timedelta] = None
-    exposure_time: Optional[float] = field(default=None, metadata={"unit": UnitsTime})
-    position_x: Optional[str] = field(default=None, metadata={"unit": UnitsLength})
-    position_y: Optional[str] = field(default=None, metadata={"unit": UnitsLength})
-    position_z: Optional[str] = field(default=None, metadata={"unit": UnitsLength})
-
-    # delta_t_unit: Optional[str] = None
-    # exposure_time_unit: Optional[str] = None
-    # position_x_unit: Optional[str] = None
-    # position_y_unit: Optional[str] = None
-    # position_z_unit: Optional[str] = None
+class NonNegativeInt(ConstrainedInt):
+    ge = 0
 
 
 @dataclass
@@ -59,21 +43,22 @@ class Pixels:
     data from a slightly incorrect file.
     """
 
-    size_c: int
-    size_t: int
-    size_x: int
-    size_y: int
-    size_z: int
-    data: Union[BinData, TiffData, MetadataOnly]
+    size_c: PositiveInt
+    size_t: PositiveInt
+    size_x: PositiveInt
+    size_y: PositiveInt
+    size_z: PositiveInt
     dimension_order: DimensionOrder
     type: PixelType
-    physical_size_x: Optional[float] = field(
+    # the data can either be a numpy array or a string to a tiff file
+    data: Optional[Union[ndarray, str]] = None  # None = MetadataOnly
+    physical_size_x: Optional[PositiveFloat] = field(
         default=None, metadata={"unit": UnitsLength.um}
     )
-    physical_size_y: Optional[float] = field(
+    physical_size_y: Optional[PositiveFloat] = field(
         default=None, metadata={"unit": UnitsLength.um}
     )
-    physical_size_z: Optional[float] = field(
+    physical_size_z: Optional[PositiveFloat] = field(
         default=None, metadata={"unit": UnitsLength.um}
     )
     interleaved: Optional[bool] = False

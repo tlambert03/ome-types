@@ -77,6 +77,11 @@ class Channel:
     pinhole_size: Optional[float] = field(
         default=None, metadata={"unit": UnitsLength.um}
     )
+    # light_source_settings: Optional[LightSourceSettings] = None
+    # detector_settings: Optional[DetectorSettings] = None
+    # filter_set: Optional[FilterSet] = None
+    # light_path: Optional[LightPath] = None
+    # annotations: List[Annotation] = field(default_factory=list)
     id: UUID = field(default_factory=uuid4, init=False, repr=False)
 
     # # UNUSED
