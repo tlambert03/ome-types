@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 from pydantic.dataclasses import dataclass  # noqa
 from pydantic import PositiveFloat
 
-from omelite.units import UnitsLength
+from .units import UnitsLength
 
 
 class AquisitionMode(Enum):

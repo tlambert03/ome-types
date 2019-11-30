@@ -17,7 +17,12 @@ class NonNegativeInt(ConstrainedInt):
     ge = 0
 
 
-@dataclass
+class Config:
+    # not currently working
+    arbitrary_types_allowed = True
+
+
+@dataclass(config=Config)
 class Pixels:
     """Pixels is going to be removed in the future, but it is still required.
 
@@ -51,7 +56,7 @@ class Pixels:
     dimension_order: DimensionOrder
     type: PixelType
     # the data can either be a numpy array or a string to a tiff file
-    data: Optional[Union[ndarray, str]] = None  # None = MetadataOnly
+    # data: Optional[Union[ndarray, str]] = None  # None = MetadataOnly
     physical_size_x: Optional[PositiveFloat] = field(
         default=None, metadata={"unit": UnitsLength.um}
     )
