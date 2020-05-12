@@ -333,4 +333,4 @@ class SchemaConverter:
 
 if __name__ == "__main__":
 
-    SchemaConverter("omelite/ome.xsd").write()
+    SchemaConverter("https://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd").write()
