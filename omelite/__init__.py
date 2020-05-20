@@ -1,5 +1,10 @@
 __version__ = "0.1.0"
 
-from .model import Channel, Experimenter, Image, Plane, Dataset
+from .autogen import convert_schema
+from .schema import to_dict, validate
 
-__all__ = ["Channel", "Image", "Plane", "Experimenter", "Dataset"]
+__all__ = ["convert_schema", "to_dict", "validate"]
+
+
+# def from_xml(xml):
+#     return OME(**to_dict(xml))

@@ -107,3 +107,4 @@ venv.bak/
 omelite/schema/*.pkl
 .DS_Store
 _model
+_test_data
