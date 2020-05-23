@@ -17,13 +17,20 @@ from xmlschema.validators import (
 
 # FIXME: hacks
 OVERRIDE = {
-    "MetadataOnly": ("bool", 'False', None),
-    "XMLAnnotation": ("str", None, None),
-    "Length": ("int", None, None),
-    "Union": (
+    "MetadataOnly": ("bool", "False", None),
+    "XMLAnnotation": ("Optional[str]", "None", "from typing import Optional\n\n",),
+    "BinData/Length": ("int", None, None),
+    "ROI/Union": (
         "conlist(Shape, min_items=1)",
         None,
         "from pydantic.types import conlist\nfrom .shape import Shape",
+    ),
+    "TiffData/UUID": (
+        r'Optional[dataclass(type("UUID", (), {"__annotations__": '
+        r'{"file_name": str, "value": UniversallyUniqueIdentifier}}))]',
+        None,
+        "from typing import Optional\n\nfrom "
+        ".simple_types import UniversallyUniqueIdentifier",
     ),
 }
 
@@ -192,8 +199,20 @@ class Member:
     def is_builtin_type(self) -> bool:
         return hasattr(self.type, "python_type")
 
+    @property
+    def key(self):
+        p = self.component.parent
+        name = p.local_name
+        while not name and (p.parent is not None):
+            p = p.parent
+            name = p.local_name
+        name = f"{name}/{self.component.local_name}"
+        if name not in OVERRIDE and self.component.local_name in OVERRIDE:
+            return self.component.local_name
+        return name
+
     def locals(self) -> Set[str]:
-        if self.component.local_name in OVERRIDE:
+        if self.key in OVERRIDE:
             return set()
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
             return set()
@@ -210,8 +229,8 @@ class Member:
         return locals_
 
     def imports(self) -> Set[str]:
-        if self.component.local_name in OVERRIDE:
-            _imp = OVERRIDE[self.component.local_name][2]
+        if self.key in OVERRIDE:
+            _imp = OVERRIDE[self.key][2]
             return set([_imp]) if _imp else set()
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
             return set(["from typing import Any"])
@@ -241,8 +260,8 @@ class Member:
     @property
     def type_string(self) -> str:
         """single type, without Optional, etc..."""
-        if self.component.local_name in OVERRIDE:
-            return OVERRIDE[self.component.local_name][0]
+        if self.key in OVERRIDE:
+            return OVERRIDE[self.key][0]
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
             return "Any"
         if self.component.ref is not None:
@@ -271,7 +290,7 @@ class Member:
     @property
     def full_type_string(self) -> str:
         """full type, like Optional[List[str]]"""
-        if self.component.local_name in OVERRIDE and self.type_string:
+        if self.key in OVERRIDE and self.type_string:
             return f": {self.type_string}"
         type_string = self.type_string
         if not type_string:
@@ -284,8 +303,8 @@ class Member:
 
     @property
     def default_val_str(self) -> str:
-        if self.component.local_name in OVERRIDE:
-            default = OVERRIDE[self.component.local_name][1]
+        if self.key in OVERRIDE:
+            default = OVERRIDE[self.key][1]
             return f" = {default}" if default else ""
         if not self.is_optional:
             return ""
@@ -539,4 +558,3 @@ if __name__ == "__main__":
     this_dir = os.path.dirname(__file__)
     url = os.path.join(this_dir, "ome.xsd")
     convert_schema(url, os.path.join(this_dir, "model"))
-

@@ -8,6 +8,11 @@ __all__ = ["convert_schema", "to_dict", "validate"]
 
 from xmlschema.converters import XMLSchemaConverter
 
+try:
+    from .model import OME
+except ImportError:
+    OME = None
+
 
 class MyConv(XMLSchemaConverter):
     def __init__(self, namespaces=None):
@@ -25,11 +30,11 @@ class MyConv(XMLSchemaConverter):
         return result
 
 
-def from_xml(xml):
-    from .model import OME
+def from_xml(xml, OME=OME):
 
     d = to_dict(xml, converter=MyConv)
     for key in list(d.keys()):
         if key.startswith(("xml", "xsi")):
             d.pop(key)
+
     return OME(**d)
