@@ -489,12 +489,7 @@ class GlobalElem:
         return "\n".join(lines)
 
     def format(self) -> str:
-        text = self.lines() + "\n"
-        try:
-            return black_format(sort_imports(text))
-        except Exception:
-            print(text)
-            raise
+        return black_format(sort_imports(self.lines() + "\n"))
 
     def write(self, filename: str) -> None:
         os.makedirs(os.path.dirname(filename), exist_ok=True)
@@ -555,6 +550,7 @@ def convert_schema(url, target_dir):
 
 
 if __name__ == "__main__":
+    # for testing
     this_dir = os.path.dirname(__file__)
     url = os.path.join(this_dir, "ome.xsd")
     convert_schema(url, os.path.join(this_dir, "model"))
