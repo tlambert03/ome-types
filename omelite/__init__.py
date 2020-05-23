@@ -11,7 +11,7 @@ from xmlschema.converters import XMLSchemaConverter
 try:
     from .model import OME
 except ImportError:
-    OME = None
+    OME = None  # type: ignore
 
 
 class MyConv(XMLSchemaConverter):
