@@ -28,6 +28,6 @@ def validate(xml: str, schema=None):
     schema.validate(xml)
 
 
-def to_dict(xml: str, schema=None):
+def to_dict(xml: str, schema=None, **kwargs):
     schema = schema or get_schema(xml)
-    return schema.to_dict(xml)
+    return schema.to_dict(xml, **kwargs)
