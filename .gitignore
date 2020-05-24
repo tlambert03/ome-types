@@ -104,7 +104,8 @@ venv.bak/
 .mypy_cache/
 .vscode/
 
-omelite/schema/*.pkl
+
 .DS_Store
 _test_data
 omelite/model/
+omelite/*.pkl

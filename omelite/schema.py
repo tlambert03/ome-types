@@ -1,7 +1,9 @@
-import re
-from os.path import dirname, join, exists
-from typing import Dict
 import pickle
+import re
+from os.path import dirname, exists, join
+from typing import Dict
+from .autogen import camel_to_snake
+
 import xmlschema
 
 __cache__: Dict[str, xmlschema.XMLSchema] = {}
@@ -9,8 +11,12 @@ __cache__: Dict[str, xmlschema.XMLSchema] = {}
 
 def get_schema(xml):
     url = xmlschema.fetch_schema(xml)
-    match = re.search(r"\d{4}-\d{2}", url)
-    version = match.group() if match else url
+    version = (
+        re.split("(.com|.org)", url)[-1]
+        .replace("/", "_")
+        .lstrip("_")
+        .replace(".xsd", "")
+    )
     if version not in __cache__:
         local = join(dirname(__file__), f"{version}.pkl")
         if exists(local):
@@ -28,6 +34,22 @@ def validate(xml: str, schema=None):
     schema.validate(xml)
 
 
-def to_dict(xml: str, schema=None, **kwargs):
+class MyConverter(xmlschema.converters.XMLSchemaConverter):
+    def __init__(self, namespaces=None):
+        super().__init__(namespaces, attr_prefix="")
+
+    def map_qname(self, qname):
+        name = super().map_qname(qname)
+        return camel_to_snake(name)
+
+    def element_decode(self, data, xsd_element, xsd_type=None, level=0) -> dict:
+        """Converts a decoded element data to a data structure."""
+        result = super().element_decode(data, xsd_element, xsd_type, level)
+        if result and "$" in result:
+            result["value"] = result.pop("$")
+        return result
+
+
+def to_dict(xml: str, schema=None, converter=MyConverter, **kwargs):
     schema = schema or get_schema(xml)
-    return schema.to_dict(xml, **kwargs)
+    return schema.to_dict(xml, converter=converter, **kwargs)

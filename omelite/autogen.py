@@ -43,6 +43,16 @@ def sort_imports(text):
     return isort.SortImports(file_contents=text).output
 
 
+def sort_types(el):
+    if not el.is_complex() and not el.base_type.is_restriction():
+        return "    " + el.local_name.lower()
+    return el.local_name.lower()
+
+
+def sort_prop(prop):
+    return ("" if prop.default_val_str else "   ") + prop.format().lower()
+
+
 def as_identifier(s):
     # Remove invalid characters
     _s = re.sub("[^0-9a-zA-Z_]", "", s)
@@ -147,10 +157,6 @@ facet_converters = {
     qnames.XSD_MIN_LENGTH: lambda f: [f"min_length = {f.value}"],
     qnames.XSD_MAX_LENGTH: lambda f: [f"max_length = {f.value}"],
 }
-
-
-def sort_prop(prop):
-    return ("" if prop.default_val_str else "   ") + prop.format().lower()
 
 
 def iter_all_members(component):
@@ -501,16 +507,12 @@ class GlobalElem:
         return f"{camel_to_snake(self.elem.local_name)}.py"
 
 
-# ####### MAIN ##########
+_this_dir = os.path.dirname(__file__)
+_url = os.path.join(_this_dir, "ome-2016-06.xsd")
+_target = os.path.join(_this_dir, "model")
 
 
-def sort_types(el):
-    if not el.is_complex() and not el.base_type.is_restriction():
-        return "    " + el.local_name.lower()
-    return el.local_name.lower()
-
-
-def convert_schema(url, target_dir):
+def convert_schema(url=_url, target_dir=_target):
     schema = XMLSchema(url)
     shutil.rmtree(target_dir, ignore_errors=True)
     init_imports = []
@@ -551,6 +553,4 @@ def convert_schema(url, target_dir):
 
 if __name__ == "__main__":
     # for testing
-    this_dir = os.path.dirname(__file__)
-    url = os.path.join(this_dir, "ome.xsd")
-    convert_schema(url, os.path.join(this_dir, "model"))
+    convert_schema()

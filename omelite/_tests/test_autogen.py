@@ -13,9 +13,8 @@ this_dir = os.path.dirname(__file__)
 
 @pytest.fixture(scope="session")
 def model(tmpdir_factory):
-    target = tmpdir_factory.mktemp("test_model")
-    url = os.path.join(this_dir, "ome.xsd")
-    convert_schema(url, target)
+    target_dir = tmpdir_factory.mktemp("test_model")
+    convert_schema(target_dir=target_dir)
     sys.path.insert(0, os.path.dirname(str(target)))
     model_name = os.path.basename(str(target))
     model_module = importlib.import_module(model_name)
