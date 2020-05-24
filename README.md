@@ -7,13 +7,8 @@ It converts the ome.xsd schema into a set of python dataclasses and types.
 
 `omelite.autogen.convert_schema(url, target)` is the main function.  It accepts an `xsd` file path (only test on an ome.xsd), and a target directory, and writes a human-readable module, that will validate OME XML, provide pythonic method naming, and provides full typing support for IDEs, etc...
 
-The model is not checked into source, to build it, checkout this package and run:
+The model is not checked into source, but it will be built automatically if it doesn't exist the first time you import the package.
 
-```bash
-python -m omelite.autogen
-```
-
-it will write the model to `omelite/model`.  It can then be imported and used as usual:
 
 ```python
 from omelite import OME  # the root class
