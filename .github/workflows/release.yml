@@ -1,4 +1,4 @@
-name: deploy
+name: release
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
   build:
     name: Create Release
     runs-on: ubuntu-latest
-    if: github.repository == 'tlambert/ome-types'
+    if: github.repository == 'tlambert03/ome-types'
     steps:
       - name: Checkout code
         uses: actions/checkout@master
