@@ -1,0 +1,14 @@
+from distutils.command.build_py import build_py as _build_py
+from setuptools import setup
+from runpy import run_path
+
+
+class build_py(_build_py):
+    run_path("src/ome_autogen.py", run_name="__main__")
+
+
+setup(
+    cmdclass={"build_py": build_py},
+    use_scm_version={"write_to": "src/ome_types/_version.py"},
+    setup_requires=["setuptools_scm"],
+)

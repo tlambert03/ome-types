@@ -2,11 +2,16 @@ import pickle
 import re
 from os.path import dirname, exists, join
 from typing import Dict
-from .autogen import camel_to_snake
 
 import xmlschema
 
 __cache__: Dict[str, xmlschema.XMLSchema] = {}
+
+
+def camel_to_snake(name):
+    # https://stackoverflow.com/a/1176023
+    name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower().replace(" ", "_")
 
 
 def get_schema(xml):
