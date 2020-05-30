@@ -1,6 +1,9 @@
-__version__ = "0.1.0"
+try:
+    from ._version import version as __version__
+except ImportError:
+    __version__ = "unknown"
 
-from .autogen import convert_schema
+from ome_autogen import convert_schema
 from .schema import to_dict, validate
 
 __all__ = ["convert_schema", "to_dict", "validate", "from_xml"]
@@ -9,8 +12,10 @@ __all__ = ["convert_schema", "to_dict", "validate", "from_xml"]
 try:
     from .model import OME
 except ImportError:
-    print("model not found ... running autogeneration")
-    convert_schema()
+    print("OME dataclasses not found ... running autogeneration")
+    import runpy
+
+    runpy.run_module("ome_autogen", run_name="__main__")
     from .model import OME
 
 

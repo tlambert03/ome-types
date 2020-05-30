@@ -107,5 +107,6 @@ venv.bak/
 
 .DS_Store
 _test_data
-omelite/model/
-omelite/*.pkl
+src/ome_types/model/
+src/ome_types/*.pkl
+src/ome_types/_version.py
