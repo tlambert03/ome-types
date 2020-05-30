@@ -12,6 +12,7 @@ __all__ = ["convert_schema", "to_dict", "validate", "from_xml"]
 try:
     from .model import OME
 except ImportError:
+    print("OME dataclasses not found ... running autogeneration")
     import runpy
 
     runpy.run_module("ome_autogen", run_name="__main__")
