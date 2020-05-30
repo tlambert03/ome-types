@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@master
       - name: Install Python
-        uses: actions/setup-python@v8
+        uses: actions/setup-python@v2
         with:
           python-version: 3.8
       - name: Install Dependencies
