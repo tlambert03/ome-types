@@ -6,7 +6,7 @@ http://www.openmicroscopy.org/Schemas/OME/2016-06
 It converts the ome.xsd schema into a set of python dataclasses and types.
 
 As an example, the
-[`OME/Image`](https://www.openmicroscopy.org/Schemas/Documentation/Generated/OME-2016-06/ome.html)
+[`OME/Image`](https://www.openmicroscopy.org/Schemas/Documentation/Generated/OME-2016-06/ome_xsd.html#Image)
 model will be rendered as the following dataclass in `ome_types/model/image.py`
 
 ```python
