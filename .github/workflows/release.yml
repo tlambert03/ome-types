@@ -45,7 +45,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./dist/ome-types-${{ env.tag }}.tar.gz
-          asset_name: ome-types-${{ github.ref }}.tar.gz
+          asset_name: ome-types-${{ env.tag }}.tar.gz
           asset_content_type: application/gzip
       - name: Publish PyPI Package
         uses: pypa/gh-action-pypi-publish@master
