@@ -3,10 +3,9 @@ try:
 except ImportError:
     __version__ = "unknown"
 
-from ome_autogen import convert_schema
 from .schema import to_dict, validate
 
-__all__ = ["convert_schema", "to_dict", "validate", "from_xml"]
+__all__ = ["to_dict", "validate", "from_xml"]
 
 
 try:
