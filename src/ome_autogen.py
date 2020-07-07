@@ -21,14 +21,14 @@ OVERRIDE = {
     "XMLAnnotation": ("Optional[str]", "None", "from typing import Optional\n\n",),
     "BinData/Length": ("int", None, None),
     "ROI/Union": (
-        "conlist(Shape, min_items=1)",
+        "List[Shape] = Field(..., min_items=1)",
         None,
-        "from pydantic.types import conlist\nfrom .shape import Shape",
+        "from pydantic import Field\nfrom .shape import Shape",
     ),
     "TiffData/UUID": (
         r'Optional[dataclass(type("UUID", (), {"__annotations__": '
         r'{"file_name": str, "value": UniversallyUniqueIdentifier}}))]',
-        None,
+        "None",
         "from typing import Optional\n\nfrom "
         ".simple_types import UniversallyUniqueIdentifier",
     ),
@@ -206,6 +206,12 @@ class Member:
         return hasattr(self.type, "python_type")
 
     @property
+    def is_decimal(self) -> bool:
+        return self.component.type.is_derived(
+            self.component.schema.builtin_types()['decimal']
+        )
+
+    @property
     def key(self):
         p = self.component.parent
         name = p.local_name
@@ -247,6 +253,8 @@ class Member:
                 imports.add("from dataclasses import field")
         elif self.is_optional:
             imports.add("from typing import Optional")
+        if self.is_decimal:
+            imports.add("from typing import cast")
         if self.type.is_datetime():
             imports.add("from datetime import datetime")
         if not self.is_builtin_type and self.type.is_global():
@@ -324,6 +332,8 @@ class Member:
                     default_val = f"{self.type_string}('{default_val}')"
                 elif hasattr(builtins, self.type_string):
                     default_val = repr(getattr(builtins, self.type_string)(default_val))
+                if self.is_decimal:
+                    default_val = f"cast({self.type_string}, {default_val})"
             else:
                 default_val = "None"
         return f" = {default_val}"
