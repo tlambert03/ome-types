@@ -3,6 +3,7 @@ try:
 except ImportError:
     __version__ = "unknown"
 
+import os
 from .schema import to_dict, validate
 
 __all__ = ["to_dict", "validate", "from_xml"]
@@ -20,6 +21,7 @@ except ImportError:
 
 def from_xml(xml, OME=OME) -> OME:
 
+    xml = os.fspath(xml)
     d = to_dict(xml)
     for key in list(d.keys()):
         if key.startswith(("xml", "xsi")):

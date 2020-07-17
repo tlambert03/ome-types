@@ -2,6 +2,7 @@ import builtins
 import os
 import re
 import shutil
+from pathlib import Path
 from typing import Generator, Iterable, List, Set, Union
 
 import black
@@ -208,7 +209,7 @@ class Member:
     @property
     def is_decimal(self) -> bool:
         return self.component.type.is_derived(
-            self.component.schema.builtin_types()['decimal']
+            self.component.schema.builtin_types()["decimal"]
         )
 
     @property
@@ -525,6 +526,8 @@ _target = os.path.join(_this_dir, "ome_types", "model")
 
 def convert_schema(url=_url, target_dir=_target):
     print("Inspecting XML schema ...")
+    if isinstance(url, Path):
+        url = str(url)
     schema = XMLSchema(url)
     print("Building dataclasses ...")
     shutil.rmtree(target_dir, ignore_errors=True)
