@@ -5,6 +5,8 @@ except ImportError:
 
 import os
 from .schema import to_dict, validate
+from typing import Union, Type
+from pathlib import Path
 
 __all__ = ["to_dict", "validate", "from_xml"]
 
@@ -19,8 +21,7 @@ except ImportError:
     from .model import OME
 
 
-def from_xml(xml, OME=OME) -> OME:
-
+def from_xml(xml: Union[Path, str], OME=OME) -> OME:  # type: ignore
     xml = os.fspath(xml)
     d = to_dict(xml)
     for key in list(d.keys()):
