@@ -76,7 +76,10 @@ def local_import(item_type):
 
 def make_dataclass(component) -> List[str]:
     lines = ["from pydantic.dataclasses import dataclass", ""]
-    if isinstance(component, XsdType):
+    # FIXME: Refactor to remove BinData special-case.
+    if component.local_name == "BinData":
+        base_type = None
+    elif isinstance(component, XsdType):
         base_type = component.base_type
     else:
         base_type = component.type.base_type
@@ -105,6 +108,9 @@ def make_dataclass(component) -> List[str]:
         lines += ["_no_default = object()", ""]
 
     lines += ["@dataclass", f"class {component.local_name}{base_name}:"]
+    # FIXME: Refactor to remove BinData special-case.
+    if component.local_name == "BinData":
+        lines.append("    value: str")
     lines += members.lines(
         indent=1,
         force_defaults=" = _no_default  # type: ignore"
@@ -497,7 +503,8 @@ class GlobalElem:
         return lines
 
     def lines(self) -> str:
-        if not self.is_complex:
+        # FIXME: Refactor to remove BinData special-case.
+        if not self.is_complex and self.elem.local_name != "BinData":
             lines = self._simple_class()
         elif self.elem.abstract:
             lines = self._abstract_class()
