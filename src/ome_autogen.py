@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import builtins
 import os
 import re
 import shutil
 from pathlib import Path
-from typing import Generator, Iterable, List, Set, Union
+from typing import Generator, Iterable, List, Set, Union, Iterator, Tuple
 
 import black
 import isort
@@ -14,9 +16,22 @@ from xmlschema.validators import (
     XsdAttribute,
     XsdElement,
     XsdType,
+    XsdComponent,
 )
 
+TIFF_UUID = """
+from typing import Optional
+from .simple_types import UniversallyUniqueIdentifier
+
+@dataclass
+class UUID:
+    file_name: str
+    value: UniversallyUniqueIdentifier
+"""
+
 # FIXME: hacks
+# OVERIDE is a mapping of XSD TypeName to a tuple of desired output for that type
+# where the tuple is (type, default value, imports/strings needed)
 OVERRIDE = {
     "MetadataOnly": ("bool", "False", None),
     "XMLAnnotation": ("Optional[str]", "None", "from typing import Optional\n\n",),
@@ -26,35 +41,29 @@ OVERRIDE = {
         None,
         "from pydantic import Field\nfrom .shape import Shape",
     ),
-    "TiffData/UUID": (
-        r'Optional[dataclass(type("UUID", (), {"__annotations__": '
-        r'{"file_name": str, "value": UniversallyUniqueIdentifier}}))]',
-        "None",
-        "from typing import Optional\n\nfrom "
-        ".simple_types import UniversallyUniqueIdentifier",
-    ),
+    "TiffData/UUID": ("Optional[UUID]", "None", TIFF_UUID),
 }
 
 
-def black_format(text, line_length=79):
+def black_format(text: str, line_length: int = 79) -> str:
     return black.format_str(text, mode=black.FileMode(line_length=line_length))
 
 
-def sort_imports(text):
+def sort_imports(text: str) -> str:
     return isort.SortImports(file_contents=text).output
 
 
-def sort_types(el):
+def sort_types(el: XsdType) -> str:
     if not el.is_complex() and not el.base_type.is_restriction():
         return "    " + el.local_name.lower()
     return el.local_name.lower()
 
 
-def sort_prop(prop):
+def sort_prop(prop: Member) -> str:
     return ("" if prop.default_val_str else "   ") + prop.format().lower()
 
 
-def as_identifier(s):
+def as_identifier(s: str) -> str:
     # Remove invalid characters
     _s = re.sub("[^0-9a-zA-Z_]", "", s)
     # Remove leading characters until we find a letter or underscore
@@ -64,17 +73,17 @@ def as_identifier(s):
     return _s
 
 
-def camel_to_snake(name):
+def camel_to_snake(name: str) -> str:
     # https://stackoverflow.com/a/1176023
     name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower().replace(" ", "_")
 
 
-def local_import(item_type):
+def local_import(item_type: str) -> str:
     return f"from .{camel_to_snake(item_type)} import {item_type}"
 
 
-def make_dataclass(component) -> List[str]:
+def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     lines = ["from pydantic.dataclasses import dataclass", ""]
     if isinstance(component, XsdType):
         base_type = component.base_type
@@ -115,7 +124,7 @@ def make_dataclass(component) -> List[str]:
     if cannot_have_required_args:
         lines += ["", "    # hack for dataclass inheritance with non-default args"]
         lines += ["    # https://stackoverflow.com/a/53085935/"]
-        lines += ["    def __post_init__(self):"]
+        lines += ["    def __post_init__(self) -> None:"]
         for m in members.non_defaults:
             lines += [f"        if self.{m.identifier} is _no_default:"]
             lines += [
@@ -126,19 +135,19 @@ def make_dataclass(component) -> List[str]:
     return lines
 
 
-def make_enum(component, name=None):
+def make_enum(component: XsdComponent, name: str = None) -> List[str]:
     name = name or component.local_name
     lines = ["from enum import Enum", ""]
     lines += [f"class {name}(Enum):"]
     enum_elems = list(component.elem.iter("enum"))
     facets = component.get_facet(qnames.XSD_ENUMERATION)
-    members = []
+    members: List[Tuple[str, str]] = []
     if enum_elems:
         for el, value in zip(enum_elems, facets.enumeration):
-            name = el.attrib["enum"]
+            _name = el.attrib["enum"]
             if component.base_type.python_type.__name__ == "str":
                 value = f'"{value}"'
-            members.append((name, value))
+            members.append((_name, value))
     else:
         for e in facets.enumeration:
             members.append((camel_to_snake(e), repr(e)))
@@ -160,7 +169,9 @@ facet_converters = {
 }
 
 
-def iter_all_members(component):
+def iter_all_members(
+    component: XsdComponent,
+) -> Generator[Union[XsdElement, XsdAttribute], None, None]:
     for c in component.iter_components((XsdElement, XsdAttribute)):
         if c is component:
             continue
@@ -213,7 +224,7 @@ class Member:
         )
 
     @property
-    def key(self):
+    def key(self) -> str:
         p = self.component.parent
         name = p.local_name
         while not name and (p.parent is not None):
@@ -356,7 +367,7 @@ class Member:
         type_ = "element" if isinstance(self.component, XsdElement) else "attribute"
         return f"<Member {type_} {self.component.local_name}>"
 
-    def format(self, force_default=None) -> str:
+    def format(self, force_default: str = None) -> str:
         default = self.default_val_str
         if force_default:
             default = default or force_default
@@ -364,26 +375,26 @@ class Member:
 
 
 class MemberSet:
-    def __init__(self, initial: Iterable = ()):
+    def __init__(self, initial: Iterable[Member] = ()):
         self._members: Set[Member] = set()
         self.update(initial)
 
-    def add(self, member: Member):
+    def add(self, member: Member) -> None:
         if not isinstance(member, Member):
             member = Member(member)
         self._members.add(member)
 
-    def update(self, members: Iterable):
+    def update(self, members: Iterable[Member]) -> None:
         for member in members:
             self.add(member)
 
-    def lines(self, indent=1, force_defaults: str = None) -> List[str]:
+    def lines(self, indent: int = 1, force_defaults: str = None) -> List[str]:
         if not self._members:
             lines = ["    " * indent + "pass"]
         else:
             lines = [
                 "    " * indent + m.format(force_defaults)
-                for m in sorted(self._members, key=lambda x: sort_prop(x))
+                for m in sorted(self._members, key=sort_prop)
             ]
         return lines
 
@@ -404,7 +415,7 @@ class MemberSet:
     def non_defaults(self) -> "MemberSet":
         return MemberSet(m for m in self._members if not m.default_val_str)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Member]:
         return iter(self._members)
 
 
@@ -414,21 +425,21 @@ class GlobalElem:
         self.elem = elem
 
     @property
-    def type(self):
+    def type(self) -> XsdType:
         return self.elem if self.is_type else self.elem.type
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         if hasattr(self.type, "is_complex"):
             return self.type.is_complex()
         return False
 
     @property
-    def is_element(self):
+    def is_element(self) -> bool:
         return isinstance(self.elem, XsdElement)
 
     @property
-    def is_type(self):
+    def is_type(self) -> bool:
         return isinstance(self.elem, XsdType)
 
     @property
@@ -524,7 +535,7 @@ _url = "https://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"
 _target = os.path.join(_this_dir, "ome_types", "model")
 
 
-def convert_schema(url=_url, target_dir=_target):
+def convert_schema(url: str = _url, target_dir: str = _target) -> None:
     print("Inspecting XML schema ...")
     if isinstance(url, Path):
         url = str(url)
