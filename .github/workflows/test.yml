@@ -23,3 +23,7 @@ jobs:
         run: pytest -v --cov-report=xml --cov=ome_autogen
       - name: Coverage
         uses: codecov/codecov-action@v1
+      - name: Run mypy
+        run: |
+          python src/ome_autogen.py
+          mypy src/ome_types/model/
