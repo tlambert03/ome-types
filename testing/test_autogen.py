@@ -23,8 +23,27 @@ def model(tmp_path_factory):
     return importlib.import_module(target_dir.name)
 
 
-SHOULD_PASS = {"example.ome", "small.ome"}
-SHOULD_RAISE = {"bad.ome"}
+SHOULD_FAIL = {
+    "ROI",
+    "commentannotation",
+    "filter",
+    "hcs",
+    "instrument",
+    "instrument-units-alternate",
+    "instrument-units-default",
+    "mapannotation",
+    "metadata-only",
+    "spim",
+    "tagannotation",
+    "timestampannotation",
+    "timestampannotation-posix-only",
+    "transformations-downgrade",
+    "transformations-upgrade",
+    "xmlannotation-body-space",
+    "xmlannotation-multi-value",
+    "xmlannotation-svg",
+}
+SHOULD_RAISE = {"bad"}
 
 
 def mark_xfail(fname):
@@ -35,16 +54,19 @@ def mark_xfail(fname):
         ),
     )
 
+def true_stem(p):
+    return p.name.partition(".")[0]
+
 
 params = [
-    f if f.stem in SHOULD_PASS.union(SHOULD_RAISE) else mark_xfail(f)
-    for f in TESTING_DIR.glob("data/*.xml")
+    mark_xfail(f) if true_stem(f) in SHOULD_FAIL else f
+    for f in TESTING_DIR.glob("data/*.ome.xml")
 ]
 
 
-@pytest.mark.parametrize("xml", params, ids=lambda x: x.stem)
+@pytest.mark.parametrize("xml", params, ids=true_stem)
 def test_convert_schema(model, xml):
-    if xml.stem in SHOULD_RAISE:
+    if true_stem(xml) in SHOULD_RAISE:
         with pytest.raises(XMLSchemaValidationError):
             assert from_xml(xml, model.OME)
     else:
