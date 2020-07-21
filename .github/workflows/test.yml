@@ -25,5 +25,6 @@ jobs:
         uses: codecov/codecov-action@v1
       - name: Run mypy
         run: |
+          pip install mypy
           python src/ome_autogen.py
           mypy src
