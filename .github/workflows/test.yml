@@ -1,6 +1,6 @@
 name: tests
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   test:
@@ -23,3 +23,18 @@ jobs:
         run: pytest -v --cov-report=xml --cov=ome_autogen
       - name: Coverage
         uses: codecov/codecov-action@v1
+
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Run mypy
+        run: |
+          pip install mypy
+          pip install -e .[autogen]
+          python src/ome_autogen.py
+          mypy
