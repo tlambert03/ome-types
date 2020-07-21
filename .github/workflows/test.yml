@@ -35,5 +35,6 @@ jobs:
       - name: Run mypy
         run: |
           pip install mypy
+          pip install -e .[autogen]
           python src/ome_autogen.py
           mypy
