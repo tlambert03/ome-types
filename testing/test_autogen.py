@@ -53,7 +53,6 @@ SHOULD_RAISE = {"bad"}
 
 
 def mark_xfail(fname):
-    return fname
     return pytest.param(
         fname,
         marks=pytest.mark.xfail(
