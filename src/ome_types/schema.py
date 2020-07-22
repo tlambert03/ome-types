@@ -1,13 +1,10 @@
-import shelve
-import re
 import os
+import re
 from functools import lru_cache
 from typing import Any, Dict, Optional, Union
 
 import xmlschema
 from xmlschema.converters import XMLSchemaConverter
-
-SCHEMA_CACHE = os.path.join(os.path.dirname(__file__), "_schema_cache")
 
 
 def camel_to_snake(name: str) -> str:
@@ -16,33 +13,23 @@ def camel_to_snake(name: str) -> str:
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower().replace(" ", "_")
 
 
-def clear_schema_cache() -> None:
-    os.remove(SCHEMA_CACHE + ".db")
+@lru_cache(maxsize=8)
+def _build_schema(url: str) -> xmlschema.XMLSchema:
+    """Return Schema object for a url.
 
+    For the special case of retrieving the 2016-06 OME Schema, use local file.
+    """
+    if url == "http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd":
+        url = os.path.join(os.path.dirname(__file__), "ome-2016-06.xsd")
 
-try:
-    # don't let the cache get bigger than 30MB... (a single schema is ~1.7MB)
-    if os.path.getsize(SCHEMA_CACHE + ".db") > 3e6:
-        clear_schema_cache()
-except FileNotFoundError:
-    pass
-
-
-@lru_cache(maxsize=32)
-def _cached_schema(key: str, url: str) -> xmlschema.XMLSchema:
-    """Return Schema for a url. Cached with ``key`` to disk and within-session RAM."""
-    with shelve.open(SCHEMA_CACHE) as db:
-        if key not in db:
-            schema = xmlschema.XMLSchema(url)
-            # FIXME Hack to work around xmlschema poor support for keyrefs to
-            # substitution groups
-            ns = "{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
-            ls_sgs = schema.maps.substitution_groups[f"{ns}LightSourceGroup"]
-            ls_id_maps = schema.maps.identities[f"{ns}LightSourceIDKey"]
-            ls_id_maps.elements = {e: None for e in ls_sgs}
-            db[key] = schema
-
-        return db[key]
+    schema = xmlschema.XMLSchema(url)
+    # FIXME Hack to work around xmlschema poor support for keyrefs to
+    # substitution groups
+    ns = "{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
+    ls_sgs = schema.maps.substitution_groups[f"{ns}LightSourceGroup"]
+    ls_id_maps = schema.maps.identities[f"{ns}LightSourceIDKey"]
+    ls_id_maps.elements = {e: None for e in ls_sgs}
+    return schema
 
 
 def get_schema(source: Union[xmlschema.XMLResource, str]) -> xmlschema.XMLSchema:
@@ -60,17 +47,7 @@ def get_schema(source: Union[xmlschema.XMLResource, str]) -> xmlschema.XMLSchema
     xmlschema.XMLSchema
         An XMLSchema object for the source
     """
-    from . import __version__
-
-    url = xmlschema.fetch_schema(source)
-    key = (
-        re.split("(.com|.org)", url)[-1]
-        .replace("/", "_")
-        .lstrip("_")
-        .replace(".xsd", "")
-    )
-    key += f"_xsch{xmlschema.__version__}_v{__version__}"
-    return _cached_schema(key, url)
+    return _build_schema(xmlschema.fetch_schema(source))
 
 
 def validate(xml: str, schema: Optional[xmlschema.XMLSchema] = None) -> None:

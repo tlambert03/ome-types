@@ -1,14 +1,13 @@
 import importlib
-import os
 import sys
-from glob import glob
 from pathlib import Path
 
 import pytest
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
 TESTING_DIR = Path(__file__).parent
-SRC_MODEL = TESTING_DIR.parent / "src" / "ome_types" / "model"
+SRC = TESTING_DIR.parent / "src" / "ome_types"
+SRC_MODEL = SRC / "model"
 
 
 @pytest.fixture(scope="session")
@@ -18,12 +17,12 @@ def model(tmp_path_factory, request):
             raise RuntimeError(
                 f"Please generate local {SRC_MODEL} before using --nogen"
             )
-        sys.path.insert(0, str(SRC_MODEL.parent))
+        sys.path.insert(0, str(SRC_MODEL))
         return importlib.import_module(SRC_MODEL.name)
     from ome_autogen import convert_schema
 
     target_dir = tmp_path_factory.mktemp("test_model")
-    xsd = TESTING_DIR / "ome-2016-06.xsd"
+    xsd = SRC / "ome-2016-06.xsd"
     convert_schema(url=xsd, target_dir=target_dir)
     sys.path.insert(0, str(target_dir.parent))
     return importlib.import_module(target_dir.name)
