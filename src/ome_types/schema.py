@@ -29,7 +29,16 @@ def get_schema(xml: str) -> xmlschema.XMLSchema:
             with open(local, "rb") as f:
                 __cache__[version] = pickle.load(f)
         else:
-            __cache__[version] = xmlschema.XMLSchema(url)
+            schema = xmlschema.XMLSchema(url)
+
+            # FIXME Hack to work around xmlschema poor support for keyrefs to
+            # substitution groups
+            ns = "{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
+            ls_sgs = schema.maps.substitution_groups[f"{ns}LightSourceGroup"]
+            ls_id_maps = schema.maps.identities[f"{ns}LightSourceIDKey"]
+            ls_id_maps.elements = {e: None for e in ls_sgs}
+
+            __cache__[version] = schema
             with open(local, "wb") as f:
                 pickle.dump(__cache__[version], f)
     return __cache__[version]
@@ -51,8 +60,28 @@ class MyConverter(XMLSchemaConverter):
     def element_decode(self, data, xsd_element, xsd_type=None, level=0):  # type: ignore
         """Converts a decoded element data to a data structure."""
         result = super().element_decode(data, xsd_element, xsd_type, level)
-        if result and "$" in result:
+        if isinstance(result, dict) and "$" in result:
             result["value"] = result.pop("$")
+        # FIXME: Work out a better way to deal with concrete extensions of
+        # abstract types.
+        if xsd_element.local_name == "Instrument":
+            light_sources = []
+            for _type in (
+                "laser",
+                "arc",
+                "filament",
+                "light_emitting_diode",
+                "generic_excitation_source",
+            ):
+                if _type in result:
+                    values = result.pop(_type)
+                    if isinstance(values, dict):
+                        values = [values]
+                    for v in values:
+                        v["_type"] = _type
+                    light_sources.extend(values)
+            if light_sources:
+                result["light_source_group"] = light_sources
         return result
 
 

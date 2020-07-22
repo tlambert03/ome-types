@@ -4,8 +4,10 @@ import builtins
 import os
 import re
 import shutil
+from textwrap import dedent, indent
 from pathlib import Path
-from typing import Generator, Iterable, List, Set, Union, Iterator, Tuple
+from typing import Generator, Iterable, List, Set, Union, Iterator, Tuple, Optional
+from dataclasses import dataclass
 
 import black
 import isort
@@ -19,29 +21,97 @@ from xmlschema.validators import (
     XsdComponent,
 )
 
-TIFF_UUID = """
-from typing import Optional
-from .simple_types import UniversallyUniqueIdentifier
+# FIXME: Work out a better way to implement these override hacks.
+
 
 @dataclass
-class UUID:
-    file_name: str
-    value: UniversallyUniqueIdentifier
-"""
+class Override:
+    type_: str
+    default: Optional[str] = None
+    imports: Optional[str] = None
+    body: Optional[str] = None
 
-# FIXME: hacks
-# OVERIDE is a mapping of XSD TypeName to a tuple of desired output for that type
-# where the tuple is (type, default value, imports/strings needed)
-OVERRIDE = {
-    "MetadataOnly": ("bool", "False", None),
-    "XMLAnnotation": ("Optional[str]", "None", "from typing import Optional\n\n",),
-    "BinData/Length": ("int", None, None),
-    "ROI/Union": (
-        "List[Shape] = Field(..., min_items=1)",
-        None,
-        "from pydantic import Field\nfrom .shape import Shape",
+    def __post_init__(self) -> None:
+        if self.imports:
+            self.imports = dedent(self.imports)
+        if self.body:
+            self.body = indent(dedent(self.body), " " * 4)
+
+
+# Maps XSD TypeName to Override configuration, used to control output for that type.
+OVERRIDES = {
+    "MetadataOnly": Override(type_="bool", default="False"),
+    "XMLAnnotation": Override(
+        type_="Optional[str]", default="None", imports="from typing import Optional",
     ),
-    "TiffData/UUID": ("Optional[UUID]", "None", TIFF_UUID),
+    "BinData/Length": Override(type_="int"),
+    # FIXME: hard-coded LightSource subclass lists
+    "Instrument/LightSourceGroup": Override(
+        type_="List[LightSource]",
+        default="field(default_factory=list)",
+        imports="""
+            from typing import Dict, Union, Any
+            from pydantic import validator
+            from .light_source import LightSource
+            from .laser import Laser
+            from .arc import Arc
+            from .filament import Filament
+            from .light_emitting_diode import LightEmittingDiode
+            from .generic_excitation_source import GenericExcitationSource
+
+            _light_source_types: Dict[str, type] = {
+                "laser": Laser,
+                "arc": Arc,
+                "filament": Filament,
+                "light_emitting_diode": LightEmittingDiode,
+                "generic_excitation_source": GenericExcitationSource,
+            }
+        """,
+        body="""
+            @validator("light_source_group", pre=True, each_item=True)
+            def validate_light_source_group(
+                cls, value: Union[LightSource, Dict[Any, Any]]
+            ) -> LightSource:
+                if isinstance(value, LightSource):
+                    return value
+                elif isinstance(value, dict):
+                    try:
+                        _type = value.pop("_type")
+                    except KeyError:
+                        raise ValueError(
+                            "dict initialization requires _type"
+                        ) from None
+                    try:
+                        light_source_cls = _light_source_types[_type]
+                    except KeyError:
+                        raise ValueError(
+                            f"unknown LightSource type '{_type}'"
+                        ) from None
+                    return light_source_cls(**value)
+                else:
+                    raise ValueError("invalid type for light_source_group values")
+        """,
+    ),
+    "ROI/Union": Override(
+        type_="List[Shape] = Field(..., min_items=1)",
+        imports="""
+            from pydantic import Field
+            from .shape import Shape
+        """,
+    ),
+    "TiffData/UUID": Override(
+        type_="Optional[UUID]",
+        default="None",
+        imports="""
+            from typing import Optional
+            from .simple_types import UniversallyUniqueIdentifier
+
+            @dataclass
+            class UUID:
+                file_name: str
+                value: UniversallyUniqueIdentifier
+        """,
+    ),
 }
 
 
@@ -137,6 +207,8 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
                 "    " * 3 + 'raise TypeError("__init__ missing 1 '
                 f'required argument: {m.identifier!r}")'
             ]
+
+    lines += members.body()
 
     return lines
 
@@ -237,12 +309,12 @@ class Member:
             p = p.parent
             name = p.local_name
         name = f"{name}/{self.component.local_name}"
-        if name not in OVERRIDE and self.component.local_name in OVERRIDE:
+        if name not in OVERRIDES and self.component.local_name in OVERRIDES:
             return self.component.local_name
         return name
 
     def locals(self) -> Set[str]:
-        if self.key in OVERRIDE:
+        if self.key in OVERRIDES:
             return set()
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
             return set()
@@ -259,8 +331,8 @@ class Member:
         return locals_
 
     def imports(self) -> Set[str]:
-        if self.key in OVERRIDE:
-            _imp = OVERRIDE[self.key][2]
+        if self.key in OVERRIDES:
+            _imp = OVERRIDES[self.key].imports
             return set([_imp]) if _imp else set()
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
             return set(["from typing import Any"])
@@ -284,16 +356,21 @@ class Member:
                     imports.add(f"from .simple_types import {self.type.local_name}")
 
         if self.component.ref is not None:
-            if self.component.ref.local_name not in OVERRIDE:
+            if self.component.ref.local_name not in OVERRIDES:
                 imports.add(local_import(self.component.ref.local_name))
 
         return imports
 
+    def body(self) -> str:
+        if self.key in OVERRIDES:
+            return OVERRIDES[self.key].body or ""
+        return ""
+
     @property
     def type_string(self) -> str:
         """single type, without Optional, etc..."""
-        if self.key in OVERRIDE:
-            return OVERRIDE[self.key][0]
+        if self.key in OVERRIDES:
+            return OVERRIDES[self.key].type_
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
             return "Any"
         if self.component.ref is not None:
@@ -322,7 +399,7 @@ class Member:
     @property
     def full_type_string(self) -> str:
         """full type, like Optional[List[str]]"""
-        if self.key in OVERRIDE and self.type_string:
+        if self.key in OVERRIDES and self.type_string:
             return f": {self.type_string}"
         type_string = self.type_string
         if not type_string:
@@ -335,8 +412,8 @@ class Member:
 
     @property
     def default_val_str(self) -> str:
-        if self.key in OVERRIDE:
-            default = OVERRIDE[self.key][1]
+        if self.key in OVERRIDES:
+            default = OVERRIDES[self.key].default
             return f" = {default}" if default else ""
         if not self.is_optional:
             return ""
@@ -412,6 +489,11 @@ class MemberSet:
     def locals(self) -> List[str]:
         if self._members:
             return list(set.union(*[m.locals() for m in self._members]))
+        return []
+
+    def body(self) -> List[str]:
+        if self._members:
+            return [m.body() for m in self._members]
         return []
 
     def has_non_default_args(self) -> bool:
@@ -552,7 +634,7 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
     init_imports = []
     simples: List[GlobalElem] = []
     for elem in sorted(schema.types.values(), key=sort_types):
-        if elem.local_name in OVERRIDE:
+        if elem.local_name in OVERRIDES:
             continue
         converter = GlobalElem(elem)
         if not elem.is_complex():
@@ -563,7 +645,7 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
         converter.write(filename=targetfile)
 
     for elem in schema.elements.values():
-        if elem.local_name in OVERRIDE:
+        if elem.local_name in OVERRIDES:
             continue
         converter = GlobalElem(elem)
         targetfile = os.path.join(target_dir, converter.fname)
