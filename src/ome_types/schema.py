@@ -1,12 +1,13 @@
-import pickle
+import shelve
 import re
-from os.path import dirname, exists, join
-from typing import Any, Dict, Optional
+import os
+from functools import lru_cache
+from typing import Any, Dict, Optional, Union
 
 import xmlschema
 from xmlschema.converters import XMLSchemaConverter
 
-__cache__: Dict[str, xmlschema.XMLSchema] = {}
+SCHEMA_CACHE = os.path.join(os.path.dirname(__file__), "_schema_cache")
 
 
 def camel_to_snake(name: str) -> str:
@@ -15,33 +16,61 @@ def camel_to_snake(name: str) -> str:
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower().replace(" ", "_")
 
 
-def get_schema(xml: str) -> xmlschema.XMLSchema:
-    url = xmlschema.fetch_schema(xml)
-    version = (
-        re.split("(.com|.org)", url)[-1]
-        .replace("/", "_")
-        .lstrip("_")
-        .replace(".xsd", "")
-    )
-    if version not in __cache__:
-        local = join(dirname(__file__), f"{version}.pkl")
-        if exists(local):
-            with open(local, "rb") as f:
-                __cache__[version] = pickle.load(f)
-        else:
-            schema = xmlschema.XMLSchema(url)
+def clear_schema_cache() -> None:
+    os.remove(SCHEMA_CACHE + ".db")
 
+
+try:
+    # don't let the cache get bigger than 30MB... (a single schema is ~1.7MB)
+    if os.path.getsize(SCHEMA_CACHE + ".db") > 3e6:
+        clear_schema_cache()
+except FileNotFoundError:
+    pass
+
+
+@lru_cache(maxsize=32)
+def _cached_schema(key: str, url: str) -> xmlschema.XMLSchema:
+    """Return Schema for a url. Cached with ``key`` to disk and within-session RAM."""
+    with shelve.open(SCHEMA_CACHE) as db:
+        if key not in db:
+            schema = xmlschema.XMLSchema(url)
             # FIXME Hack to work around xmlschema poor support for keyrefs to
             # substitution groups
             ns = "{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
             ls_sgs = schema.maps.substitution_groups[f"{ns}LightSourceGroup"]
             ls_id_maps = schema.maps.identities[f"{ns}LightSourceIDKey"]
             ls_id_maps.elements = {e: None for e in ls_sgs}
+            db[key] = schema
 
-            __cache__[version] = schema
-            with open(local, "wb") as f:
-                pickle.dump(__cache__[version], f)
-    return __cache__[version]
+        return db[key]
+
+
+def get_schema(source: Union[xmlschema.XMLResource, str]) -> xmlschema.XMLSchema:
+    """Fetch an XMLSchema object given XML source.
+
+    Parameters
+    ----------
+    source : XMLResource or str
+        can be an :class:`xmlschema.XMLResource` instance, a file-like object, a path
+        to a file or an URI of a resource or an Element instance or an ElementTree
+        instance or a string containing the XML data.
+
+    Returns
+    -------
+    xmlschema.XMLSchema
+        An XMLSchema object for the source
+    """
+    from . import __version__
+
+    url = xmlschema.fetch_schema(source)
+    key = (
+        re.split("(.com|.org)", url)[-1]
+        .replace("/", "_")
+        .lstrip("_")
+        .replace(".xsd", "")
+    )
+    key += f"_xsch{xmlschema.__version__}_v{__version__}"
+    return _cached_schema(key, url)
 
 
 def validate(xml: str, schema: Optional[xmlschema.XMLSchema] = None) -> None:
