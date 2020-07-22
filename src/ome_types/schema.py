@@ -49,7 +49,7 @@ def validate(xml: str, schema: Optional[xmlschema.XMLSchema] = None) -> None:
     schema.validate(xml)
 
 
-class MyConverter(XMLSchemaConverter):
+class OMEConverter(XMLSchemaConverter):
     def __init__(self, namespaces: Optional[Dict[str, Any]] = None):
         super().__init__(namespaces, attr_prefix="")
 
@@ -113,7 +113,7 @@ class MyConverter(XMLSchemaConverter):
 def to_dict(  # type: ignore
     xml: str,
     schema: Optional[xmlschema.XMLSchema] = None,
-    converter: XMLSchemaConverter = MyConverter,
+    converter: XMLSchemaConverter = OMEConverter,
     **kwargs,
 ) -> Dict[str, Any]:
     schema = schema or get_schema(xml)
