@@ -64,7 +64,12 @@ class MyConverter(XMLSchemaConverter):
             result["value"] = result.pop("$")
         # FIXME: Work out a better way to deal with concrete extensions of
         # abstract types.
-        if xsd_element.local_name == "Instrument":
+        if xsd_element.local_name == "MetadataOnly":
+            result = True
+        elif xsd_element.local_name == "BinData":
+            if result["length"] == 0 and "value" not in result:
+                result["value"] = ""
+        elif xsd_element.local_name == "Instrument":
             light_sources = []
             for _type in (
                 "laser",

@@ -31,10 +31,7 @@ def model(tmp_path_factory, request):
 
 SHOULD_FAIL = {
     "commentannotation",
-    "filter",
-    "hcs",
     "mapannotation",
-    "metadata-only",
     "spim",
     "tagannotation",
     "timestampannotation",
