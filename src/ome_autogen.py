@@ -41,11 +41,11 @@ class Override:
 # Maps XSD TypeName to Override configuration, used to control output for that type.
 OVERRIDES = {
     "MetadataOnly": Override(type_="bool", default="False"),
-    "XMLAnnotation": Override(
-        type_="Optional[str]", default="None", imports="from typing import Optional",
-    ),
+    # FIXME: Type should be xml.etree.ElementTree.Element but isinstance checks
+    # with that class often mysteriously fail so the validator fails.
+    "XMLAnnotation/Value": Override(type_="Any", imports="from typing import Any"),
     "BinData/Length": Override(type_="int"),
-    # FIXME: hard-coded LightSource subclass lists
+    # FIXME: hard-coded subclass lists
     "Instrument/LightSourceGroup": Override(
         type_="List[LightSource]",
         default="field(default_factory=list)",
@@ -140,6 +140,60 @@ OVERRIDES = {
                     return shape_cls(**value)
                 else:
                     raise ValueError("invalid type for union values")
+        """,
+    ),
+    "OME/StructuredAnnotations": Override(
+        type_="List[Annotation]",
+        default="field(default_factory=list)",
+        imports="""
+            from typing import Dict, Union, Any
+            from pydantic import validator
+            from .annotation import Annotation
+            from .boolean_annotation import BooleanAnnotation
+            from .comment_annotation import CommentAnnotation
+            from .double_annotation import DoubleAnnotation
+            from .file_annotation import FileAnnotation
+            from .list_annotation import ListAnnotation
+            from .long_annotation import LongAnnotation
+            from .tag_annotation import TagAnnotation
+            from .term_annotation import TermAnnotation
+            from .timestamp_annotation import TimestampAnnotation
+            from .xml_annotation import XMLAnnotation
+
+            _annotation_types: Dict[str, type] = {
+                "boolean_annotation": BooleanAnnotation,
+                "comment_annotation": CommentAnnotation,
+                "double_annotation": DoubleAnnotation,
+                "file_annotation": FileAnnotation,
+                "list_annotation": ListAnnotation,
+                "long_annotation": LongAnnotation,
+                "tag_annotation": TagAnnotation,
+                "term_annotation": TermAnnotation,
+                "timestamp_annotation": TimestampAnnotation,
+                "xml_annotation": XMLAnnotation,
+            }
+        """,
+        body="""
+            @validator("structured_annotations", pre=True, each_item=True)
+            def validate_structured_annotations(
+                cls, value: Union[Annotation, Dict[Any, Any]]
+            ) -> Annotation:
+                if isinstance(value, Annotation):
+                    return value
+                elif isinstance(value, dict):
+                    try:
+                        _type = value.pop("_type")
+                    except KeyError:
+                        raise ValueError(
+                            "dict initialization requires _type"
+                        ) from None
+                    try:
+                        annotation_cls = _annotation_types[_type]
+                    except KeyError:
+                        raise ValueError(f"unknown Annotation type '{_type}'") from None
+                    return annotation_cls(**value)
+                else:
+                    raise ValueError("invalid type for annotation values")
         """,
     ),
     "TiffData/UUID": Override(

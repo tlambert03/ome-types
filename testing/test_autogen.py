@@ -30,17 +30,8 @@ def model(tmp_path_factory, request):
 
 
 SHOULD_FAIL = {
-    "commentannotation",
-    "mapannotation",
-    "spim",
-    "tagannotation",
+    # Some timestamps have negative years which datetime doesn't support.
     "timestampannotation",
-    "timestampannotation-posix-only",
-    "transformations-downgrade",
-    "transformations-upgrade",
-    "xmlannotation-body-space",
-    "xmlannotation-multi-value",
-    "xmlannotation-svg",
 }
 SHOULD_RAISE = {"bad"}
 
