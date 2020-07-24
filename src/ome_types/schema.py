@@ -1,10 +1,14 @@
 import pickle
 import re
 from os.path import dirname, exists, join
+from xml.etree import ElementTree
 from typing import Any, Dict, Optional
 
 import xmlschema
 from xmlschema.converters import XMLSchemaConverter
+
+
+NS_OME = "{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
 
 __cache__: Dict[str, xmlschema.XMLSchema] = {}
 
@@ -33,9 +37,8 @@ def get_schema(xml: str) -> xmlschema.XMLSchema:
 
             # FIXME Hack to work around xmlschema poor support for keyrefs to
             # substitution groups
-            ns = "{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
-            ls_sgs = schema.maps.substitution_groups[f"{ns}LightSourceGroup"]
-            ls_id_maps = schema.maps.identities[f"{ns}LightSourceIDKey"]
+            ls_sgs = schema.maps.substitution_groups[f"{NS_OME}LightSourceGroup"]
+            ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
             ls_id_maps.elements = {e: None for e in ls_sgs}
 
             __cache__[version] = schema
@@ -107,6 +110,29 @@ class OMEConverter(XMLSchemaConverter):
                         v["_type"] = _type
                     shapes.extend(values)
             result = shapes
+        elif xsd_element.local_name == "StructuredAnnotations":
+            annotations = []
+            for _type in (
+                "boolean_annotation",
+                "comment_annotation",
+                "double_annotation",
+                "file_annotation",
+                "list_annotation",
+                "long_annotation",
+                "tag_annotation",
+                "term_annotation",
+                "timestamp_annotation",
+                "xml_annotation",
+            ):
+                if _type in result:
+                    values = result.pop(_type)
+                    for v in values:
+                        v["_type"] = _type
+                        # Normalize empty element to zero-length string.
+                        if "value" in v and v["value"] is None:
+                            v["value"] = ""
+                    annotations.extend(values)
+            result = annotations
         return result
 
 
@@ -117,4 +143,16 @@ def to_dict(  # type: ignore
     **kwargs,
 ) -> Dict[str, Any]:
     schema = schema or get_schema(xml)
-    return schema.to_dict(xml, converter=converter, **kwargs)
+    result = schema.to_dict(xml, converter=converter, **kwargs)
+    # xmlschema doesn't provide usable access to mixed XML content, so we'll
+    # fill the XMLAnnotation value attributes ourselves by re-parsing the XML
+    # with ElementTree and using the Element objects as the values.
+    tree = None
+    for annotation in result.get("structured_annotations", []):
+        if annotation["_type"] == "xml_annotation":
+            if tree is None:
+                tree = ElementTree.parse(xml)
+            aid = annotation["id"]
+            elt = tree.find(f".//{NS_OME}XMLAnnotation[@ID='{aid}']/{NS_OME}Value")
+            annotation["value"] = elt
+    return result
