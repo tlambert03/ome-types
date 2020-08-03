@@ -23,12 +23,12 @@ def camel_to_snake(name: str) -> str:
 
 
 @lru_cache(maxsize=8)
-def _build_schema(url: str) -> xmlschema.XMLSchema:
+def _build_schema(namespace: str) -> xmlschema.XMLSchema:
     """Return Schema object for a url.
 
     For the special case of retrieving the 2016-06 OME Schema, use local file.
     """
-    if "http://www.openmicroscopy.org/Schemas/OME/2016-06" in url:
+    if "http://www.openmicroscopy.org/Schemas/OME/2016-06" in namespace:
         schema = xmlschema.XMLSchema(str(Path(__file__).parent / "ome-2016-06.xsd"))
         # FIXME Hack to work around xmlschema poor support for keyrefs to
         # substitution groups
@@ -36,7 +36,7 @@ def _build_schema(url: str) -> xmlschema.XMLSchema:
         ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
         ls_id_maps.elements = {e: None for e in ls_sgs}
     else:
-        schema = xmlschema.XMLSchema(url)
+        schema = xmlschema.XMLSchema(namespace)
     return schema
 
 
