@@ -304,7 +304,7 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
 
     cannot_have_required_args = base_type and members.has_non_default_args()
     if cannot_have_required_args:
-        lines += ["_no_default = object()", ""]
+        lines[0] += ", EMPTY"
 
     lines += ["@ome_dataclass", f"class {component.local_name}{base_name}:"]
     # FIXME: Refactor to remove BinData special-case.
@@ -312,21 +312,10 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
         lines.append("    value: str")
     lines += members.lines(
         indent=1,
-        force_defaults=" = _no_default  # type: ignore"
+        force_defaults=" = EMPTY  # type: ignore"
         if cannot_have_required_args
         else None,
     )
-
-    if cannot_have_required_args:
-        lines += ["", "    # hack for dataclass inheritance with non-default args"]
-        lines += ["    # https://stackoverflow.com/a/53085935/"]
-        lines += ["    def __post_init__(self) -> None:"]
-        for m in members.non_defaults:
-            lines += [f"        if self.{m.identifier} is _no_default:"]
-            lines += [
-                "    " * 3 + 'raise TypeError("__init__ missing 1 '
-                f'required argument: {m.identifier!r}")'
-            ]
 
     lines += members.body()
 
