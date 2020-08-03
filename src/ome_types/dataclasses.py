@@ -76,8 +76,8 @@ def modify_repr(_cls: Type[Any]) -> None:
         for f in fields(self):
             if f.name == "id":
                 continue
-            if f.default_factory is not MISSING:
-                default = f.default_factory()
+            if f.default_factory is not MISSING:  # type: ignore
+                default = f.default_factory()  # type: ignore
             else:
                 default = f.default
             value = getattr(self, f.name)
@@ -85,8 +85,7 @@ def modify_repr(_cls: Type[Any]) -> None:
                 if isinstance(value, Enum):
                     value = repr(value.value)
                 if isinstance(value, Sequence) and not isinstance(value, str):
-                    lines.append(f"<{len(value)} {f.name.title()}>")
-                    continue
+                    value = f"<{len(value)} {f.name.title()}>"
                 lines.append(f"{f.name}={value}")
         out = name + "\n"
         out += indent("\n".join(lines), "   ")
