@@ -2,9 +2,7 @@ import os
 import re
 from functools import lru_cache
 from typing import Any, Dict, Optional, Union
-from os.path import dirname, exists, join
 from xml.etree import ElementTree
-from typing import Any, Dict, Optional
 
 import xmlschema
 from xmlschema.converters import XMLSchemaConverter
