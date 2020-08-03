@@ -31,9 +31,8 @@ def _build_schema(url: str) -> xmlschema.XMLSchema:
 
     For the special case of retrieving the 2016-06 OME Schema, use local file.
     """
-    if url == "http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd":
+    if "http://www.openmicroscopy.org/Schemas/OME/2016-06" in url:
         url = os.path.join(os.path.dirname(__file__), "ome-2016-06.xsd")
-
     schema = xmlschema.XMLSchema(url)
     # FIXME Hack to work around xmlschema poor support for keyrefs to
     # substitution groups
@@ -58,7 +57,11 @@ def get_schema(source: Union[xmlschema.XMLResource, str]) -> xmlschema.XMLSchema
     xmlschema.XMLSchema
         An XMLSchema object for the source
     """
-    return _build_schema(xmlschema.fetch_schema(source))
+    if not isinstance(source, xmlschema.XMLResource):
+        resource = xmlschema.XMLResource(source)
+    else:
+        resource = source
+    return _build_schema(resource.namespace)
 
 
 def validate(xml: str, schema: Optional[xmlschema.XMLSchema] = None) -> None:
