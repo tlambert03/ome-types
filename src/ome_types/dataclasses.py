@@ -1,12 +1,14 @@
 from __future__ import annotations
-from pydantic.dataclasses import _process_class
-from pydantic import validator
 
 from typing import TYPE_CHECKING, Any, Callable, Optional, Type, Union
 
+from pydantic import validator
+from pydantic.dataclasses import _process_class
 
 if TYPE_CHECKING:
     from pydantic.dataclasses import DataclassType
+
+EMPTY = object()
 
 
 @validator("id", pre=True, always=True)
@@ -43,6 +45,24 @@ def validate_id(cls: Type[Any], value: Any) -> str:
     return id_type(value)
 
 
+def modify_post_init(_cls: Type[Any]) -> None:
+    origin_post_init = getattr(_cls, "__post_init__", None)
+    required_fields = {k for k, v in _cls.__dict__.items() if v is EMPTY}
+
+    def new_post_init(self: Any, *args: Any) -> None:
+        missed = {f for f in required_fields if getattr(self, f, None) is EMPTY}
+        if missed:
+            nmissed = len(missed)
+            s = "s" if nmissed > 1 else ""
+            raise TypeError(
+                f"__init__ missing {nmissed} required argument{s}: {sorted(missed)!r}"
+            )
+        if origin_post_init is not None:
+            origin_post_init(self, *args)
+
+    setattr(_cls, "__post_init__", new_post_init)
+
+
 def ome_dataclass(
     _cls: Optional[Type[Any]] = None,
     *,
@@ -58,12 +78,18 @@ def ome_dataclass(
 
     Provides OME-specific methods and validators.
     """
-    if "id" in getattr(_cls, "__annotations__", {}):
-        setattr(_cls, "validate_id", validate_id)
-        if not hasattr(_cls, "id"):
-            setattr(_cls, "id", None)
 
     def wrap(cls: Type[Any]) -> DataclassType:
+        if "id" in getattr(cls, "__annotations__", {}):
+            setattr(cls, "validate_id", validate_id)
+            if not hasattr(cls, "id"):
+                setattr(cls, "id", None)
+
+        modify_post_init(cls)
+
         return _process_class(cls, init, repr, eq, order, unsafe_hash, frozen, config)
 
     return wrap if _cls is None else wrap(_cls)
+
+
+__all__ = ["EMPTY", "ome_dataclass"]
