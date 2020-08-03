@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Optional, Type, Union
-
+from dataclasses import MISSING, fields
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Callable, Optional, Sequence, Type, Union
+from textwrap import indent
 from pydantic import validator
 from pydantic.dataclasses import _process_class
 
@@ -63,11 +65,41 @@ def modify_post_init(_cls: Type[Any]) -> None:
     setattr(_cls, "__post_init__", new_post_init)
 
 
+def modify_repr(_cls: Type[Any]) -> None:
+    if _cls.__repr__ is not object.__repr__:
+        return
+
+    # let classes still create their own
+    def new_repr(self: Any) -> str:
+        name = getattr(self, "id", self.__class__.__qualname__)
+        lines = []
+        for f in fields(self):
+            if f.name == "id":
+                continue
+            if f.default_factory is not MISSING:
+                default = f.default_factory()
+            else:
+                default = f.default
+            value = getattr(self, f.name)
+            if value != default:
+                if isinstance(value, Enum):
+                    value = repr(value.value)
+                if isinstance(value, Sequence) and not isinstance(value, str):
+                    lines.append(f"<{len(value)} {f.name.title()}>")
+                    continue
+                lines.append(f"{f.name}={value}")
+        out = name + "\n"
+        out += indent("\n".join(lines), "   ")
+        return out
+
+    setattr(_cls, "__repr__", new_repr)
+
+
 def ome_dataclass(
     _cls: Optional[Type[Any]] = None,
     *,
     init: bool = True,
-    repr: bool = True,
+    repr: bool = False,
     eq: bool = True,
     order: bool = False,
     unsafe_hash: bool = False,
@@ -86,7 +118,8 @@ def ome_dataclass(
                 setattr(cls, "id", None)
 
         modify_post_init(cls)
-
+        if not repr:
+            modify_repr(cls)
         return _process_class(cls, init, repr, eq, order, unsafe_hash, frozen, config)
 
     return wrap if _cls is None else wrap(_cls)
