@@ -57,7 +57,7 @@ def modify_post_init(_cls: Type[Any]) -> None:
             raise TypeError(
                 f"__init__ missing {nmissed} required argument{s}: {missed!r}"
             )
-        if origin_post_init:
+        if origin_post_init is not None:
             origin_post_init(self, *args)
 
     setattr(_cls, "__post_init__", new_post_init)
