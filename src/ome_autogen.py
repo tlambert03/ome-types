@@ -6,7 +6,17 @@ import re
 import shutil
 from textwrap import dedent, indent
 from pathlib import Path
-from typing import Generator, Iterable, List, Set, Union, Iterator, Tuple, Optional
+from typing import (
+    Generator,
+    Iterable,
+    List,
+    Dict,
+    Set,
+    Union,
+    Iterator,
+    Tuple,
+    Optional,
+)
 from dataclasses import dataclass
 
 import black
@@ -20,6 +30,7 @@ from xmlschema.validators import (
     XsdType,
     XsdComponent,
 )
+
 
 # FIXME: Work out a better way to implement these override hacks.
 
@@ -240,10 +251,22 @@ def as_identifier(s: str) -> str:
     return _s
 
 
+_CAMEL_SNAKE_OVERRIDES = {"ROIs": "rois"}
+
+
 def camel_to_snake(name: str) -> str:
-    # https://stackoverflow.com/a/1176023
-    name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower().replace(" ", "_")
+    result = _CAMEL_SNAKE_OVERRIDES.get(name, None)
+    if not result:
+        # FIXME This part must be kept identical to the copy of this function in
+        # the schema module. Ideally we would have one shared implementation but
+        # currently there is a problem importing anything from ome_types if the
+        # model code hasn't been generated yet. It should be fixable with a
+        # little reorganization.
+        # https://stackoverflow.com/a/1176023
+        result = re.sub("([A-Z]+)([A-Z][a-z]+)", r"\1_\2", name)
+        result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", result)
+        result = result.lower().replace(" ", "_")
+    return result
 
 
 def local_import(item_type: str) -> str:
@@ -367,6 +390,10 @@ def iter_members(
 
 
 class Member:
+
+    # Stores plurals from all Members for later access.
+    plurals_registry: Dict[Tuple[str, str], str] = {}
+
     def __init__(self, component: Union[XsdElement, XsdAttribute]):
         self.component = component
         assert not component.is_global()
@@ -375,10 +402,31 @@ class Member:
     def identifier(self) -> str:
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
             return self.component.local_name
-        ident = camel_to_snake(self.component.local_name)
+        name = camel_to_snake(self.component.local_name)
+        if self.plural:
+            plural = camel_to_snake(self.plural)
+            Member.plurals_registry[(self.parent_name, name)] = plural
+            name = plural
+        ident = camel_to_snake(name)
         if not ident.isidentifier():
             raise ValueError(f"failed to make identifier of {self!r}")
         return ident
+
+    @property
+    def plural(self) -> Optional[str]:
+        """Plural form of component name, if available."""
+        if (
+            isinstance(self.component, XsdElement)
+            and self.component.is_multiple()
+            and self.component.ref
+            and self.component.ref.annotation
+        ):
+            appinfo = self.component.ref.annotation.appinfo
+            assert len(appinfo) == 1, "unexpected multiple appinfo elements"
+            plural = appinfo[0].find("xsdfu/plural")
+            if plural is not None:
+                return plural.text
+        return None
 
     @property
     def type(self) -> XsdType:
@@ -399,13 +447,16 @@ class Member:
         )
 
     @property
-    def key(self) -> str:
+    def parent_name(self) -> str:
+        """Local name of component's first named ancestor."""
         p = self.component.parent
-        name = p.local_name
-        while not name and (p.parent is not None):
+        while not p.local_name and p.parent is not None:
             p = p.parent
-            name = p.local_name
-        name = f"{name}/{self.component.local_name}"
+        return p.local_name
+
+    @property
+    def key(self) -> str:
+        name = f"{self.parent_name}/{self.component.local_name}"
         if name not in OVERRIDES and self.component.local_name in OVERRIDES:
             return self.component.local_name
         return name
@@ -759,6 +810,8 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
         text += local_import(classname) + "\n"
     text = sort_imports(text)
     text += f"\n\n__all__ = [{', '.join(sorted(repr(i[1]) for i in init_imports))}]"
+    # FIXME This could probably live somewhere else less visible to end-users.
+    text += "\n\n_field_plurals = " + repr(Member.plurals_registry)
     text = black_format(text)
     with open(os.path.join(target_dir, f"__init__.py"), "w") as f:
         f.write(text)

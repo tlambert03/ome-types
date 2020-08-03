@@ -7,6 +7,8 @@ from typing import Any, Dict, Optional
 import xmlschema
 from xmlschema.converters import XMLSchemaConverter
 
+from .model import _field_plurals
+
 
 NS_OME = "{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
 
@@ -15,8 +17,10 @@ __cache__: Dict[str, xmlschema.XMLSchema] = {}
 
 def camel_to_snake(name: str) -> str:
     # https://stackoverflow.com/a/1176023
-    name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower().replace(" ", "_")
+    result = re.sub("([A-Z]+)([A-Z][a-z]+)", r"\1_\2", name)
+    result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", result)
+    result = result.lower().replace(" ", "_")
+    return result
 
 
 def get_schema(xml: str) -> xmlschema.XMLSchema:
@@ -133,6 +137,13 @@ class OMEConverter(XMLSchemaConverter):
                             v["value"] = ""
                     annotations.extend(values)
             result = annotations
+        if isinstance(result, dict):
+            for name in list(result.keys()):
+                plural = _field_plurals.get((xsd_element.local_name, name), None)
+                if plural:
+                    value = result.pop(name)
+                    assert isinstance(value, list), "expected list for plural attr"
+                    result[plural] = value
         return result
 
 
