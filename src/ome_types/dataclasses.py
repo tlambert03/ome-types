@@ -55,7 +55,7 @@ def modify_post_init(_cls: Type[Any]) -> None:
             nmissed = len(missed)
             s = "s" if nmissed > 1 else ""
             raise TypeError(
-                f"__init__ missing {nmissed} required argument{s}: {missed!r}"
+                f"__init__ missing {nmissed} required argument{s}: {sorted(missed)!r}"
             )
         if origin_post_init is not None:
             origin_post_init(self, *args)
