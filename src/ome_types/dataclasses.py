@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 @validator("id", pre=True, always=True)
 def validate_id(cls: Type[Any], value: Any) -> str:
-    from typing import ClassVar, Set, Union
+    from typing import ClassVar, Union
 
     # get the required LSID type from the annotation
     id_type = cls.__annotations__.get("id")
@@ -21,20 +21,26 @@ def validate_id(cls: Type[Any], value: Any) -> str:
     if not id_type:
         return value
 
-    if not hasattr(cls, "_global_ids"):
-        cls._global_ids = set()
-        cls.__annotations__["_global_ids"] = ClassVar[Set[str]]
+    if not hasattr(cls, "_max_id"):
+        cls._max_id = 0
+        cls.__annotations__["_max_id"] = ClassVar[int]
 
-    id_string = id_type.__name__[:-2]
     if not value:
-        suffixes = [i.split(":")[-1] for i in cls._global_ids]
-        max_id = max({int(s) for s in suffixes if s.isdigit()} or {0})
-        new_id = f"{id_string}:{max_id + 1}"
+        value = cls._max_id + 1
+    if isinstance(value, int):
+        v_id = value
+        id_string = id_type.__name__[:-2]
+        value = f"{id_string}:{value}"
     else:
-        new_id = f"{id_string}:{value}" if isinstance(value, int) else str(value)
+        value = str(value)
+        v_id = value.rsplit(":", 1)[-1]
+    try:
+        v_id = int(v_id)
+        cls._max_id = max(cls._max_id, v_id)
+    except ValueError:
+        pass
 
-    cls._global_ids.add(new_id)
-    return id_type(new_id)
+    return id_type(value)
 
 
 def ome_dataclass(
