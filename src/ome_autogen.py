@@ -214,7 +214,7 @@ OVERRIDES = {
             from typing import Optional
             from .simple_types import UniversallyUniqueIdentifier
 
-            @dataclass
+            @ome_dataclass
             class UUID:
                 file_name: str
                 value: UniversallyUniqueIdentifier
@@ -274,7 +274,7 @@ def local_import(item_type: str) -> str:
 
 
 def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
-    lines = ["from pydantic.dataclasses import dataclass", ""]
+    lines = ["from ome_types.dataclasses import ome_dataclass", ""]
     # FIXME: Refactor to remove BinData special-case.
     if component.local_name == "BinData":
         base_type = None
@@ -306,7 +306,7 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     if cannot_have_required_args:
         lines += ["_no_default = object()", ""]
 
-    lines += ["@dataclass", f"class {component.local_name}{base_name}:"]
+    lines += ["@ome_dataclass", f"class {component.local_name}{base_name}:"]
     # FIXME: Refactor to remove BinData special-case.
     if component.local_name == "BinData":
         lines.append("    value: str")
@@ -588,6 +588,8 @@ class Member:
     @property
     def is_optional(self) -> bool:
         # FIXME: hack.  doesn't fully capture the restriction
+        if self.identifier == "id":
+            return True
         if getattr(self.component.parent, "model", "") == "choice":
             return True
         if hasattr(self.component, "min_occurs"):
