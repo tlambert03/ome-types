@@ -1,6 +1,6 @@
-import os
 import re
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict, Optional, Union
 from xml.etree import ElementTree
 
@@ -8,7 +8,6 @@ import xmlschema
 from xmlschema.converters import XMLSchemaConverter
 
 from .model import _field_plurals
-
 
 NS_OME = "{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
 
@@ -30,13 +29,14 @@ def _build_schema(url: str) -> xmlschema.XMLSchema:
     For the special case of retrieving the 2016-06 OME Schema, use local file.
     """
     if "http://www.openmicroscopy.org/Schemas/OME/2016-06" in url:
-        url = os.path.join(os.path.dirname(__file__), "ome-2016-06.xsd")
-    schema = xmlschema.XMLSchema(url)
-    # FIXME Hack to work around xmlschema poor support for keyrefs to
-    # substitution groups
-    ls_sgs = schema.maps.substitution_groups[f"{NS_OME}LightSourceGroup"]
-    ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
-    ls_id_maps.elements = {e: None for e in ls_sgs}
+        schema = xmlschema.XMLSchema(str(Path(__file__).parent / "ome-2016-06.xsd"))
+        # FIXME Hack to work around xmlschema poor support for keyrefs to
+        # substitution groups
+        ls_sgs = schema.maps.substitution_groups[f"{NS_OME}LightSourceGroup"]
+        ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
+        ls_id_maps.elements = {e: None for e in ls_sgs}
+    else:
+        schema = xmlschema.XMLSchema(url)
     return schema
 
 
