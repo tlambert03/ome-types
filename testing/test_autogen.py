@@ -29,17 +29,8 @@ def model(tmp_path_factory, request):
 
 
 SHOULD_FAIL = {
-    "commentannotation",
-    "mapannotation",
-    "spim",
-    "tagannotation",
+    # Some timestamps have negative years which datetime doesn't support.
     "timestampannotation",
-    "timestampannotation-posix-only",
-    "transformations-downgrade",
-    "transformations-upgrade",
-    "xmlannotation-body-space",
-    "xmlannotation-multi-value",
-    "xmlannotation-svg",
 }
 SHOULD_RAISE = {"bad"}
 
@@ -72,3 +63,26 @@ def test_convert_schema(model, xml):
             assert from_xml(xml, model.OME)
     else:
         assert from_xml(xml, model.OME)
+
+
+def test_no_id(model):
+    """Test that ids are optional, and auto-increment."""
+    i = model.Instrument(id=20)
+    assert i.id == "Instrument:20"
+    i2 = model.Instrument()
+    assert i2.id == "Instrument:21"
+
+    # but validation still works
+    with pytest.raises(ValueError):
+        model.Instrument(id="nonsense")
+
+
+def test_required_missing(model):
+    """Test subclasses with non-default arguments still work."""
+    with pytest.raises(TypeError) as e:
+        _ = model.BooleanAnnotation()
+    assert "missing 1 required argument: ['value']" in str(e)
+
+    with pytest.raises(TypeError) as e:
+        _ = model.Label()
+    assert "missing 2 required arguments: ['x', 'y']" in str(e)
