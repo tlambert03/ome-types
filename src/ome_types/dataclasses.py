@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import MISSING, fields
+from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Optional, Sequence, Type, Union
 from textwrap import indent
+from typing import TYPE_CHECKING, Any, Callable, Optional, Sequence, Type, Union
+
 from pydantic import validator
 from pydantic.dataclasses import _process_class
 
@@ -66,29 +68,34 @@ def modify_post_init(_cls: Type[Any]) -> None:
 
 
 def modify_repr(_cls: Type[Any]) -> None:
+    # let classes still create their own
     if _cls.__repr__ is not object.__repr__:
         return
 
-    # let classes still create their own
     def new_repr(self: Any) -> str:
-        name = getattr(self, "id", self.__class__.__qualname__)
+        name = self.__class__.__qualname__
         lines = []
-        for f in fields(self):
-            if f.name == "id":
-                continue
+        for f in sorted(fields(self), key=lambda f: f.name not in ("name", "id")):
+            # https://github.com/python/mypy/issues/6910
             if f.default_factory is not MISSING:  # type: ignore
                 default = f.default_factory()  # type: ignore
             else:
                 default = f.default
-            value = getattr(self, f.name)
-            if value != default:
-                if isinstance(value, Enum):
-                    value = repr(value.value)
-                if isinstance(value, Sequence) and not isinstance(value, str):
-                    value = f"<{len(value)} {f.name.title()}>"
-                lines.append(f"{f.name}={value}")
-        out = name + "\n"
-        out += indent("\n".join(lines), "   ")
+
+            current = getattr(self, f.name)
+            if current != default:
+                if isinstance(current, Sequence) and not isinstance(current, str):
+                    rep = f"[<{len(current)} {f.name.title()}>]"
+                elif isinstance(current, Enum):
+                    rep = repr(current.value)
+                elif isinstance(current, datetime):
+                    rep = f"datetime.fromisoformat({current.isoformat()!r})"
+                else:
+                    rep = repr(current)
+                lines.append(f"{f.name}={rep},")
+        lines[-1] = lines[-1].rstrip(",")
+        body = "\n" + indent("\n".join(lines), "   ") + "\n"
+        out = f"{name}({body})"
         return out
 
     setattr(_cls, "__repr__", new_repr)
