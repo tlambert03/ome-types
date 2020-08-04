@@ -17,6 +17,11 @@ EMPTY = object()
 
 @validator("id", pre=True, always=True)
 def validate_id(cls: Type[Any], value: Any) -> str:
+    """Pydantic validator for ID fields in OME dataclasses.
+
+    If no value is provided, this validator provides and integer ID, and stores the
+    maximum previously-seen value on the class.
+    """
     from typing import ClassVar, Union
 
     # get the required LSID type from the annotation
@@ -27,6 +32,7 @@ def validate_id(cls: Type[Any], value: Any) -> str:
     if not id_type:
         return value
 
+    # Store the highest seen value on the class._max_id attribute.
     if not hasattr(cls, "_max_id"):
         cls._max_id = 0
         cls.__annotations__["_max_id"] = ClassVar[int]
@@ -50,6 +56,11 @@ def validate_id(cls: Type[Any], value: Any) -> str:
 
 
 def modify_post_init(_cls: Type[Any]) -> None:
+    """Modify __post_init__.
+
+    Provides support for non-default arguments in dataclass subclasses (where the super
+    class has default args) by providing the default value "EMPTY" from this module.
+    """
     origin_post_init = getattr(_cls, "__post_init__", None)
     required_fields = {k for k, v in _cls.__dict__.items() if v is EMPTY}
 
@@ -68,6 +79,10 @@ def modify_post_init(_cls: Type[Any]) -> None:
 
 
 def modify_repr(_cls: Type[Any]) -> None:
+    """Improved dataclass repr function.
+
+    Only show non-default values, and summarize containers.
+    """
     # let classes still create their own
     if _cls.__repr__ is not object.__repr__:
         return
@@ -93,8 +108,11 @@ def modify_repr(_cls: Type[Any]) -> None:
                 else:
                     rep = repr(current)
                 lines.append(f"{f.name}={rep},")
-        lines[-1] = lines[-1].rstrip(",")
-        body = "\n" + indent("\n".join(lines), "   ") + "\n"
+        if lines:
+            lines[-1] = lines[-1].rstrip(",")
+            body = "\n" + indent("\n".join(lines), "   ") + "\n"
+        else:
+            body = ""
         out = f"{name}({body})"
         return out
 
