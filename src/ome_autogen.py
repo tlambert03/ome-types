@@ -758,8 +758,7 @@ class GlobalElem:
 
 
 _this_dir = os.path.dirname(__file__)
-# _url = os.path.join(_this_dir, "ome_types", "ome-2016-06.xsd")
-_url = "https://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd"
+_url = os.path.join(_this_dir, "ome_types", "ome-2016-06.xsd")
 _target = os.path.join(_this_dir, "ome_types", "model")
 
 
