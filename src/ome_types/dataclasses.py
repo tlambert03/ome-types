@@ -108,8 +108,9 @@ def modify_repr(_cls: Type[Any]) -> None:
                 else:
                     rep = repr(current)
                 lines.append(f"{f.name}={rep},")
-        if lines:
-            lines[-1] = lines[-1].rstrip(",")
+        if len(lines) == 1:
+            body = lines[-1].rstrip(",")
+        elif lines:
             body = "\n" + indent("\n".join(lines), "   ") + "\n"
         else:
             body = ""
