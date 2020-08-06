@@ -50,6 +50,22 @@ class Override:
             self.body = indent(dedent(self.body), " " * 4)
 
 
+@dataclass
+class ClassOverride:
+    base_type: Optional[str] = None
+    imports: Optional[str] = None
+    fields: Optional[str] = None
+    body: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        if self.imports:
+            self.imports = dedent(self.imports)
+        if self.fields:
+            self.fields = indent(dedent(self.fields), " " * 4)
+        if self.body:
+            self.body = indent(dedent(self.body), " " * 4)
+
+
 # Maps XSD TypeName to Override configuration, used to control output for that type.
 OVERRIDES = {
     "MetadataOnly": Override(type_="bool", default="False"),
@@ -224,6 +240,49 @@ OVERRIDES = {
 }
 
 
+# Maps XSD TypeName to ClassOverride configuration, used to control dataclass
+# generation.
+CLASS_OVERRIDES = {
+    "OME": ClassOverride(
+        imports="""
+            from typing import Any
+            import weakref
+            from ome_types.util import collect_ids, collect_references
+        """,
+        body="""
+            def __post_init_post_parse__(self: Any, *args: Any) -> None:
+                ids = collect_ids(self)
+                references = collect_references(self)
+                for ref_id, ref in references.items():
+                    ref.ref_ = weakref.ref(ids[ref_id])
+        """,
+    ),
+    "Reference": ClassOverride(
+        imports="""
+            from dataclasses import field
+            from typing import Any, Optional
+            from .simple_types import LSID
+        """,
+        # FIXME Figure out typing for ref_ (weakref). Even with the "correct"
+        # typing, Pydantic has a problem.
+        fields="""
+            id: LSID
+            ref_: Any = field(default=None, init=False)
+        """,
+        # FIXME Could make `ref` abstract and implement stronger-typed overrides
+        # in subclasses.
+        body="""
+            @property
+            def ref(self) -> Any:
+                if self.ref_ is None:
+                    raise ValueError("references not yet resolved on root OME object")
+                return self.ref_()
+        """,
+    ),
+    "BinData": ClassOverride(base_type="object", fields="value: str"),
+}
+
+
 def black_format(text: str, line_length: int = 79) -> str:
     return black.format_str(text, mode=black.FileMode(line_length=line_length))
 
@@ -275,16 +334,20 @@ def local_import(item_type: str) -> str:
 
 
 def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
+    class_override = CLASS_OVERRIDES.get(component.local_name, None)
     lines = ["from ome_types.dataclasses import ome_dataclass", ""]
-    # FIXME: Refactor to remove BinData special-case.
-    if component.local_name == "BinData":
-        base_type = None
-    elif isinstance(component, XsdType):
+    if isinstance(component, XsdType):
         base_type = component.base_type
     else:
         base_type = component.type.base_type
 
-    if base_type and not hasattr(base_type, "python_type"):
+    if class_override and class_override.base_type:
+        if class_override.base_type == "object":
+            base_name = ""
+        else:
+            base_name = f"({class_override.base_type})"
+        base_type = None
+    elif base_type and not hasattr(base_type, "python_type"):
         base_name = f"({base_type.local_name})"
         if base_type.is_complex():
             lines += [local_import(base_type.local_name)]
@@ -292,6 +355,8 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
             lines += [f"from .simple_types import {base_type.local_name}"]
     else:
         base_name = ""
+    if class_override and class_override.imports:
+        lines.append(class_override.imports)
 
     base_members = set()
     _basebase = base_type
@@ -310,9 +375,8 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
         lines[0] += ", AUTO_SEQUENCE"
 
     lines += ["@ome_dataclass", f"class {component.local_name}{base_name}:"]
-    # FIXME: Refactor to remove BinData special-case.
-    if component.local_name == "BinData":
-        lines.append("    value: str")
+    if class_override and class_override.fields:
+        lines.append(class_override.fields)
     lines += members.lines(
         indent=1,
         force_defaults=" = EMPTY  # type: ignore"
@@ -320,6 +384,8 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
         else None,
     )
 
+    if class_override and class_override.body:
+        lines.append(class_override.body)
     lines += members.body()
 
     return lines
@@ -755,8 +821,7 @@ class GlobalElem:
         return lines
 
     def lines(self) -> str:
-        # FIXME: Refactor to remove BinData special-case.
-        if not self.is_complex and self.elem.local_name != "BinData":
+        if not self.is_complex:
             lines = self._simple_class()
         elif self.elem.abstract:
             lines = self._abstract_class()
