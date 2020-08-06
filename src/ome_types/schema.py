@@ -1,16 +1,16 @@
-import pickle
 import re
-from os.path import dirname, exists, join
+from functools import lru_cache
+from pathlib import Path
+from typing import Any, Dict, Optional, Union
 from xml.etree import ElementTree
-from typing import Any, Dict, Optional
 
 import xmlschema
 from xmlschema.converters import XMLSchemaConverter
 
 from .model import _field_plurals
 
-
-NS_OME = "{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
+URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
+NS_OME = "{" + URI_OME + "}"
 
 __cache__: Dict[str, xmlschema.XMLSchema] = {}
 
@@ -23,32 +23,44 @@ def camel_to_snake(name: str) -> str:
     return result
 
 
-def get_schema(xml: str) -> xmlschema.XMLSchema:
-    url = xmlschema.fetch_schema(xml)
-    version = (
-        re.split("(.com|.org)", url)[-1]
-        .replace("/", "_")
-        .lstrip("_")
-        .replace(".xsd", "")
-    )
-    if version not in __cache__:
-        local = join(dirname(__file__), f"{version}.pkl")
-        if exists(local):
-            with open(local, "rb") as f:
-                __cache__[version] = pickle.load(f)
-        else:
-            schema = xmlschema.XMLSchema(url)
+@lru_cache(maxsize=8)
+def _build_schema(namespace: str) -> xmlschema.XMLSchema:
+    """Return Schema object for a url.
 
-            # FIXME Hack to work around xmlschema poor support for keyrefs to
-            # substitution groups
-            ls_sgs = schema.maps.substitution_groups[f"{NS_OME}LightSourceGroup"]
-            ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
-            ls_id_maps.elements = {e: None for e in ls_sgs}
+    For the special case of retrieving the 2016-06 OME Schema, use local file.
+    """
+    if namespace == URI_OME:
+        schema = xmlschema.XMLSchema(str(Path(__file__).parent / "ome-2016-06.xsd"))
+        # FIXME Hack to work around xmlschema poor support for keyrefs to
+        # substitution groups
+        ls_sgs = schema.maps.substitution_groups[f"{NS_OME}LightSourceGroup"]
+        ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
+        ls_id_maps.elements = {e: None for e in ls_sgs}
+    else:
+        schema = xmlschema.XMLSchema(namespace)
+    return schema
 
-            __cache__[version] = schema
-            with open(local, "wb") as f:
-                pickle.dump(__cache__[version], f)
-    return __cache__[version]
+
+def get_schema(source: Union[xmlschema.XMLResource, str]) -> xmlschema.XMLSchema:
+    """Fetch an XMLSchema object given XML source.
+
+    Parameters
+    ----------
+    source : XMLResource or str
+        can be an :class:`xmlschema.XMLResource` instance, a file-like object, a path
+        to a file or an URI of a resource or an Element instance or an ElementTree
+        instance or a string containing the XML data.
+
+    Returns
+    -------
+    xmlschema.XMLSchema
+        An XMLSchema object for the source
+    """
+    if not isinstance(source, xmlschema.XMLResource):
+        resource = xmlschema.XMLResource(source)
+    else:
+        resource = source
+    return _build_schema(resource.namespace)
 
 
 def validate(xml: str, schema: Optional[xmlschema.XMLSchema] = None) -> None:
