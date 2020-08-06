@@ -6,5 +6,6 @@ build-backend = "setuptools.build_meta"
 ignore = [
     "*src/ome_types/model/*",
     "mypy.ini",
+    "coverage.yml",
     "src/ome_types/_version.py",  # added by setuptools_scm during build
 ]
