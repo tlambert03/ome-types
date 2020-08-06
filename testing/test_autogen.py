@@ -17,15 +17,18 @@ def model(tmp_path_factory, request):
             raise RuntimeError(
                 f"Please generate local {SRC_MODEL} before using --nogen"
             )
-        sys.path.insert(0, str(SRC_MODEL))
-        return importlib.import_module(SRC_MODEL.name)
-    from ome_autogen import convert_schema
+        sys.path.insert(0, str(SRC))
+        model = importlib.import_module(SRC_MODEL.name)
+    else:
+        from ome_autogen import convert_schema
 
-    target_dir = tmp_path_factory.mktemp("test_model")
-    xsd = SRC / "ome-2016-06.xsd"
-    convert_schema(url=xsd, target_dir=target_dir)
-    sys.path.insert(0, str(target_dir.parent))
-    return importlib.import_module(target_dir.name)
+        target_dir = tmp_path_factory.mktemp("test_model")
+        xsd = SRC / "ome-2016-06.xsd"
+        convert_schema(url=xsd, target_dir=target_dir)
+        sys.path.insert(0, str(target_dir.parent))
+        model = importlib.import_module(target_dir.name)
+    sys.path.pop(0)
+    return model
 
 
 SHOULD_FAIL = {
