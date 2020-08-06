@@ -9,7 +9,8 @@ from xmlschema.converters import XMLSchemaConverter
 
 from .model import _field_plurals
 
-NS_OME = "{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
+URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
+NS_OME = "{" + URI_OME + "}"
 
 __cache__: Dict[str, xmlschema.XMLSchema] = {}
 
@@ -28,7 +29,7 @@ def _build_schema(namespace: str) -> xmlschema.XMLSchema:
 
     For the special case of retrieving the 2016-06 OME Schema, use local file.
     """
-    if "http://www.openmicroscopy.org/Schemas/OME/2016-06" in namespace:
+    if namespace == URI_OME:
         schema = xmlschema.XMLSchema(str(Path(__file__).parent / "ome-2016-06.xsd"))
         # FIXME Hack to work around xmlschema poor support for keyrefs to
         # substitution groups
