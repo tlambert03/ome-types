@@ -306,6 +306,8 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     cannot_have_required_args = base_type and members.has_non_default_args()
     if cannot_have_required_args:
         lines[0] += ", EMPTY"
+    if members.has_nonref_id():
+        lines[0] += ", AUTO_SEQUENCE"
 
     lines += ["@ome_dataclass", f"class {component.local_name}{base_name}:"]
     # FIXME: Refactor to remove BinData special-case.
@@ -437,6 +439,20 @@ class Member:
         )
 
     @property
+    def is_nonref_id(self) -> bool:
+        if self.identifier == "id":
+            gp = self.component.parent.parent
+            if not gp.base_type or gp.base_type.local_name != "Reference":
+                return True
+        return False
+
+    @property
+    def is_ref_id(self) -> bool:
+        if self.identifier == "id":
+            return not self.is_nonref_id
+        return False
+
+    @property
     def parent_name(self) -> str:
         """Local name of component's first named ancestor."""
         p = self.component.parent
@@ -553,7 +569,9 @@ class Member:
         if self.key in OVERRIDES:
             default = OVERRIDES[self.key].default
             return f" = {default}" if default else ""
-        if not self.is_optional:
+        elif self.is_nonref_id:
+            return " = AUTO_SEQUENCE  # type: ignore"
+        elif not self.is_optional:
             return ""
 
         if not self.max_occurs:
@@ -578,8 +596,8 @@ class Member:
     @property
     def is_optional(self) -> bool:
         # FIXME: hack.  doesn't fully capture the restriction
-        if self.identifier == "id":
-            return True
+        if self.is_ref_id:
+            return False
         if getattr(self.component.parent, "model", "") == "choice":
             return True
         if hasattr(self.component, "min_occurs"):
@@ -636,6 +654,9 @@ class MemberSet:
 
     def has_non_default_args(self) -> bool:
         return any(not m.default_val_str for m in self._members)
+
+    def has_nonref_id(self) -> bool:
+        return any(m.is_nonref_id for m in self._members)
 
     @property
     def non_defaults(self) -> "MemberSet":
