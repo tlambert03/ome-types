@@ -4,6 +4,7 @@ import builtins
 import os
 import re
 import shutil
+from itertools import chain
 from textwrap import dedent, indent
 from pathlib import Path
 from typing import (
@@ -450,51 +451,51 @@ class Member:
             return self.component.local_name
         return name
 
-    def locals(self) -> Set[str]:
+    def locals(self) -> List[str]:
         if self.key in OVERRIDES:
-            return set()
+            return []
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
-            return set()
+            return []
         if not self.type or self.type.is_global():
-            return set()
-        locals_: Set[str] = set()
+            return []
+        locals_: List[str] = []
         # FIXME: this bit is mostly hacks
         if self.type.is_complex() and self.component.ref is None:
-            locals_.add("\n".join(make_dataclass(self.component)) + "\n")
+            locals_.append("\n".join(make_dataclass(self.component)) + "\n")
         if self.type.is_restriction() and self.is_enum_type:
-            locals_.add(
+            locals_.append(
                 "\n".join(make_enum(self.type, name=self.component.local_name)) + "\n"
             )
         return locals_
 
-    def imports(self) -> Set[str]:
+    def imports(self) -> List[str]:
         if self.key in OVERRIDES:
             _imp = OVERRIDES[self.key].imports
-            return set([_imp]) if _imp else set()
+            return [_imp] if _imp else []
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
-            return set(["from typing import Any"])
-        imports = set()
+            return ["from typing import Any"]
+        imports = []
         if not self.max_occurs:
-            imports.add("from typing import List")
+            imports.append("from typing import List")
             if self.is_optional:
-                imports.add("from dataclasses import field")
+                imports.append("from dataclasses import field")
         elif self.is_optional:
-            imports.add("from typing import Optional")
+            imports.append("from typing import Optional")
         if self.is_decimal:
-            imports.add("from typing import cast")
+            imports.append("from typing import cast")
         if self.type.is_datetime():
-            imports.add("from datetime import datetime")
+            imports.append("from datetime import datetime")
         if not self.is_builtin_type and self.type.is_global():
             # FIXME: hack
             if not self.type.local_name == "anyType":
                 if self.type.is_complex():
-                    imports.add(local_import(self.type.local_name))
+                    imports.append(local_import(self.type.local_name))
                 else:
-                    imports.add(f"from .simple_types import {self.type.local_name}")
+                    imports.append(f"from .simple_types import {self.type.local_name}")
 
         if self.component.ref is not None:
             if self.component.ref.local_name not in OVERRIDES:
-                imports.add(local_import(self.component.ref.local_name))
+                imports.append(local_import(self.component.ref.local_name))
 
         return imports
 
@@ -598,13 +599,17 @@ class Member:
 
 class MemberSet:
     def __init__(self, initial: Iterable[Member] = ()):
-        self._members: Set[Member] = set()
+        # Use a list to maintain insertion order.
+        self._members: List[Member] = []
         self.update(initial)
 
     def add(self, member: Member) -> None:
         if not isinstance(member, Member):
             member = Member(member)
-        self._members.add(member)
+        # We don't expect very many elements so this O(n) check is fine.
+        if member in self._members:
+            return
+        self._members.append(member)
 
     def update(self, members: Iterable[Member]) -> None:
         for member in members:
@@ -621,19 +626,13 @@ class MemberSet:
         return lines
 
     def imports(self) -> List[str]:
-        if self._members:
-            return list(set.union(*[m.imports() for m in self._members]))
-        return []
+        return list(chain.from_iterable(m.imports() for m in self._members))
 
     def locals(self) -> List[str]:
-        if self._members:
-            return list(set.union(*[m.locals() for m in self._members]))
-        return []
+        return list(chain.from_iterable(m.locals() for m in self._members))
 
     def body(self) -> List[str]:
-        if self._members:
-            return [m.body() for m in self._members]
-        return []
+        return [m.body() for m in self._members]
 
     def has_non_default_args(self) -> bool:
         return any(not m.default_val_str for m in self._members)
@@ -801,7 +800,9 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
     text = sort_imports(text)
     text += f"\n\n__all__ = [{', '.join(sorted(repr(i[1]) for i in init_imports))}]"
     # FIXME This could probably live somewhere else less visible to end-users.
-    text += "\n\n_field_plurals = " + repr(Member.plurals_registry)
+    text += "\n\n_field_plurals = " + repr(
+        {k: Member.plurals_registry[k] for k in sorted(Member.plurals_registry)}
+    )
     text = black_format(text)
     with open(os.path.join(target_dir, f"__init__.py"), "w") as f:
         f.write(text)
