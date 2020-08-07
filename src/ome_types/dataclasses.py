@@ -12,7 +12,10 @@ from pydantic.dataclasses import _process_class
 if TYPE_CHECKING:
     from pydantic.dataclasses import DataclassType
 
+# Sentinel default value to support optional fields in dataclass subclasses.
 EMPTY = object()
+# Sentinel default value to support automatic numbering for id field values.
+AUTO_SEQUENCE = object()
 
 
 @validator("id", pre=True, always=True)
@@ -22,13 +25,10 @@ def validate_id(cls: Type[Any], value: Any) -> str:
     If no value is provided, this validator provides and integer ID, and stores the
     maximum previously-seen value on the class.
     """
-    from typing import ClassVar, Union
+    from typing import ClassVar
 
     # get the required LSID type from the annotation
     id_type = cls.__annotations__.get("id")
-    # (it will likely be an Optional[LSID])
-    if getattr(id_type, "__origin__", None) is Union:
-        id_type = getattr(id_type, "__args__")[0]
     if not id_type:
         return value
 
@@ -37,7 +37,7 @@ def validate_id(cls: Type[Any], value: Any) -> str:
         cls._max_id = 0
         cls.__annotations__["_max_id"] = ClassVar[int]
 
-    if not value:
+    if value is AUTO_SEQUENCE:
         value = cls._max_id + 1
     if isinstance(value, int):
         v_id = value
@@ -137,11 +137,8 @@ def ome_dataclass(
     """
 
     def wrap(cls: Type[Any]) -> DataclassType:
-        if "id" in getattr(cls, "__annotations__", {}):
+        if getattr(cls, "id", None) is AUTO_SEQUENCE:
             setattr(cls, "validate_id", validate_id)
-            if not hasattr(cls, "id"):
-                setattr(cls, "id", None)
-
         modify_post_init(cls)
         if not repr:
             modify_repr(cls)
