@@ -12,10 +12,21 @@ from pydantic.dataclasses import _process_class
 if TYPE_CHECKING:
     from pydantic.dataclasses import DataclassType
 
-# Sentinel default value to support optional fields in dataclass subclasses.
-EMPTY = object()
-# Sentinel default value to support automatic numbering for id field values.
-AUTO_SEQUENCE = object()
+
+class Sentinel:
+    """Create singleton sentinel objects with a readable repr."""
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def __repr__(self) -> str:
+        return f"{__name__}.{self.name}"
+
+
+# Default value to support optional fields in dataclass subclasses.
+EMPTY = Sentinel("EMPTY")
+# Default value to support automatic numbering for id field values.
+AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
 
 
 @validator("id", pre=True, always=True)
