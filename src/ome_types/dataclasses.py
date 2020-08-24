@@ -6,11 +6,19 @@ from enum import Enum
 from textwrap import indent
 from typing import TYPE_CHECKING, Any, Callable, Optional, Sequence, Type, Union
 
+import pint
 from pydantic import validator
 from pydantic.dataclasses import _process_class
 
 if TYPE_CHECKING:
     from pydantic.dataclasses import DataclassType
+
+
+ureg = pint.UnitRegistry(auto_reduce_dimensions=True)
+ureg.define("reference_frame = [_reference_frame]")
+ureg.define("@alias grade = gradian")
+ureg.define("@alias astronomical_unit = ua")
+ureg.define("line = inch / 12 = li")
 
 
 class Sentinel:
@@ -89,6 +97,22 @@ def modify_post_init(_cls: Type[Any]) -> None:
     setattr(_cls, "__post_init__", new_post_init)
 
 
+def add_quantities(_cls: Type[Any]) -> None:
+    value_fields = [f for f in dir(_cls) if f + "_unit" in dir(_cls)]
+    for field in value_fields:
+        setattr(_cls, field + "_quantity", quantity_property(field))
+
+
+def quantity_property(field: str) -> property:
+    def quantity(self: Any) -> Optional[pint.Quantity]:
+        value = getattr(self, field)
+        if value is None:
+            return None
+        unit = getattr(self, field + "_unit").value.replace(' ', '_')
+        return ureg.Quantity(value, unit)
+    return property(quantity)
+
+
 def modify_repr(_cls: Type[Any]) -> None:
     """Improved dataclass repr function.
 
@@ -153,6 +177,7 @@ def ome_dataclass(
         if getattr(cls, "id", None) is AUTO_SEQUENCE:
             setattr(cls, "validate_id", validate_id)
         modify_post_init(cls)
+        add_quantities(cls)
         if not repr:
             modify_repr(cls)
         return _process_class(cls, init, repr, eq, order, unsafe_hash, frozen, config)
