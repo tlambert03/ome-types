@@ -252,9 +252,8 @@ CLASS_OVERRIDES = {
         body="""
             def __post_init_post_parse__(self: Any, *args: Any) -> None:
                 ids = collect_ids(self)
-                references = collect_references(self)
-                for ref_id, ref in references.items():
-                    ref.ref_ = weakref.ref(ids[ref_id])
+                for ref in collect_references(self):
+                    ref.ref_ = weakref.ref(ids[ref.id])
         """,
     ),
     "Reference": ClassOverride(
