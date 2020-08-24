@@ -92,7 +92,7 @@ def modify_post_init(_cls: Type[Any]) -> None:
 def modify_repr(_cls: Type[Any]) -> None:
     """Improved dataclass repr function.
 
-    Only show non-default values, and summarize containers.
+    Only show non-default non-internal values, and summarize containers.
     """
     # let classes still create their own
     if _cls.__repr__ is not object.__repr__:
@@ -102,6 +102,8 @@ def modify_repr(_cls: Type[Any]) -> None:
         name = self.__class__.__qualname__
         lines = []
         for f in sorted(fields(self), key=lambda f: f.name not in ("name", "id")):
+            if f.name.endswith("_"):
+                continue
             # https://github.com/python/mypy/issues/6910
             if f.default_factory is not MISSING:  # type: ignore
                 default = f.default_factory()  # type: ignore
