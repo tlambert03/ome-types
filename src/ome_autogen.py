@@ -505,11 +505,22 @@ class Member:
 
     @property
     def is_nonref_id(self) -> bool:
-        if self.identifier == "id":
-            gp = self.component.parent.parent
-            if not gp.base_type or gp.base_type.local_name != "Reference":
-                return True
-        return False
+        """Return True for 'id' fields that aren't part of a Reference type."""
+        if self.identifier != "id":
+            return False
+        # Walk up the containment tree until we find something with a base_type.
+        p = self.component.parent
+        while p is not None and not hasattr(p, "base_type"):
+            p = p.parent
+        if p is not None:
+            # Walk the type hierarchy looking for 'Reference'.
+            pt = p.base_type
+            while pt is not None:
+                if pt.local_name == "Reference":
+                    return False
+                pt = pt.base_type
+        # If we get here, we have an 'id' that isn't in a Reference type.
+        return True
 
     @property
     def is_ref_id(self) -> bool:
