@@ -4,7 +4,7 @@ import builtins
 import os
 import re
 import shutil
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
 from textwrap import dedent, indent, wrap
@@ -16,6 +16,7 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Set,
     Tuple,
     Union,
 )
@@ -33,6 +34,11 @@ from xmlschema.validators import (
     XsdElement,
     XsdType,
 )
+
+# Track all camel-to-snake and pluralization results so we can include them in the model.
+camel_snake_registry: Dict[str, str] = {}
+plural_registry: Dict[Tuple[str, str], str] = {}
+
 
 # FIXME: Work out a better way to implement these override hacks.
 
@@ -56,6 +62,7 @@ class ClassOverride:
     base_type: Optional[str] = None
     imports: Optional[str] = None
     fields: Optional[str] = None
+    fields_suppress: Set[str] = field(default_factory=set)
     body: Optional[str] = None
 
     def __post_init__(self) -> None:
@@ -184,6 +191,7 @@ OVERRIDES = {
             from .file_annotation import FileAnnotation
             from .list_annotation import ListAnnotation
             from .long_annotation import LongAnnotation
+            from .map_annotation import MapAnnotation
             from .tag_annotation import TagAnnotation
             from .term_annotation import TermAnnotation
             from .timestamp_annotation import TimestampAnnotation
@@ -196,6 +204,7 @@ OVERRIDES = {
                 "file_annotation": FileAnnotation,
                 "list_annotation": ListAnnotation,
                 "long_annotation": LongAnnotation,
+                "map_annotation": MapAnnotation,
                 "tag_annotation": TagAnnotation,
                 "term_annotation": TermAnnotation,
                 "timestamp_annotation": TimestampAnnotation,
@@ -238,6 +247,7 @@ OVERRIDES = {
                 value: UniversallyUniqueIdentifier
         """,
     ),
+    "M/K": Override(type_="str", default=""),
 }
 
 
@@ -248,12 +258,12 @@ CLASS_OVERRIDES = {
         imports="""
             from typing import Any
             import weakref
-            from ome_types.util import collect_ids, collect_references
+            from ome_types import util
         """,
         body="""
             def __post_init_post_parse__(self: Any, *args: Any) -> None:
-                ids = collect_ids(self)
-                for ref in collect_references(self):
+                ids = util.collect_ids(self)
+                for ref in util.collect_references(self):
                     ref.ref_ = weakref.ref(ids[ref.id])
         """,
     ),
@@ -280,6 +290,8 @@ CLASS_OVERRIDES = {
         """,
     ),
     "BinData": ClassOverride(base_type="object", fields="value: str"),
+    "Map": ClassOverride(fields_suppress={"K"}),
+    "M": ClassOverride(base_type="object", fields="value: str"),
 }
 
 
@@ -318,21 +330,17 @@ def as_identifier(s: str) -> str:
     return _s
 
 
-_CAMEL_SNAKE_OVERRIDES = {"ROIs": "rois"}
+CAMEL_SNAKE_OVERRIDES = {"ROIs": "rois"}
 
 
 def camel_to_snake(name: str) -> str:
-    result = _CAMEL_SNAKE_OVERRIDES.get(name, None)
+    result = CAMEL_SNAKE_OVERRIDES.get(name, None)
     if not result:
-        # FIXME This part must be kept identical to the copy of this function in
-        # the schema module. Ideally we would have one shared implementation but
-        # currently there is a problem importing anything from ome_types if the
-        # model code hasn't been generated yet. It should be fixable with a
-        # little reorganization.
         # https://stackoverflow.com/a/1176023
         result = re.sub("([A-Z]+)([A-Z][a-z]+)", r"\1_\2", name)
         result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", result)
         result = result.lower().replace(" ", "_")
+    camel_snake_registry[name] = result
     return result
 
 
@@ -387,8 +395,15 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     while _basebase:
         base_members.update(set(iter_members(base_type)))
         _basebase = _basebase.base_type
+    skip_names = set()
+    if class_override:
+        skip_names.update(class_override.fields_suppress)
 
-    members = MemberSet(m for m in iter_members(component) if m not in base_members)
+    members = MemberSet(
+        m
+        for m in iter_members(component)
+        if m not in base_members and m.local_name not in skip_names
+    )
     lines += members.imports()
     lines += members.locals()
 
@@ -485,10 +500,6 @@ def iter_members(
 
 
 class Member:
-
-    # Stores plurals from all Members for later access.
-    plurals_registry: Dict[Tuple[str, str], str] = {}
-
     def __init__(self, component: Union[XsdElement, XsdAttribute]):
         self.component = component
         assert not component.is_global()
@@ -500,12 +511,11 @@ class Member:
         name = camel_to_snake(self.component.local_name)
         if self.plural:
             plural = camel_to_snake(self.plural)
-            Member.plurals_registry[(self.parent_name, name)] = plural
+            plural_registry[(self.parent_name, name)] = plural
             name = plural
-        ident = camel_to_snake(name)
-        if not ident.isidentifier():
+        if not name.isidentifier():
             raise ValueError(f"failed to make identifier of {self!r}")
-        return ident
+        return name
 
     @property
     def plural(self) -> Optional[str]:
@@ -945,9 +955,24 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
         text += local_import(classname) + "\n"
     text = sort_imports(text)
     text += f"\n\n__all__ = [{', '.join(sorted(repr(i[1]) for i in init_imports))}]"
-    # FIXME This could probably live somewhere else less visible to end-users.
-    text += "\n\n_field_plurals = " + repr(
-        {k: Member.plurals_registry[k] for k in sorted(Member.plurals_registry)}
+    # FIXME These could probably live somewhere else less visible to end-users.
+    if len(plural_registry) != len(set(plural_registry.values())):
+        raise Exception(
+            "singular-to-plural mapping is not invertible (duplicate plurals)"
+        )
+    text += "\n\n_singular_to_plural = " + repr(
+        {k: plural_registry[k] for k in sorted(plural_registry)}
+    )
+    text += "\n\n_plural_to_singular = " + repr(
+        {plural_registry[k]: k[1] for k in sorted(plural_registry)}
+    )
+    if len(camel_snake_registry) != len(set(camel_snake_registry.values())):
+        raise Exception("camel-to-snake mapping is not invertible (duplicate snakes)")
+    text += "\n\n_camel_to_snake = " + repr(
+        {k: camel_snake_registry[k] for k in sorted(camel_snake_registry)}
+    )
+    text += "\n\n_snake_to_camel = " + repr(
+        {camel_snake_registry[k]: k for k in sorted(camel_snake_registry)}
     )
     text = black_format(text)
     with open(os.path.join(target_dir, "__init__.py"), "w") as f:
