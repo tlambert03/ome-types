@@ -31,10 +31,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
-      - name: Run mypy
+      - name: test autogen
         run: |
           python -m pip install --upgrade pip
-          pip install isort<5.0, black, autoflake
+          pip install 'isort<5.0' black autoflake
           pytest testing/test_autogen.py
 
   code-quality:
