@@ -8,11 +8,11 @@ from itertools import chain
 from textwrap import dedent, indent
 from pathlib import Path
 from typing import (
+    Any,
     Generator,
     Iterable,
     List,
     Dict,
-    Set,
     Union,
     Iterator,
     Tuple,
@@ -280,6 +280,14 @@ CLASS_OVERRIDES = {
     ),
     "BinData": ClassOverride(base_type="object", fields="value: str"),
 }
+
+
+def autoflake(text: str, **kwargs: Any) -> str:
+    from autoflake import fix_code
+
+    kwargs.setdefault("remove_all_unused_imports", True)
+    kwargs.setdefault("remove_unused_variables", True)
+    return fix_code(text, **kwargs)
 
 
 def black_format(text: str, line_length: int = 79) -> str:
@@ -840,7 +848,7 @@ class GlobalElem:
         return "\n".join(lines)
 
     def format(self) -> str:
-        return black_format(sort_imports(self.lines() + "\n"))
+        return black_format(sort_imports(autoflake(self.lines() + "\n")))
 
     def write(self, filename: str) -> None:
         os.makedirs(os.path.dirname(filename), exist_ok=True)
@@ -900,7 +908,7 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
         {k: Member.plurals_registry[k] for k in sorted(Member.plurals_registry)}
     )
     text = black_format(text)
-    with open(os.path.join(target_dir, f"__init__.py"), "w") as f:
+    with open(os.path.join(target_dir, "__init__.py"), "w") as f:
         f.write(text)
 
 

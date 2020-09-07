@@ -1,5 +1,4 @@
 import dataclasses
-import weakref
 from typing import Any, Dict, List
 
 from .model.simple_types import LSID

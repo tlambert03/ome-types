@@ -17,14 +17,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov
-          pip install -e .[autogen]
-      - name: Test with pytest
-        run: pytest -v --cov-report=xml --cov=ome_autogen
+          pip install tox tox-gh-actions
+      - name: Test with tox
+        run: tox
       - name: Coverage
         uses: codecov/codecov-action@v1
 
-  mypy:
+  test-autogen:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -34,7 +33,22 @@ jobs:
           python-version: 3.8
       - name: Run mypy
         run: |
-          pip install mypy
-          pip install -e .[autogen]
-          python src/ome_autogen.py
+          python -m pip install --upgrade pip
+          pip install isort<5.0, black, autoflake
+          pytest testing/test_autogen.py
+
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Run mypy
+        run: |
+          python -m pip install --upgrade pip
+          pip install mypy flake8
+          pip install -e .
           mypy
+          flake8
