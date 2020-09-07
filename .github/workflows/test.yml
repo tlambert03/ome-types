@@ -21,7 +21,6 @@ jobs:
       - name: Test with tox
         run: tox
 
-
   code-quality:
     runs-on: ubuntu-latest
     steps:
@@ -30,10 +29,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
-      - name: Run mypy
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install mypy flake8
           pip install -e .
-          mypy
-          flake8
+      - name: mypy
+        run: mypy
+      - name: lint
+        run: flake8
