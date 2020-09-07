@@ -20,8 +20,6 @@ jobs:
           pip install tox tox-gh-actions
       - name: Test with tox
         run: tox
-      - name: Coverage
-        uses: codecov/codecov-action@v1
 
 
   code-quality:
