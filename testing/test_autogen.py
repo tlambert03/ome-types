@@ -8,7 +8,7 @@ ome_autogen = pytest.importorskip("ome_autogen")
 
 def test_autogen(tmp_path_factory):
     """Test that autogen works without raising an exception.
-    
+
     This does *not* actually test the resulting model.
     """
     target_dir = tmp_path_factory.mktemp("_ome_types_test_model")
