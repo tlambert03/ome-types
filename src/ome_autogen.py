@@ -7,7 +7,7 @@ import shutil
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from textwrap import dedent, indent
+from textwrap import dedent, indent, wrap
 from typing import (
     Any,
     Dict,
@@ -23,6 +23,7 @@ from typing import (
 import black
 import isort
 from autoflake import fix_code
+from numpydoc.docscrape import NumpyDocString, Parameter
 from xmlschema import XMLSchema, qnames
 from xmlschema.validators import (
     XsdAnyAttribute,
@@ -339,6 +340,23 @@ def local_import(item_type: str) -> str:
     return f"from .{camel_to_snake(item_type)} import {item_type}"
 
 
+def get_docstring(
+    component: Union[XsdComponent, XsdType], summary: bool = False
+) -> str:
+    try:
+        doc = dedent(component.annotation.documentation[0].text).strip()
+        # make sure the first line is followed by a double newline
+        # and preserve paragraphs
+        if summary:
+            doc = re.sub(r"\.\s", ".\n\n", doc, count=1)
+        # textwrap each paragraph seperately
+        paragraphs = ["\n".join(wrap(p.strip(), width=73)) for p in doc.split("\n\n")]
+        # join and return
+        return "\n\n".join(paragraphs)
+    except (AttributeError, IndexError):
+        return ""
+
+
 def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     class_override = CLASS_OVERRIDES.get(component.local_name, None)
     lines = ["from ome_types.dataclasses import ome_dataclass", ""]
@@ -381,6 +399,10 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
         lines[0] += ", AUTO_SEQUENCE"
 
     lines += ["@ome_dataclass", f"class {component.local_name}{base_name}:"]
+    doc = get_docstring(component, summary=True)
+    doc = MemberSet(iter_members(component)).docstring(doc)
+    doc = f'"""{doc.strip()}\n"""\n'
+    lines += indent(doc, "    ").splitlines()
     if class_override and class_override.fields:
         lines.append(class_override.fields)
     lines += members.lines(
@@ -397,17 +419,22 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     return lines
 
 
-def make_enum(component: XsdComponent, name: str = None) -> List[str]:
-    name = name or component.local_name
+def make_enum(component: XsdComponent) -> List[str]:
+    name = component.local_name
+    _type = component.type if hasattr(component, "type") else component
     lines = ["from enum import Enum", ""]
     lines += [f"class {name}(Enum):"]
-    enum_elems = list(component.elem.iter("enum"))
-    facets = component.get_facet(qnames.XSD_ENUMERATION)
+    doc = get_docstring(component, summary=True)
+    if doc:
+        doc = f'"""{doc}\n"""\n'
+        lines += indent(doc, "    ").splitlines()
+    enum_elems = list(_type.elem.iter("enum"))
+    facets = _type.get_facet(qnames.XSD_ENUMERATION)
     members: List[Tuple[str, str]] = []
     if enum_elems:
         for el, value in zip(enum_elems, facets.enumeration):
             _name = el.attrib["enum"]
-            if component.base_type.python_type.__name__ == "str":
+            if _type.base_type.python_type.__name__ == "str":
                 value = f'"{value}"'
             members.append((_name, value))
     else:
@@ -496,6 +523,13 @@ class Member:
     def type(self) -> XsdType:
         return self.component.type
 
+    def to_numpydoc_param(self) -> Parameter:
+        _type = self.type_string
+        _type += ", optional" if self.is_optional else ""
+        desc = get_docstring(self.component)
+        desc = re.sub(r"\s?\[.+\]", "", desc)  # remove bracketed types
+        return Parameter(self.identifier, _type, wrap(desc))
+
     @property
     def is_enum_type(self) -> bool:
         return self.type.get_facet(qnames.XSD_ENUMERATION) is not None
@@ -562,9 +596,7 @@ class Member:
         if self.type.is_complex() and self.component.ref is None:
             locals_.append("\n".join(make_dataclass(self.component)) + "\n")
         if self.type.is_restriction() and self.is_enum_type:
-            locals_.append(
-                "\n".join(make_enum(self.type, name=self.component.local_name)) + "\n"
-            )
+            locals_.append("\n".join(make_enum(self.component)) + "\n")
         return locals_
 
     def imports(self) -> List[str]:
@@ -747,6 +779,13 @@ class MemberSet:
 
     def __iter__(self) -> Iterator[Member]:
         return iter(self._members)
+
+    def docstring(self, summary: str = "") -> str:
+        ds = NumpyDocString(summary)
+        ds["Parameters"] = [
+            m.to_numpydoc_param() for m in sorted(self._members, key=sort_prop)
+        ]
+        return str(ds)
 
 
 class GlobalElem:
