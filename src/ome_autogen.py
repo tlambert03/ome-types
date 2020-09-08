@@ -4,34 +4,34 @@ import builtins
 import os
 import re
 import shutil
+from dataclasses import dataclass
 from itertools import chain
-from textwrap import dedent, indent
 from pathlib import Path
+from textwrap import dedent, indent
 from typing import (
     Any,
+    Dict,
     Generator,
     Iterable,
-    List,
-    Dict,
-    Union,
     Iterator,
-    Tuple,
+    List,
     Optional,
+    Tuple,
+    Union,
 )
-from dataclasses import dataclass
 
 import black
 import isort
+from autoflake import fix_code
 from xmlschema import XMLSchema, qnames
 from xmlschema.validators import (
     XsdAnyAttribute,
     XsdAnyElement,
     XsdAttribute,
+    XsdComponent,
     XsdElement,
     XsdType,
-    XsdComponent,
 )
-
 
 # FIXME: Work out a better way to implement these override hacks.
 
@@ -283,7 +283,6 @@ CLASS_OVERRIDES = {
 
 
 def autoflake(text: str, **kwargs: Any) -> str:
-    from autoflake import fix_code
 
     kwargs.setdefault("remove_all_unused_imports", True)
     kwargs.setdefault("remove_unused_variables", True)

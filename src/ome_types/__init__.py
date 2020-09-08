@@ -13,7 +13,7 @@ except ImportError:
     raise ImportError(
         "Could not import 'ome_types.model.OME'.\nIf you are in a dev environment, "
         "you may need to run 'python -m src.ome_autogen'"
-    )
+    ) from None
 from .schema import to_dict, validate
 
 
