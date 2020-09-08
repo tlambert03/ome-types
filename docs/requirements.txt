@@ -7,3 +7,5 @@ isort<5.0
 black
 numpydoc
 autoflake
+xmlschema
+pydantic
