@@ -108,8 +108,9 @@ def quantity_property(field: str) -> property:
         value = getattr(self, field)
         if value is None:
             return None
-        unit = getattr(self, field + "_unit").value.replace(' ', '_')
+        unit = getattr(self, field + "_unit").value.replace(" ", "_")
         return ureg.Quantity(value, unit)
+
     return property(quantity)
 
 

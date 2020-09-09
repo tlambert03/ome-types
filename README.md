@@ -100,14 +100,38 @@ from ome_types import from_xml
 metadata = from_xml(xml)
 ```
 
-where `xml` in that example can be a path to a file, a URI of a
-resource, an opened file-like object, an Element instance, an ElementTree
-instance, or a literal string containing the XML data.
+where `xml` in that example can be a path to a file, a URI of a resource, an
+opened file-like object, an Element instance, an ElementTree instance, or a
+literal string containing the XML data.
 
-all attributes and variable names follow the OME data model, but `camelCaseNames`
-have been replaced with pythonic `snake_case_names`
+all attributes and variable names follow the OME data model, but
+`camelCaseNames` have been replaced with pythonic `snake_case_names`
 
 ## Work in progress!
 
 This is a work in progress and will absolutely need refining.  Feel free to
 submit an issue or a PR if you try it out and have requests.
+
+## Contributing
+
+We use `pre-commit` to run various code-quality checks (black, mypy, flake8)
+during continuous integration.  If you'd like to make sure that your code will
+pass these checks before you commit your code, you can install `pre-commit`
+after cloning this repository:
+
+```shell
+pip install pre-commit
+pre-commit install
+```
+
+or, you can install and run `tox` which will run tests and code-quality checks
+in an isolated environment.
+
+## Testing
+
+To run tests quickly, just install and run `pytest`.  Note, however, that this
+requires that the `ome_types.model` module has already been built with python
+`src/ome_autogen.py`.
+
+Alternatively, you can install and run `tox` which will run tests and
+code-quality checks in an isolated environment.
