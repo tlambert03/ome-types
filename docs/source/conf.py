@@ -14,7 +14,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../../src"))
-from ome_types import __version__  # noqa: E402
+from ome_types import __version__  # isort:skip  # noqa
 
 # -- Project information -----------------------------------------------------
 

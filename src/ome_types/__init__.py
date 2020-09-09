@@ -1,11 +1,11 @@
+import os
+from pathlib import Path
+from typing import Union
+
 try:
     from ._version import version as __version__
 except ImportError:
     __version__ = "unknown"
-
-import os
-from pathlib import Path
-from typing import Union
 
 try:
     from .model import OME
@@ -14,7 +14,8 @@ except ImportError:
         "Could not import 'ome_types.model.OME'.\nIf you are in a dev environment, "
         "you may need to run 'python -m src.ome_autogen'"
     ) from None
-from .schema import to_dict, validate
+from .schema import to_dict, validate  # isort:skip
+
 
 __all__ = ["to_dict", "validate", "from_xml"]
 
