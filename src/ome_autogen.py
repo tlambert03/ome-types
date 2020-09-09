@@ -400,7 +400,9 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
 
     lines += ["@ome_dataclass", f"class {component.local_name}{base_name}:"]
     doc = get_docstring(component, summary=True)
-    doc = MemberSet(iter_members(component)).docstring(doc)
+    doc = MemberSet(iter_members(component)).docstring(
+        doc or f"{component.local_name}."
+    )
     doc = f'"""{doc.strip()}\n"""\n'
     lines += indent(doc, "    ").splitlines()
     if class_override and class_override.fields:
