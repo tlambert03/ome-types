@@ -21,7 +21,7 @@ from typing import (
 )
 
 import black
-import isort
+import isort.api
 from autoflake import fix_code
 from numpydoc.docscrape import NumpyDocString, Parameter
 from xmlschema import XMLSchema, qnames
@@ -290,12 +290,12 @@ def autoflake(text: str, **kwargs: Any) -> str:
     return fix_code(text, **kwargs)
 
 
-def black_format(text: str, line_length: int = 79) -> str:
+def black_format(text: str, line_length: int = 88) -> str:
     return black.format_str(text, mode=black.FileMode(line_length=line_length))
 
 
 def sort_imports(text: str) -> str:
-    return isort.SortImports(file_contents=text).output
+    return isort.api.sort_code_string(text, profile="black", float_to_top=True)
 
 
 def sort_types(el: XsdType) -> str:
@@ -350,7 +350,7 @@ def get_docstring(
         if summary:
             doc = re.sub(r"\.\s", ".\n\n", doc, count=1)
         # textwrap each paragraph seperately
-        paragraphs = ["\n".join(wrap(p.strip(), width=73)) for p in doc.split("\n\n")]
+        paragraphs = ["\n".join(wrap(p.strip(), width=78)) for p in doc.split("\n\n")]
         # join and return
         return "\n\n".join(paragraphs)
     except (AttributeError, IndexError):
@@ -428,6 +428,8 @@ def make_enum(component: XsdComponent) -> List[str]:
     lines += [f"class {name}(Enum):"]
     doc = get_docstring(component, summary=True)
     if doc:
+        if not doc.endswith("."):
+            doc += "."
         doc = f'"""{doc}\n"""\n'
         lines += indent(doc, "    ").splitlines()
     enum_elems = list(_type.elem.iter("enum"))
