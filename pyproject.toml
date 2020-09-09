@@ -9,3 +9,26 @@ ignore = [
     "coverage.yml",
     "src/ome_types/_version.py",  # added by setuptools_scm during build
 ]
+
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip_glob = ["*examples/*", "*vendored*"]
+
+[tool.black]
+target-version = ['py37', 'py38']
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | docs
+)/
+'''

@@ -1,6 +1,7 @@
 import importlib
 import sys
 from pathlib import Path
+
 import pytest
 
 ome_autogen = pytest.importorskip("ome_autogen")

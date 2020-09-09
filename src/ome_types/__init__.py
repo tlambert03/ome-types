@@ -16,7 +16,6 @@ except ImportError:
     ) from None
 from .schema import to_dict, validate
 
-
 __all__ = ["to_dict", "validate", "from_xml"]
 
 

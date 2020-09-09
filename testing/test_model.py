@@ -5,7 +5,6 @@ from xmlschema.validators.exceptions import XMLSchemaValidationError
 
 from ome_types import from_xml, model
 
-
 SHOULD_FAIL = {
     # Some timestamps have negative years which datetime doesn't support.
     "timestampannotation",

@@ -1,8 +1,8 @@
 import dataclasses
 from typing import Any, Dict, List
 
-from .model.simple_types import LSID
 from .model.reference import Reference
+from .model.simple_types import LSID
 
 
 def collect_references(value: Any) -> List[Reference]:

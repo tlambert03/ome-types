@@ -1,8 +1,9 @@
 import pytest
-from pydantic import ValidationError
 from pint import DimensionalityError
-from ome_types.model import Channel, Laser, Plane
+from pydantic import ValidationError
+
 from ome_types.dataclasses import ureg
+from ome_types.model import Channel, Laser, Plane
 
 
 def test_quantity_math():
@@ -24,7 +25,8 @@ def test_invalid_unit():
     """Ensure incompatible units in constructor raises ValidationError."""
     with pytest.raises(ValidationError):
         Channel(
-            excitation_wavelength=475, excitation_wavelength_unit="kg",
+            excitation_wavelength=475,
+            excitation_wavelength_unit="kg",
         )
 
 
