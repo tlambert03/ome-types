@@ -214,7 +214,7 @@ class OMEConverter(XMLSchemaConverter):
             else:
                 default = field.default
             value = getattr(obj, name)
-            if value is None or value == default:
+            if value == default:
                 continue
             elif name == "metadata_only" and not value:
                 continue
