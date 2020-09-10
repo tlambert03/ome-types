@@ -1,5 +1,5 @@
 from collections import defaultdict
-from dataclasses import fields, is_dataclass
+from dataclasses import MISSING, fields, is_dataclass
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
@@ -76,7 +76,9 @@ def validate(xml: str, schema: Optional[xmlschema.XMLSchema] = None) -> None:
 
 
 class OMEConverter(XMLSchemaConverter):
-    def __init__(self, namespaces: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, namespaces: Optional[Dict[str, Any]] = None, **kwargs: Dict[Any, Any]
+    ):
         super().__init__(namespaces, attr_prefix="")
 
     def map_qname(self, qname: str) -> str:
@@ -207,9 +209,12 @@ class OMEConverter(XMLSchemaConverter):
             name = field.name
             if name.endswith("_"):
                 continue
+            if field.default_factory is not MISSING:  # type: ignore
+                default = field.default_factory()  # type: ignore
+            else:
+                default = field.default
             value = getattr(obj, name)
-            # FIXME skip if field has default value (see repr implmentation)
-            if value is None or value == []:
+            if value is None or value == default:
                 continue
             elif name == "metadata_only" and not value:
                 continue
@@ -261,7 +266,9 @@ def to_dict(  # type: ignore
 
 def to_xml_element(ome: OME) -> ElementTree.Element:
     schema = _build_schema(URI_OME)
-    root = schema.encode(ome, path=f"/{NS_OME}OME", converter=OMEConverter)
+    root = schema.encode(
+        ome, path=f"/{NS_OME}OME", converter=OMEConverter, use_defaults=False
+    )
     # Patch up the XML element tree with Element objects from XMLAnnotations to
     # work around xmlschema's lack of support for mixed content.
     for oid, obj in util.collect_ids(ome).items():
