@@ -9,6 +9,7 @@ SHOULD_FAIL = {
     # Some timestamps have negative years which datetime doesn't support.
     "timestampannotation",
     "mapannotation",
+    "tubhiswt",
 }
 SHOULD_RAISE = {"bad"}
 
