@@ -1,26 +1,33 @@
-import re
+from collections import defaultdict
+from dataclasses import MISSING, fields, is_dataclass
+from datetime import datetime
+from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 from xml.etree import ElementTree
 
 import xmlschema
-from xmlschema.converters import XMLSchemaConverter
+from elementpath.datatypes import DateTime10
+from xmlschema.converters import ElementData, XMLSchemaConverter
 
-from .model import _field_plurals
+from . import util
+from .model import (
+    OME,
+    XMLAnnotation,
+    _camel_to_snake,
+    _plural_to_singular,
+    _singular_to_plural,
+    _snake_to_camel,
+)
 
 URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
 NS_OME = "{" + URI_OME + "}"
+SCHEMA_LOC_OME = f"{URI_OME} {URI_OME}/ome.xsd"
+
+NS_XSI = "{http://www.w3.org/2001/XMLSchema-instance}"
 
 __cache__: Dict[str, xmlschema.XMLSchema] = {}
-
-
-def camel_to_snake(name: str) -> str:
-    # https://stackoverflow.com/a/1176023
-    result = re.sub("([A-Z]+)([A-Z][a-z]+)", r"\1_\2", name)
-    result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", result)
-    result = result.lower().replace(" ", "_")
-    return result
 
 
 @lru_cache(maxsize=8)
@@ -69,12 +76,14 @@ def validate(xml: str, schema: Optional[xmlschema.XMLSchema] = None) -> None:
 
 
 class OMEConverter(XMLSchemaConverter):
-    def __init__(self, namespaces: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, namespaces: Optional[Dict[str, Any]] = None, **kwargs: Dict[Any, Any]
+    ):
         super().__init__(namespaces, attr_prefix="")
 
     def map_qname(self, qname: str) -> str:
         name = super().map_qname(qname)
-        return camel_to_snake(name)
+        return _camel_to_snake.get(name, name)
 
     def element_decode(self, data, xsd_element, xsd_type=None, level=0):  # type: ignore
         """Converts a decoded element data to a data structure."""
@@ -135,6 +144,7 @@ class OMEConverter(XMLSchemaConverter):
                 "file_annotation",
                 "list_annotation",
                 "long_annotation",
+                "map_annotation",
                 "tag_annotation",
                 "term_annotation",
                 "timestamp_annotation",
@@ -151,12 +161,85 @@ class OMEConverter(XMLSchemaConverter):
             result = annotations
         if isinstance(result, dict):
             for name in list(result.keys()):
-                plural = _field_plurals.get((xsd_element.local_name, name), None)
+                plural = _singular_to_plural.get((xsd_element.local_name, name), None)
                 if plural:
                     value = result.pop(name)
                     assert isinstance(value, list), "expected list for plural attr"
                     result[plural] = value
         return result
+
+    def element_encode(
+        self, obj: Any, xsd_element: xmlschema.XsdElement, level: int = 0
+    ) -> ElementData:
+        tag = xsd_element.qualified_name
+        if not is_dataclass(obj):
+            if isinstance(obj, datetime):
+                return ElementData(tag, DateTime10.fromdatetime(obj), None, {})
+            elif isinstance(obj, ElementTree.Element):
+                # ElementData can't represent mixed content, so we'll leave this
+                # element empty and fix it up after encoding is complete.
+                return ElementData(tag, None, None, {})
+            elif xsd_element.type.simple_type is not None:
+                return ElementData(tag, obj, None, {})
+            elif xsd_element.local_name == "MetadataOnly":
+                return ElementData(tag, None, None, {})
+            elif xsd_element.local_name in {"Union", "StructuredAnnotations"}:
+                names = [type(v).__name__ for v in obj]
+                content = [(f"{NS_OME}{n}", v) for n, v in zip(names, obj)]
+                return ElementData(tag, None, content, {})
+            else:
+                raise NotImplementedError(
+                    "Encountered a combination of schema element and data type"
+                    " that is not yet supported. Please submit a bug report with"
+                    " the information below:"
+                    f"\n    element: {xsd_element}\n    data type: {type(obj)}"
+                )
+        text = None
+        content = []
+        attributes = {}
+        # FIXME Can we simplify this?
+        tag_index = defaultdict(
+            lambda: -1,
+            ((_camel_to_snake[e.local_name], i) for i, e in enumerate(xsd_element)),
+        )
+        for field in sorted(
+            fields(obj),
+            key=lambda f: tag_index[_plural_to_singular.get(f.name, f.name)],
+        ):
+            name = field.name
+            if name.endswith("_"):
+                continue
+            if field.default_factory is not MISSING:  # type: ignore
+                default = field.default_factory()  # type: ignore
+            else:
+                default = field.default
+            value = getattr(obj, name)
+            if value == default:
+                continue
+            elif name == "metadata_only" and not value:
+                continue
+            name = _plural_to_singular.get(name, name)
+            name = _snake_to_camel.get(name, name)
+            if name in xsd_element.attributes:
+                if isinstance(value, Enum):
+                    value = value.value
+                elif isinstance(value, datetime):
+                    value = DateTime10.fromdatetime(value)
+                attributes[name] = value
+            elif name == "Value" and xsd_element.local_name in {"BinData", "UUID", "M"}:
+                text = value
+            else:
+                if not isinstance(value, list) or name in {
+                    "Union",
+                    "StructuredAnnotations",
+                }:
+                    value = [value]
+                if name == "LightSourceGroup":
+                    names = [type(v).__name__ for v in value]
+                else:
+                    names = [name] * len(value)
+                content.extend([(f"{NS_OME}{n}", v) for n, v in zip(names, value)])
+        return ElementData(tag, text, content, attributes)
 
 
 def to_dict(  # type: ignore
@@ -179,3 +262,25 @@ def to_dict(  # type: ignore
             elt = tree.find(f".//{NS_OME}XMLAnnotation[@ID='{aid}']/{NS_OME}Value")
             annotation["value"] = elt
     return result
+
+
+def to_xml_element(ome: OME) -> ElementTree.Element:
+    schema = _build_schema(URI_OME)
+    root = schema.encode(
+        ome, path=f"/{NS_OME}OME", converter=OMEConverter, use_defaults=False
+    )
+    # Patch up the XML element tree with Element objects from XMLAnnotations to
+    # work around xmlschema's lack of support for mixed content.
+    for oid, obj in util.collect_ids(ome).items():
+        if isinstance(obj, XMLAnnotation):
+            elt = root.find(f".//{NS_OME}XMLAnnotation[@ID='{oid}']/{NS_OME}Value")
+            elt.extend(list(obj.value))
+    root.attrib[f"{NS_XSI}schemaLocation"] = SCHEMA_LOC_OME
+    return root
+
+
+def to_xml(ome: OME) -> str:
+    root = to_xml_element(ome)
+    ElementTree.register_namespace("", URI_OME)
+    xml = ElementTree.tostring(root, "unicode")
+    return xml
