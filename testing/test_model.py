@@ -24,7 +24,6 @@ SHOULD_FAIL_ROUNDTRIP = {
     "timestampannotation-posix-only",
     "transformations-downgrade",
     "transformations-upgrade",
-    # type Enum not being converted to str
 }
 SKIP_ROUNDTRIP = {
     # These have XMLAnnotations with extra namespaces and mixed content, which
