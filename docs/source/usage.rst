@@ -1,19 +1,20 @@
 Usage
 =====
 
-``ome_types`` is useful for parsing the `OME XML format
-<https://docs.openmicroscopy.org/ome-model/5.6.3/ome-xml/>`_ into python
-classes for interactive or programmatic access in python.
+``ome_types`` is useful for parsing the `OME-XML format
+<https://docs.openmicroscopy.org/ome-model/latest/ome-xml/>`_ into Python
+objects for interactive or programmatic access in python. It can also take
+these Python objects and turn them back into OME-XML.
 
-For example, you can parse an ome.xml, and then explore it with pythonic,
-``camel_case`` syntax and nice object representations:
+For example, you can parse an ome.xml, and then explore it with pythonic
+``camel_case`` syntax and readable object representations:
 
 
 .. code-block:: python
 
     In [1]: from ome_types import from_xml
 
-    In [2]: ome = from_xml('path/to/metadata.ome.xml')
+    In [2]: ome = from_xml('testing/data/hcs.ome.xml')
 
     In [3]: ome
     Out[3]: 
@@ -83,25 +84,87 @@ For example, you can parse an ome.xml, and then explore it with pythonic,
     In [8]: ome.images[0].pixels.channels[0].emission_wavelength                                                                               
     Out[8]: 523.0
 
-
-You can also construct OME model objects (output to XML coming)
+Then you might want to make some changes:
 
 .. code-block:: python
 
-    In [1]: from ome_types.model import Channel
+   In [9]: from ome_types.model.simple_types import UnitsLength
 
-    In [4]: channel = Channel( 
-       ...:     excitation_wavelength=475, 
-       ...:     excitation_wavelength_unit="nm", 
-       ...:     emission_wavelength=530000, 
-       ...:     emission_wavelength_unit="pm", 
-       ...: )
+   In [10]: from ome_types.model.channel import AcquisitionMode
 
-    In [5]: channel
-    Out[5]:
-    Channel(
-        id='Channel:3',
-        emission_wavelength=530000.0,
-        emission_wavelength_unit='pm',
-        excitation_wavelength=475.0,
-    )
+   In [11]: ome.images[0].description = "This is the new description."
+
+   In [12]: ome.images[0].pixels.physical_size_x = 350.0
+
+   In [13]: ome.images[0].pixels.physical_size_x_unit = UnitsLength.NANOMETER
+
+   In [14]: for c in ome.images[0].pixels.channels:
+                c.acquisition_mode = AcquisitionMode.SPINNING_DISK_CONFOCAL
+
+And add elements by constructing new OME model objects:
+
+.. code-block:: python
+
+   In [15]: from ome_types.model import Instrument, Microscope, Objective, InstrumentRef
+
+   In [16]: microscope_mk4 = Microscope(
+                manufacturer='OME Instruments',
+                model='Lab Mk4',
+                serial_number='L4-5678',
+            )
+
+   In [17]: objective_40x = Objective(
+                manufacturer='OME Objectives',
+                model='40xAir',
+                nominal_magnification=40.0,
+            )
+
+   In [18]: instrument = Instrument(
+                microscope=microscope_mk4,
+                objectives=[objective_40x],
+            )
+
+   In [19]: ome.instruments.append(instrument)
+
+   In [20]: ome.images[0].instrument_ref = InstrumentRef(instrument.id)
+
+   In [21]: ome.instruments
+   Out[21]:
+   [Instrument(
+       id='Instrument:1',
+       microscope=Microscope(
+          manufacturer='OME Instruments',
+          model='Lab Mk4',
+          serial_number='L4-5678',
+       ),
+       objectives=[<1 Objectives>],
+    )]
+
+Finally, you can generate the OME-XML representation of the OME model object,
+for writing to a standalone .ome.xml file or inserting into the header of an
+OME-TIFF file:
+
+.. code-block:: python
+
+    In [22]: from ome_types import to_xml
+
+    In [23]: print(to_xml(ome))
+    <OME ...>
+        <Plate ColumnNamingConvention="letter" Columns="12" ID="Plate:1" ...>
+            ...
+        </Plate>
+        <Instrument ID="Instrument:1">
+            <Microscope Manufacturer="OME Instruments" Model="Lab Mk4" SerialNumber="L4-5678" />
+            <Objective Manufacturer="OME Objectives" Model="40xAir" ID="Objective:1" NominalMagnification="40.0" />
+        </Instrument>
+        <Image ID="Image:0" Name="Series 1">
+            <AcquisitionDate>2008-02-06T13:43:19</AcquisitionDate>
+            <Description>This is the new description.</Description>
+            <InstrumentRef ID="Instrument:1" />
+            <Pixels ... PhysicalSizeX="350.0" PhysicalSizeXUnit="nm" ...>
+                <Channel AcquisitionMode="SpinningDiskConfocal" ...>
+                 ...
+            </Pixels>
+        </Image>
+    </OME>
+
