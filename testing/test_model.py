@@ -17,7 +17,6 @@ import util  # isort: skip
 SHOULD_FAIL_READ = {
     # Some timestamps have negative years which datetime doesn't support.
     "timestampannotation",
-    "tubhiswt",
 }
 SHOULD_RAISE_READ = {"bad"}
 SHOULD_FAIL_ROUNDTRIP = {
