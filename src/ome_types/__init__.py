@@ -20,6 +20,18 @@ __all__ = ["to_dict", "validate", "from_xml", "to_xml"]
 
 
 def from_xml(xml: Union[Path, str]) -> OME:  # type: ignore
+    """Generate OME metadata object from XML string or path.
+
+    Parameters
+    ----------
+    xml : Union[Path, str]
+        Path to an XML file, or literal XML string.
+
+    Returns
+    -------
+    ome: ome_types.model.OME
+        ome_types.OME metadata object
+    """
     xml = os.fspath(xml)
     d = to_dict(xml)
     for key in list(d.keys()):
