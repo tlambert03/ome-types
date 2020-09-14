@@ -17,7 +17,6 @@ import util  # isort: skip
 SHOULD_FAIL_READ = {
     # Some timestamps have negative years which datetime doesn't support.
     "timestampannotation",
-    "tubhiswt",
 }
 SHOULD_RAISE_READ = {"bad"}
 SHOULD_FAIL_ROUNDTRIP = {
@@ -25,6 +24,8 @@ SHOULD_FAIL_ROUNDTRIP = {
     "timestampannotation-posix-only",
     "transformations-downgrade",
     "transformations-upgrade",
+    # type Enum not being converted to str
+    "tubhiswt",
 }
 SKIP_ROUNDTRIP = {
     # These have XMLAnnotations with extra namespaces and mixed content, which

@@ -439,6 +439,8 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
 def make_enum(component: XsdComponent) -> List[str]:
     name = component.local_name
     _type = component.type if hasattr(component, "type") else component
+    if _type.is_list():
+        _type = _type.item_type
     lines = ["from enum import Enum", ""]
     lines += [f"class {name}(Enum):"]
     doc = get_docstring(component, summary=True)
@@ -499,6 +501,11 @@ def iter_members(
         yield from iter_all_members(component)
 
 
+def is_enum_type(obj: XsdType) -> bool:
+    """Return true if XsdType represents an enumeration."""
+    return obj.get_facet(qnames.XSD_ENUMERATION) is not None
+
+
 class Member:
     def __init__(self, component: Union[XsdElement, XsdAttribute]):
         self.component = component
@@ -543,10 +550,6 @@ class Member:
         desc = get_docstring(self.component)
         desc = re.sub(r"\s?\[.+\]", "", desc)  # remove bracketed types
         return Parameter(self.identifier, _type, wrap(desc))
-
-    @property
-    def is_enum_type(self) -> bool:
-        return self.type.get_facet(qnames.XSD_ENUMERATION) is not None
 
     @property
     def is_builtin_type(self) -> bool:
@@ -609,7 +612,9 @@ class Member:
         # FIXME: this bit is mostly hacks
         if self.type.is_complex() and self.component.ref is None:
             locals_.append("\n".join(make_dataclass(self.component)) + "\n")
-        if self.type.is_restriction() and self.is_enum_type:
+        if self.type.is_restriction() and is_enum_type(self.type):
+            locals_.append("\n".join(make_enum(self.component)) + "\n")
+        if self.type.is_list() and is_enum_type(self.type.item_type):
             locals_.append("\n".join(make_enum(self.component)) + "\n")
         return locals_
 
@@ -667,7 +672,7 @@ class Member:
 
         if self.type.is_global():
             return self.type.local_name
-        elif self.type.is_complex():
+        elif self.type.is_complex() or self.type.is_list():
             return self.component.local_name
 
         if self.type.is_restriction():
@@ -708,7 +713,7 @@ class Member:
         else:
             default_val = self.component.default
             if default_val is not None:
-                if self.is_enum_type:
+                if is_enum_type(self.type):
                     default_val = f"{self.type_string}('{default_val}')"
                 elif hasattr(builtins, self.type_string):
                     default_val = repr(getattr(builtins, self.type_string)(default_val))
@@ -720,7 +725,8 @@ class Member:
 
     @property
     def max_occurs(self) -> bool:
-        return getattr(self.component, "max_occurs", 1)
+        default = None if self.type.is_list() else 1
+        return getattr(self.component, "max_occurs", default)
 
     @property
     def is_optional(self) -> bool:
