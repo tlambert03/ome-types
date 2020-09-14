@@ -221,7 +221,9 @@ class OMEConverter(XMLSchemaConverter):
             name = _plural_to_singular.get(name, name)
             name = _snake_to_camel.get(name, name)
             if name in xsd_element.attributes:
-                if isinstance(value, Enum):
+                if isinstance(value, list):
+                    value = [getattr(i, "value", i) for i in value]
+                elif isinstance(value, Enum):
                     value = value.value
                 elif isinstance(value, datetime):
                     value = DateTime10.fromdatetime(value)

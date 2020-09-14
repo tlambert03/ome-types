@@ -25,7 +25,6 @@ SHOULD_FAIL_ROUNDTRIP = {
     "transformations-downgrade",
     "transformations-upgrade",
     # type Enum not being converted to str
-    "tubhiswt",
 }
 SKIP_ROUNDTRIP = {
     # These have XMLAnnotations with extra namespaces and mixed content, which

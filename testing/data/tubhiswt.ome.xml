@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!-- Warning: this comment is an OME-XML metadata block, which contains crucial dimensional parameters and other important metadata. Please edit cautiously (if at all), and back up the original data before doing so. For more information, see the OME-TIFF web site: http://www.openmicroscopy.org/site/support/ome-model/ome-tiff/. -->
 <OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Creator="OME Bio-Formats 5.2.0-m4" UUID="urn:uuid:06846f98-85ab-43f1-b665-2ba8b11ca845" xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd">
-    <Experiment ID="urn:lsid:loci.wisc.edu:Experiment:OWS350" Type="TimeLapse">
+    <Experiment ID="urn:lsid:loci.wisc.edu:Experiment:OWS350" Type="TimeLapse SpectralImaging">
         <Description>4 Cell Embryo</Description>
         <ExperimenterRef ID="urn:lsid:loci.wisc.edu:Experimenter:116"/>
     </Experiment>
