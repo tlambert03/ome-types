@@ -30,7 +30,7 @@ def from_xml(xml: Union[Path, str]) -> OME:  # type: ignore
 
     Returns
     -------
-    ome: ome_types.OME
+    ome: ome_types.model.ome.OME
         ome_types.OME metadata object
     """
     xml = os.fspath(xml)
@@ -52,7 +52,7 @@ def from_tiff(path: Union[Path, str]) -> OME:
 
     Returns
     -------
-    ome: ome_types.OME
+    ome: ome_types.model.ome.OME
         ome_types.OME metadata object
 
     Raises
@@ -60,7 +60,8 @@ def from_tiff(path: Union[Path, str]) -> OME:
     ValueError
         If the TIFF file has no OME metadata.
     """
-    """Return value of first ImageDescription tag from open TIFF file."""
+
+    # Return value of first ImageDescription tag from open TIFF file.
     fh = Path(path).open(mode="rb")
     offsetsize, offsetformat, tagnosize, tagnoformat, tagsize, codeformat = {
         b"II*\0": (4, "<I", 2, "<H", 12, "<H"),
