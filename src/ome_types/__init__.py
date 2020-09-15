@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from struct import unpack
 from typing import Union
 
 try:
@@ -42,9 +43,7 @@ def from_xml(xml: Union[Path, str]) -> OME:  # type: ignore
 
 
 def from_tiff(path: Union[Path, str]) -> OME:
-    """Generate OME metadata object from OME TIFF.
-
-    Requires tifffile.
+    """Generate OME metadata object from OME-TIFF path.
 
     Parameters
     ----------
@@ -58,19 +57,31 @@ def from_tiff(path: Union[Path, str]) -> OME:
 
     Raises
     ------
-    ImportError
-        If `tifffile` is not installed
     ValueError
         If the TIFF file has no OME metadata.
     """
-    try:
-        import tifffile
-    except ImportError:
-        raise ImportError(
-            "Please `pip install tifffile` to extract OME metadata from a TIFF."
-        ) from None
-
-    with tifffile.TiffFile(os.fspath(path)) as tf:
-        if not tf.ome_metadata:
-            raise ValueError(f"No OME metadata found in {path}")
-        return from_xml(tf.ome_metadata)
+    """Return value of first ImageDescription tag from open TIFF file."""
+    fh = Path(path).open(mode="rb")
+    offsetsize, offsetformat, tagnosize, tagnoformat, tagsize, codeformat = {
+        b"II*\0": (4, "<I", 2, "<H", 12, "<H"),
+        b"MM\0*": (4, ">I", 2, ">H", 12, ">H"),
+        b"II+\0": (8, "<Q", 8, "<Q", 20, "<H"),
+        b"MM\0+": (8, ">Q", 8, ">Q", 20, ">H"),
+    }[fh.read(4)]
+    fh.read(4 if offsetsize == 8 else 0)
+    fh.seek(unpack(offsetformat, fh.read(offsetsize))[0])
+    for _ in range(unpack(tagnoformat, fh.read(tagnosize))[0]):
+        tagstruct = fh.read(tagsize)
+        if unpack(codeformat, tagstruct[:2])[0] == 270:
+            size = unpack(offsetformat, tagstruct[4 : 4 + offsetsize])[0]
+            if size <= offsetsize:
+                desc = tagstruct[4 + offsetsize : 4 + offsetsize + size]
+                break
+            fh.seek(unpack(offsetformat, tagstruct[-offsetsize:])[0])
+            desc = fh.read(size)
+            break
+    else:
+        raise ValueError(f"No OME metadata found in file: {path}")
+    if desc[-1] == 0:
+        desc = desc[:-1]
+    return from_xml(desc.decode("utf-8"))
