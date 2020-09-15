@@ -2,4 +2,3 @@ include LICENSE README.md setup.py pyproject.toml
 recursive-include src *.xsd
 recursive-exclude testing *
 recursive-exclude docs *
-exclude src/ome_autogen.py
