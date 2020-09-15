@@ -45,6 +45,8 @@ def from_xml(xml: Union[Path, str]) -> OME:  # type: ignore
 def from_tiff(path: Union[Path, str]) -> OME:
     """Generate OME metadata object from OME-TIFF path.
 
+    This will use the first ImageDescription tag found in the TIFF header.
+
     Parameters
     ----------
     path : Union[Path, str]
@@ -60,29 +62,31 @@ def from_tiff(path: Union[Path, str]) -> OME:
     ValueError
         If the TIFF file has no OME metadata.
     """
+    with Path(path).open(mode="rb") as fh:
+        try:
+            offsetsize, offsetformat, tagnosize, tagnoformat, tagsize, codeformat = {
+                b"II*\0": (4, "<I", 2, "<H", 12, "<H"),
+                b"MM\0*": (4, ">I", 2, ">H", 12, ">H"),
+                b"II+\0": (8, "<Q", 8, "<Q", 20, "<H"),
+                b"MM\0+": (8, ">Q", 8, ">Q", 20, ">H"),
+            }[fh.read(4)]
+        except KeyError:
+            raise ValueError(f"{path!r} does not have a recognized TIFF header")
 
-    # Return value of first ImageDescription tag from open TIFF file.
-    fh = Path(path).open(mode="rb")
-    offsetsize, offsetformat, tagnosize, tagnoformat, tagsize, codeformat = {
-        b"II*\0": (4, "<I", 2, "<H", 12, "<H"),
-        b"MM\0*": (4, ">I", 2, ">H", 12, ">H"),
-        b"II+\0": (8, "<Q", 8, "<Q", 20, "<H"),
-        b"MM\0+": (8, ">Q", 8, ">Q", 20, ">H"),
-    }[fh.read(4)]
-    fh.read(4 if offsetsize == 8 else 0)
-    fh.seek(unpack(offsetformat, fh.read(offsetsize))[0])
-    for _ in range(unpack(tagnoformat, fh.read(tagnosize))[0]):
-        tagstruct = fh.read(tagsize)
-        if unpack(codeformat, tagstruct[:2])[0] == 270:
-            size = unpack(offsetformat, tagstruct[4 : 4 + offsetsize])[0]
-            if size <= offsetsize:
-                desc = tagstruct[4 + offsetsize : 4 + offsetsize + size]
+        fh.read(4 if offsetsize == 8 else 0)
+        fh.seek(unpack(offsetformat, fh.read(offsetsize))[0])
+        for _ in range(unpack(tagnoformat, fh.read(tagnosize))[0]):
+            tagstruct = fh.read(tagsize)
+            if unpack(codeformat, tagstruct[:2])[0] == 270:
+                size = unpack(offsetformat, tagstruct[4 : 4 + offsetsize])[0]
+                if size <= offsetsize:
+                    desc = tagstruct[4 + offsetsize : 4 + offsetsize + size]
+                    break
+                fh.seek(unpack(offsetformat, tagstruct[-offsetsize:])[0])
+                desc = fh.read(size)
                 break
-            fh.seek(unpack(offsetformat, tagstruct[-offsetsize:])[0])
-            desc = fh.read(size)
-            break
-    else:
-        raise ValueError(f"No OME metadata found in file: {path}")
+        else:
+            raise ValueError(f"No OME metadata found in file: {path}")
     if desc[-1] == 0:
         desc = desc[:-1]
     return from_xml(desc.decode("utf-8"))
