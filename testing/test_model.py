@@ -5,7 +5,7 @@ from xml.dom import minidom
 import pytest
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
-from ome_types import from_xml, model, to_xml
+from ome_types import from_tiff, from_xml, model, to_xml
 from ome_types.schema import NS_OME, URI_OME, get_schema
 
 # Import ElementTree from one central module to avoid problems passing Elements around,
@@ -69,13 +69,22 @@ for f in all_xml:
 
 
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
-def test_read(xml):
+def test_from_xml(xml):
 
     if true_stem(xml) in SHOULD_RAISE_READ:
         with pytest.raises(XMLSchemaValidationError):
             assert from_xml(xml)
     else:
         assert from_xml(xml)
+
+
+def test_from_tiff():
+    """Test that OME metadata extractions from Tiff headers works."""
+    ome = from_tiff(Path(__file__).parent / "data" / "ome.tiff")
+    assert len(ome.images) == 1
+    assert ome.images[0].id == "Image:0"
+    assert ome.images[0].pixels.size_x == 6
+    assert ome.images[0].pixels.channels[0].samples_per_pixel == 1
 
 
 @pytest.mark.parametrize("xml", xml_roundtrip, ids=true_stem)
