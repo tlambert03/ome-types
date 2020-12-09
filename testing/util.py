@@ -1,11 +1,6 @@
 import io
 import re
-from xml.etree.ElementTree import (
-    XMLParser,
-    _namespace_map,
-    _raise_serialization_error,
-    parse,
-)
+from xml.etree import ElementTree
 
 # --------------------------------------------------------------------
 # Taken from Python 3.8's ElementTree.py.
@@ -30,13 +25,13 @@ def canonicalize(xml_data=None, *, out=None, from_file=None, **options):
     if out is None:
         sio = out = io.StringIO()
 
-    parser = XMLParser(target=C14NWriterTarget(out.write, **options))
+    parser = ElementTree.XMLParser(target=C14NWriterTarget(out.write, **options))
 
     if xml_data is not None:
         parser.feed(xml_data)
         parser.close()
     elif from_file is not None:
-        parse(from_file, parser=parser)
+        ElementTree.parse(from_file, parser=parser)
 
     return sio.getvalue() if sio is not None else None
 
@@ -105,7 +100,8 @@ class C14NWriterTarget:
         # Stack with user declared namespace prefixes as (uri, prefix) pairs.
         self._ns_stack = []
         if not rewrite_prefixes:
-            self._ns_stack.append(list(_namespace_map.items()))
+            # this must not be separated from ElementTree
+            self._ns_stack.append(list(ElementTree._namespace_map.items()))
         self._ns_stack.append([])
         self._prefix_map = {}
         self._preserve_space = [False]
@@ -331,7 +327,7 @@ def _escape_cdata_c14n(text):
             text = text.replace("\r", "&#xD;")
         return text
     except (TypeError, AttributeError):
-        _raise_serialization_error(text)
+        ElementTree._raise_serialization_error(text)
 
 
 def _escape_attrib_c14n(text):
@@ -351,4 +347,4 @@ def _escape_attrib_c14n(text):
             text = text.replace("\r", "&#xD;")
         return text
     except (TypeError, AttributeError):
-        _raise_serialization_error(text)
+        ElementTree._raise_serialization_error(text)

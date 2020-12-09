@@ -1,3 +1,4 @@
+import os.path
 from collections import defaultdict
 from dataclasses import MISSING, fields, is_dataclass
 from datetime import datetime
@@ -259,7 +260,10 @@ def to_dict(  # type: ignore
     for annotation in result.get("structured_annotations", []):
         if annotation["_type"] == "xml_annotation":
             if tree is None:
-                tree = ElementTree.parse(xml)
+                from io import StringIO
+
+                _xml = xml if os.path.exists(xml) else StringIO(xml)
+                tree = ElementTree.parse(_xml)  # type: ignore
             aid = annotation["id"]
             elt = tree.find(f".//{NS_OME}XMLAnnotation[@ID='{aid}']/{NS_OME}Value")
             annotation["value"] = elt
