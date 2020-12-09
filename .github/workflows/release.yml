@@ -26,7 +26,7 @@ jobs:
       - name: Build Distribution
         run: |
           TAG="${GITHUB_REF/refs\/tags\/v/}"
-          echo "::set-env name=tag::$TAG"
+          echo "tag=${TAG}" >> $GITHUB_ENV
           check-manifest
           python setup.py sdist bdist_wheel
       - name: Create Release
