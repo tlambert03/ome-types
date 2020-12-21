@@ -262,7 +262,13 @@ def to_dict(  # type: ignore
             if tree is None:
                 from io import StringIO
 
-                _xml = xml if os.path.exists(xml) else StringIO(xml)
+                # determine if we're dealing with a raw XML string or a filepath
+                # very long XML strings will raise ValueError on Windows.
+                try:
+                    _xml = xml if os.path.exists(xml) else StringIO(xml)
+                except ValueError:
+                    _xml = StringIO(xml)
+
                 tree = ElementTree.parse(_xml)  # type: ignore
             aid = annotation["id"]
             elt = tree.find(f".//{NS_OME}XMLAnnotation[@ID='{aid}']/{NS_OME}Value")
