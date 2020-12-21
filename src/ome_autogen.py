@@ -910,7 +910,7 @@ class GlobalElem:
 
     def write(self, filename: str) -> None:
         os.makedirs(os.path.dirname(filename), exist_ok=True)
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding='utf-8') as f:
             f.write(self.format())
 
     @property
