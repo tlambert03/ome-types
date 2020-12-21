@@ -910,7 +910,7 @@ class GlobalElem:
 
     def write(self, filename: str) -> None:
         os.makedirs(os.path.dirname(filename), exist_ok=True)
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             f.write(self.format())
 
     @property
@@ -953,7 +953,7 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
 
     text = "\n".join([s.format() for s in simples])
     text = black_format(sort_imports(text))
-    with open(os.path.join(target_dir, "simple_types.py"), "w") as f:
+    with open(os.path.join(target_dir, "simple_types.py"), "w", encoding="utf-8") as f:
         f.write(text)
 
     text = ""
@@ -981,7 +981,7 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
         {camel_snake_registry[k]: k for k in sorted(camel_snake_registry)}
     )
     text = black_format(text)
-    with open(os.path.join(target_dir, "__init__.py"), "w") as f:
+    with open(os.path.join(target_dir, "__init__.py"), "w", encoding="utf-8") as f:
         f.write(text)
 
 
