@@ -69,18 +69,19 @@ for f in all_xml:
 
 
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
-def test_from_xml(xml):
+def test_from_xml(xml, benchmark):
 
     if true_stem(xml) in SHOULD_RAISE_READ:
         with pytest.raises(XMLSchemaValidationError):
-            assert from_xml(xml)
+            assert benchmark(from_xml, xml)
     else:
-        assert from_xml(xml)
+        assert benchmark(from_xml, xml)
 
 
-def test_from_tiff():
+def test_from_tiff(benchmark):
     """Test that OME metadata extractions from Tiff headers works."""
-    ome = from_tiff(Path(__file__).parent / "data" / "ome.tiff")
+    _path = Path(__file__).parent / "data" / "ome.tiff"
+    ome = benchmark(from_tiff, _path)
     assert len(ome.images) == 1
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
@@ -88,7 +89,7 @@ def test_from_tiff():
 
 
 @pytest.mark.parametrize("xml", xml_roundtrip, ids=true_stem)
-def test_roundtrip(xml):
+def test_roundtrip(xml, benchmark):
     """Ensure we can losslessly round-trip XML through the model and back."""
     xml = str(xml)
     schema = get_schema(xml)
@@ -115,8 +116,9 @@ def test_roundtrip(xml):
         return xml_out
 
     original = canonicalize(xml, True)
-    ours = canonicalize(to_xml(from_xml(xml)), False)
-    assert ours == original
+    ome = from_xml(xml)
+    rexml = benchmark(to_xml, ome)
+    assert canonicalize(rexml, False) == original
 
 
 def test_no_id():
