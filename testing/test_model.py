@@ -119,6 +119,17 @@ def test_roundtrip(xml):
     assert ours == original
 
 
+@pytest.mark.parametrize("xml", xml_read, ids=true_stem)
+def test_serialization(xml):
+    """Test pickle serialization and reserialization."""
+    import pickle
+
+    ome = from_xml(xml)
+    serialized = pickle.dumps(ome)
+    deserialized = pickle.loads(serialized)
+    assert ome == deserialized
+
+
 def test_no_id():
     """Test that ids are optional, and auto-increment."""
     i = model.Instrument(id=20)
