@@ -1,15 +1,15 @@
 from __future__ import annotations
 
+import weakref
 from dataclasses import MISSING, fields
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import TYPE_CHECKING, Any, Callable, Optional, Sequence, Type, Union, Dict
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Sequence, Type, Union
 
 import pint
 from pydantic import validator
 from pydantic.dataclasses import _process_class
-import weakref
 
 if TYPE_CHECKING:
     from pydantic.dataclasses import DataclassType
@@ -196,8 +196,10 @@ def ome_dataclass(
         if getattr(cls, "id", None) is AUTO_SEQUENCE:
             setattr(cls, "validate_id", validate_id)
         modify_post_init(cls)
-        cls.__getstate__ = __getstate__
-        cls.__setstate__ = __setstate__
+        if not hasattr(cls, "__getstate__"):
+            cls.__getstate__ = __getstate__
+        if not hasattr(cls, "__setstate__"):
+            cls.__setstate__ = __setstate__
         add_quantities(cls)
         if not repr:
             modify_repr(cls)

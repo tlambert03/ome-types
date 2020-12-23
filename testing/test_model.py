@@ -1,3 +1,4 @@
+import pickle
 import re
 from pathlib import Path
 from xml.dom import minidom
@@ -122,7 +123,8 @@ def test_roundtrip(xml):
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
 def test_serialization(xml):
     """Test pickle serialization and reserialization."""
-    import pickle
+    if true_stem(xml) in SHOULD_RAISE_READ:
+        pytest.skip("Can't pickle unreadable xml")
 
     ome = from_xml(xml)
     serialized = pickle.dumps(ome)
