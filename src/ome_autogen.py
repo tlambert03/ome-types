@@ -25,7 +25,7 @@ import black
 import isort.api
 from autoflake import fix_code
 from numpydoc.docscrape import NumpyDocString, Parameter
-from xmlschema import XMLSchema, qnames
+from xmlschema import XMLSchema
 from xmlschema.validators import (
     XsdAnyAttribute,
     XsdAnyElement,
@@ -34,6 +34,13 @@ from xmlschema.validators import (
     XsdElement,
     XsdType,
 )
+
+try:
+    # xmlschema ≥ v1.4.0
+    from xmlschema import names as qnames
+except ImportError:
+    from xmlschema import qnames
+
 
 # Track all camel-to-snake and pluralization results so we can include them in the model.
 camel_snake_registry: Dict[str, str] = {}
