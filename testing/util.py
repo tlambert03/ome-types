@@ -1,8 +1,6 @@
 import io
 import re
-
-# Import ElementTree from one central module to avoid problems passing Elements around,
-from ome_types.schema import ElementTree  # isort: skip
+from xml.etree import ElementTree
 
 # --------------------------------------------------------------------
 # Taken from Python 3.8's ElementTree.py.
