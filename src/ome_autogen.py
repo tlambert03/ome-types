@@ -269,9 +269,17 @@ CLASS_OVERRIDES = {
         """,
         body="""
             def __post_init_post_parse__(self: Any, *args: Any) -> None:
+                self._link_refs()
+
+            def _link_refs(self):
                 ids = util.collect_ids(self)
                 for ref in util.collect_references(self):
                     ref.ref_ = weakref.ref(ids[ref.id])
+
+            def __setstate__(self: Any, state: Dict[str, Any]) -> None:
+                '''Support unpickle of our weakref references.'''
+                self.__dict__.update(state)
+                self._link_refs()
         """,
     ),
     "Reference": ClassOverride(

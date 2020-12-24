@@ -161,19 +161,12 @@ def modify_repr(_cls: Type[Any]) -> None:
 
 def __getstate__(self: Any) -> Dict[str, Any]:
     """Support pickle of our weakref references."""
+    # don't do copy unless necessary
     if "ref_" in self.__dict__:
         d = self.__dict__.copy()
-        d["ref_"] = d.pop("ref_")()  # dereference weakref
+        del d["ref_"]  # remove weakref
         return d
     return self.__dict__
-
-
-def __setstate__(self: Any, state: Dict[str, Any]) -> None:
-    """Support unpickle of our weakref references."""
-    self.__dict__.update(state)
-    if "ref_" in self.__dict__:
-        # re-reference weakref
-        self.__dict__["ref_"] = weakref.ref(self.__dict__.pop("ref_"))
 
 
 def ome_dataclass(
@@ -198,8 +191,6 @@ def ome_dataclass(
         modify_post_init(cls)
         if not hasattr(cls, "__getstate__"):
             cls.__getstate__ = __getstate__
-        if not hasattr(cls, "__setstate__"):
-            cls.__setstate__ = __setstate__
         add_quantities(cls)
         if not repr:
             modify_repr(cls)
