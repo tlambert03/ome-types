@@ -4,7 +4,7 @@ from dataclasses import MISSING, fields
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import TYPE_CHECKING, Any, Callable, Optional, Sequence, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Sequence, Type, Union
 
 import pint
 from pydantic import validator
@@ -158,6 +158,16 @@ def modify_repr(_cls: Type[Any]) -> None:
     setattr(_cls, "__repr__", new_repr)
 
 
+def __getstate__(self: Any) -> Dict[str, Any]:
+    """Support pickle of our weakref references."""
+    # don't do copy unless necessary
+    if "ref_" in self.__dict__:
+        d = self.__dict__.copy()
+        del d["ref_"]  # remove weakref
+        return d
+    return self.__dict__
+
+
 def ome_dataclass(
     _cls: Optional[Type[Any]] = None,
     *,
@@ -178,6 +188,8 @@ def ome_dataclass(
         if getattr(cls, "id", None) is AUTO_SEQUENCE:
             setattr(cls, "validate_id", validate_id)
         modify_post_init(cls)
+        if not hasattr(cls, "__getstate__"):
+            cls.__getstate__ = __getstate__
         add_quantities(cls)
         if not repr:
             modify_repr(cls)
