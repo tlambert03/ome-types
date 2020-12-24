@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import weakref
 from dataclasses import MISSING, fields
 from datetime import datetime
 from enum import Enum
