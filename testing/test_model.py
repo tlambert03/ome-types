@@ -1,13 +1,14 @@
 import pickle
 import re
 from pathlib import Path
+from unittest import mock
 from xml.dom import minidom
 
 import pytest
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types.schema import NS_OME, URI_OME, get_schema
+from ome_types.schema import NS_OME, URI_OME, get_schema, to_xml_element
 
 # Import ElementTree from one central module to avoid problems passing Elements around,
 from ome_types.schema import ElementTree  # isort: skip
@@ -122,13 +123,13 @@ def test_roundtrip(xml):
 
 def test_to_xml_with_kwargs():
     """Ensure kwargs are passed to ElementTree"""
-    # We just need to test with one of them
-    xml = str(xml_roundtrip[0])
-    ome = from_xml(xml)
+    ome = from_xml(Path(__file__).parent / "data" / "example.ome.xml")
 
-    # Use an ElementTree.tostring kwarg and assert that it was passed through
-    rewritten = to_xml(ome, xml_declaration=True)
-    assert rewritten.startswith("<?xml version='1.0' encoding='UTF-8'?>")
+    with mock.patch("xml.etree.ElementTree.tostring") as mocked_et_tostring:
+        element = to_xml_element(ome)
+        # Use an ElementTree.tostring kwarg and assert that it was passed through
+        to_xml(element, xml_declaration=True)
+        assert mocked_et_tostring.call_args.xml_declaration
 
 
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
