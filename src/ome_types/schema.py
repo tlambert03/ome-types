@@ -291,7 +291,7 @@ def to_xml_element(ome: OME) -> ElementTree.Element:
     return root
 
 
-def to_xml(ome: OME, **kwargs: Dict[str, Any]) -> str:
+def to_xml(ome: OME, **kwargs) -> str:  # type: ignore
     """
     Dump an OME object to string.
 
