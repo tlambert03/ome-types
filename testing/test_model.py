@@ -1,12 +1,14 @@
+import pickle
 import re
 from pathlib import Path
+from unittest import mock
 from xml.dom import minidom
 
 import pytest
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types.schema import NS_OME, URI_OME, get_schema
+from ome_types.schema import NS_OME, URI_OME, get_schema, to_xml_element
 
 # Import ElementTree from one central module to avoid problems passing Elements around,
 from ome_types.schema import ElementTree  # isort: skip
@@ -119,6 +121,29 @@ def test_roundtrip(xml, benchmark):
     ome = from_xml(xml)
     rexml = benchmark(to_xml, ome)
     assert canonicalize(rexml, False) == original
+
+
+def test_to_xml_with_kwargs():
+    """Ensure kwargs are passed to ElementTree"""
+    ome = from_xml(Path(__file__).parent / "data" / "example.ome.xml")
+
+    with mock.patch("xml.etree.ElementTree.tostring") as mocked_et_tostring:
+        element = to_xml_element(ome)
+        # Use an ElementTree.tostring kwarg and assert that it was passed through
+        to_xml(element, xml_declaration=True)
+        assert mocked_et_tostring.call_args.xml_declaration
+
+
+@pytest.mark.parametrize("xml", xml_read, ids=true_stem)
+def test_serialization(xml):
+    """Test pickle serialization and reserialization."""
+    if true_stem(xml) in SHOULD_RAISE_READ:
+        pytest.skip("Can't pickle unreadable xml")
+
+    ome = from_xml(xml)
+    serialized = pickle.dumps(ome)
+    deserialized = pickle.loads(serialized)
+    assert ome == deserialized
 
 
 def test_no_id():

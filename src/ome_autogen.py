@@ -269,9 +269,17 @@ CLASS_OVERRIDES = {
         """,
         body="""
             def __post_init_post_parse__(self: Any, *args: Any) -> None:
+                self._link_refs()
+
+            def _link_refs(self):
                 ids = util.collect_ids(self)
                 for ref in util.collect_references(self):
                     ref.ref_ = weakref.ref(ids[ref.id])
+
+            def __setstate__(self: Any, state: Dict[str, Any]) -> None:
+                '''Support unpickle of our weakref references.'''
+                self.__dict__.update(state)
+                self._link_refs()
         """,
     ),
     "Reference": ClassOverride(
@@ -295,6 +303,27 @@ CLASS_OVERRIDES = {
                     raise ValueError("references not yet resolved on root OME object")
                 return self.ref_()
         """,
+    ),
+    "XMLAnnotation": ClassOverride(
+        body='''
+            def __getstate__(self: Any):
+                """Support pickle of our weakref references."""
+                from ome_types.schema import ElementTree
+
+                d = self.__dict__.copy()
+                d["value"] = ElementTree.tostring(d.pop("value")).strip()
+                return d
+
+            def __setstate__(self: Any, state) -> None:
+                """Support unpickle of our weakref references."""
+                from ome_types.schema import ElementTree
+
+                self.__dict__.update(state)
+                self.value = ElementTree.fromstring(self.value)
+
+            def __eq__(self, o: "XMLAnnotation") -> bool:
+                return self.__getstate__() == o.__getstate__()
+        '''
     ),
     "BinData": ClassOverride(base_type="object", fields="value: str"),
     "Map": ClassOverride(fields_suppress={"K"}),
