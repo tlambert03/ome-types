@@ -291,8 +291,23 @@ def to_xml_element(ome: OME) -> ElementTree.Element:
     return root
 
 
-def to_xml(ome: OME) -> str:
+def to_xml(ome: OME, **kwargs) -> str:  # type: ignore
+    """
+    Dump an OME object to string.
+
+    Parameters
+    ----------
+    ome: OME
+        OME object to dump.
+    **kwargs
+        Extra kwargs to pass to ElementTree.tostring.
+
+    Returns
+    -------
+    ome_string: str
+        The XML string of the OME object.
+    """
     root = to_xml_element(ome)
     ElementTree.register_namespace("", URI_OME)
-    xml = ElementTree.tostring(root, "unicode")
+    xml = ElementTree.tostring(root, "unicode", **kwargs)
     return xml
