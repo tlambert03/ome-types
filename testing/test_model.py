@@ -120,6 +120,17 @@ def test_roundtrip(xml):
     assert ours == original
 
 
+def test_to_xml_with_kwargs():
+    """Ensure kwargs are passed to ElementTree"""
+    # We just need to test with one of them
+    xml = str(xml_roundtrip[0])
+    ome = from_xml(xml)
+
+    # Use an ElementTree.tostring kwarg and assert that it was passed through
+    rewritten = to_xml(ome, xml_declaration=True)
+    assert rewritten.startswith("<?xml version='1.0' encoding='UTF-8'?>")
+
+
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
 def test_serialization(xml):
     """Test pickle serialization and reserialization."""
