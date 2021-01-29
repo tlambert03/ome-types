@@ -3,18 +3,14 @@ import re
 from pathlib import Path
 from unittest import mock
 from xml.dom import minidom
+from xml.etree import ElementTree
 
 import pytest
+import util
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
 from ome_types.schema import NS_OME, URI_OME, get_schema, to_xml_element
-
-# Import ElementTree from one central module to avoid problems passing Elements around,
-from ome_types.schema import ElementTree  # isort: skip
-
-import util  # isort: skip
-
 
 SHOULD_FAIL_READ = {
     # Some timestamps have negative years which datetime doesn't support.

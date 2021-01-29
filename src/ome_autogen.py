@@ -305,25 +305,19 @@ CLASS_OVERRIDES = {
         """,
     ),
     "XMLAnnotation": ClassOverride(
-        body='''
-            def __getstate__(self: Any):
-                """Support pickle of our weakref references."""
-                from ome_types.schema import ElementTree
+        body="""
+            # NOTE: pickling this object requires xmlschema>=1.4.1
+
+            def _to_dict(self):
+                from xml.etree import ElementTree
 
                 d = self.__dict__.copy()
                 d["value"] = ElementTree.tostring(d.pop("value")).strip()
                 return d
 
-            def __setstate__(self: Any, state) -> None:
-                """Support unpickle of our weakref references."""
-                from ome_types.schema import ElementTree
-
-                self.__dict__.update(state)
-                self.value = ElementTree.fromstring(self.value)
-
             def __eq__(self, o: "XMLAnnotation") -> bool:
-                return self.__getstate__() == o.__getstate__()
-        '''
+                return self._to_dict() == o._to_dict()
+        """
     ),
     "BinData": ClassOverride(base_type="object", fields="value: str"),
     "Map": ClassOverride(fields_suppress={"K"}),
