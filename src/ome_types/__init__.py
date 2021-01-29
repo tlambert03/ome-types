@@ -62,6 +62,29 @@ def from_tiff(path: Union[Path, str]) -> OME:
     ValueError
         If the TIFF file has no OME metadata.
     """
+    return from_xml(_tiff2xml(path))
+
+
+def _tiff2xml(path: Union[Path, str]) -> str:
+    """Extract OME XML from OME-TIFF path.
+
+    This will use the first ImageDescription tag found in the TIFF header.
+
+    Parameters
+    ----------
+    path : Union[Path, str]
+        Path to OME TIFF.
+
+    Returns
+    -------
+    xml : str
+        OME XML
+
+    Raises
+    ------
+    ValueError
+        If the TIFF file has no OME metadata.
+    """
     with Path(path).open(mode="rb") as fh:
         try:
             offsetsize, offsetformat, tagnosize, tagnoformat, tagsize, codeformat = {
@@ -89,4 +112,4 @@ def from_tiff(path: Union[Path, str]) -> OME:
             raise ValueError(f"No OME metadata found in file: {path}")
     if desc[-1] == 0:
         desc = desc[:-1]
-    return from_xml(desc.decode("utf-8"))
+    return desc.decode("utf-8")
