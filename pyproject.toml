@@ -1,16 +1,26 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4", "black", "isort>=5.0", "xmlschema", "autoflake", "numpydoc", "pydantic"]
+requires = [
+  "setuptools>=42",
+  "wheel",
+  "setuptools_scm[toml]>=3.4",
+  "black",
+  "isort>=5.0",
+  "xmlschema==1.4.1",
+  "autoflake",
+  "numpydoc",
+  "pydantic",
+]
 build-backend = "setuptools.build_meta"
 
 [tool.check-manifest]
 ignore = [
-    "*src/ome_types/model/*",
-    "mypy.ini",
-    "coverage.yml",
-    ".pre-commit-config.yaml",
-    "src/ome_autogen.py",
-    ".readthedocs.yml",
-    "src/ome_types/_version.py",  # added by setuptools_scm during build
+  "*src/ome_types/model/*",
+  "mypy.ini",
+  "coverage.yml",
+  ".pre-commit-config.yaml",
+  "src/ome_autogen.py",
+  ".readthedocs.yml",
+  "src/ome_types/_version.py", # added by setuptools_scm during build
 ]
 
 
