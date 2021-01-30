@@ -247,9 +247,9 @@ OVERRIDES = {
         imports="""
             from typing import Optional
             from .simple_types import UniversallyUniqueIdentifier
-            from ome_types._base_models._base_model import BaseOMEModel
+            from ome_types._base_models._base_model import OMEType
 
-            class UUID(BaseOMEModel):
+            class UUID(OMEType):
                 file_name: str
                 value: UniversallyUniqueIdentifier
         """,
@@ -272,10 +272,10 @@ CLASS_OVERRIDES = {
                 super().__init__(**data)
                 self._link_refs()
 
-            def _link_refs(self):
+            def _link_refs(self) -> None:
                 ids = util.collect_ids(self)
                 for ref in util.collect_references(self):
-                    ref.ref_ = weakref.ref(ids[ref.id])
+                    ref._ref = weakref.ref(ids[ref.id])
 
             def __setstate__(self: Any, state: Dict[str, Any]) -> None:
                 '''Support unpickle of our weakref references.'''
@@ -286,40 +286,40 @@ CLASS_OVERRIDES = {
     "Reference": ClassOverride(
         imports="""
             from pydantic import Field
-            from typing import Any, Optional
+            from typing import Any, Optional, TYPE_CHECKING
             from weakref import ReferenceType
             from .simple_types import LSID
         """,
-        # FIXME Figure out typing for ref_ (weakref). Even with the "correct"
-        # typing, Pydantic has a problem.
         fields="""
+            if TYPE_CHECKING:
+                _ref: Optional["ReferenceType[OMEType]"]
+
             id: LSID
-            ref_: 'ReferenceType' = Field(default=None, init=False)
+            _ref = None
         """,
         # FIXME Could make `ref` abstract and implement stronger-typed overrides
         # in subclasses.
         body="""
             @property
             def ref(self) -> Any:
-                if self.ref_ is None:
+                if self._ref is None:
                     raise ValueError("references not yet resolved on root OME object")
-                return self.ref_()
-
-            class Config(BaseOMEModel.Config):
-                arbitrary_types_allowed = True
+                return self._ref()
         """,
     ),
     "XMLAnnotation": ClassOverride(
         imports="""
             from xml.etree import ElementTree
+            from typing import Generator
+            from typing import Callable, Generator, Any, Dict
 
             class Element(ElementTree.Element):
                 @classmethod
-                def __get_validators__(cls):
+                def __get_validators__(cls) -> Generator[Callable[[Any], Any], None, None]:
                     yield cls.validate
 
                 @classmethod
-                def validate(cls, v):
+                def validate(cls, v: Any) -> ElementTree.Element:
                     if isinstance(v, ElementTree.Element):
                         return v
                     try:
@@ -330,7 +330,7 @@ CLASS_OVERRIDES = {
         body="""
             # NOTE: pickling this object requires xmlschema>=1.4.1
 
-            def dict(self, **k):
+            def dict(self, **k: Any) -> Dict[str, Any]:
                 d = super().dict(**k)
                 d["value"] = ElementTree.tostring(
                     d.pop("value"), encoding="unicode", method="xml"
@@ -416,7 +416,7 @@ def get_docstring(
 
 def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     class_override = CLASS_OVERRIDES.get(component.local_name, None)
-    lines = ["from ome_types._base_models._base_model import BaseOMEModel", ""]
+    lines = ["from ome_types._base_models._base_model import OMEType", ""]
     if isinstance(component, XsdType):
         base_type = component.base_type
     else:
@@ -424,18 +424,18 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
 
     if class_override and class_override.base_type:
         if class_override.base_type == "object":
-            base_name = "(BaseOMEModel)"
+            base_name = "(OMEType)"
         else:
-            base_name = f"({class_override.base_type}, BaseOMEModel)"
+            base_name = f"({class_override.base_type}, OMEType)"
         base_type = None
     elif base_type and not hasattr(base_type, "python_type"):
-        base_name = f"({base_type.local_name}, BaseOMEModel)"
+        base_name = f"({base_type.local_name}, OMEType)"
         if base_type.is_complex():
             lines += [local_import(base_type.local_name)]
         else:
             lines += [f"from .simple_types import {base_type.local_name}"]
     else:
-        base_name = "(BaseOMEModel)"
+        base_name = "(OMEType)"
     if class_override and class_override.imports:
         lines.append(class_override.imports)
 
@@ -742,7 +742,7 @@ class Member:
             default = OVERRIDES[self.key].default
             return f" = {default}" if default else ""
         elif self.is_nonref_id:
-            return " = BaseOMEModel._AUTO_SEQUENCE"
+            return " = OMEType._AUTO_SEQUENCE"
         elif not self.is_optional:
             return ""
 

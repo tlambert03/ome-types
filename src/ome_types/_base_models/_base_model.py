@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import Any, ClassVar, Optional, Sequence, Set, no_type_check
+from typing import Any, ClassVar, Dict, Optional, Sequence, Set, no_type_check
 
 import pint
 from pydantic import BaseModel, validator
@@ -47,7 +47,7 @@ class OMEMetaclass(ModelMetaclass):
         return cls
 
 
-class BaseOMEModel(BaseModel, metaclass=OMEMetaclass):
+class OMEType(BaseModel, metaclass=OMEMetaclass):
     # Default value to support automatic numbering for id field values.
     _AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
 
@@ -129,7 +129,7 @@ class BaseOMEModel(BaseModel, metaclass=OMEMetaclass):
         if not hasattr(cls, "_max_id"):
             cls._max_id = 0
             cls.__annotations__["_max_id"] = ClassVar[int]
-        if value is BaseOMEModel._AUTO_SEQUENCE:
+        if value is OMEType._AUTO_SEQUENCE:
             value = cls._max_id + 1
         if isinstance(value, int):
             v_id = value
@@ -145,3 +145,10 @@ class BaseOMEModel(BaseModel, metaclass=OMEMetaclass):
             pass
 
         return type_(value)
+
+    def __getstate__(self: Any) -> Dict[str, Any]:
+        """Support pickle of our weakref references."""
+        # don't do copy unless necessary
+        state = super().__getstate__()
+        state["__private_attribute_values__"].pop("_ref", None)
+        return state

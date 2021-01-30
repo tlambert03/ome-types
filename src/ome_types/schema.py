@@ -11,7 +11,7 @@ import xmlschema
 from elementpath.datatypes import DateTime10
 from xmlschema.converters import ElementData, XMLSchemaConverter
 
-from ome_types._base_models._base_model import BaseOMEModel
+from ome_types._base_models._base_model import OMEType
 
 from . import util
 from .model import (
@@ -174,7 +174,7 @@ class OMEConverter(XMLSchemaConverter):
         self, obj: Any, xsd_element: xmlschema.XsdElement, level: int = 0
     ) -> ElementData:
         tag = xsd_element.qualified_name
-        if not isinstance(obj, BaseOMEModel):
+        if not isinstance(obj, OMEType):
             if isinstance(obj, datetime):
                 return ElementData(tag, DateTime10.fromdatetime(obj), None, {})
             elif isinstance(obj, ElementTree.Element):
@@ -204,7 +204,7 @@ class OMEConverter(XMLSchemaConverter):
             lambda: -1,
             ((_camel_to_snake[e.local_name], i) for i, e in enumerate(xsd_element)),
         )
-        _fields = obj.fields.values()
+        _fields = obj.__fields__.values()
         for field in sorted(
             _fields,
             key=lambda f: tag_index[_plural_to_singular.get(f.name, f.name)],
