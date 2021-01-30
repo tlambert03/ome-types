@@ -1,11 +1,19 @@
-from datetime import datetime
-from enum import Enum
-from textwrap import indent
-from typing import Any, ClassVar, Dict, Optional, Sequence, Set, no_type_check
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Dict,
+    Optional,
+    Sequence,
+    Set,
+    no_type_check,
+)
 
-import pint
 from pydantic import BaseModel, validator
 from pydantic.main import ModelMetaclass
+
+if TYPE_CHECKING:
+    import pint
 
 
 class Sentinel:
@@ -18,15 +26,10 @@ class Sentinel:
         return f"{__name__}.{self.name}.{id(self)}"
 
 
-ureg = pint.UnitRegistry(auto_reduce_dimensions=True)
-ureg.define("reference_frame = [_reference_frame]")
-ureg.define("@alias grade = gradian")
-ureg.define("@alias astronomical_unit = ua")
-ureg.define("line = inch / 12 = li")
-
-
 def quantity_property(field: str) -> property:
-    def quantity(self: Any) -> Optional[pint.Quantity]:
+    def quantity(self: Any) -> Optional["pint.Quantity"]:
+        from ome_types._units import ureg
+
         value = getattr(self, field)
         if value is None:
             return None
@@ -54,6 +57,11 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
     # allow use with weakref
     __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
+    def __init__(__pydantic_self__, **data: Any) -> None:
+        if "id" in __pydantic_self__.__fields__:
+            data.setdefault("id", OMEType._AUTO_SEQUENCE)
+        super().__init__(**data)
+
     # pydantic BaseModel configuration.  see:
     # https://pydantic-docs.helpmanual.io/usage/model_config/
     class Config:
@@ -76,6 +84,10 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
         # https://pydantic-docs.helpmanual.io/usage/exporting_models/#modeljson
 
     def __repr__(self: Any) -> str:
+        from datetime import datetime
+        from enum import Enum
+        from textwrap import indent
+
         name = self.__class__.__qualname__
         lines = []
         for f in sorted(

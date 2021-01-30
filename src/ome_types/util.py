@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from ._base_models._base_model import OMEType
+from ._base_type import OMEType
 from .model.reference import Reference
 from .model.simple_types import LSID
 
@@ -42,7 +42,7 @@ def collect_ids(value: Any) -> Dict[LSID, OMEType]:
             if f == "id" and not isinstance(value, Reference):
                 # We don't need to recurse on the id string, so just record it
                 # and move on.
-                ids[value.id] = value
+                ids[value.id] = value  # type: ignore
             else:
                 ids.update(collect_ids(getattr(value, f)))
     # Do nothing for uninteresting types.

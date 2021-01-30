@@ -11,7 +11,7 @@ import xmlschema
 from elementpath.datatypes import DateTime10
 from xmlschema.converters import ElementData, XMLSchemaConverter
 
-from ome_types._base_models._base_model import OMEType
+from ome_types._base_type import OMEType
 
 from . import util
 from .model import (
@@ -292,7 +292,7 @@ def to_xml_element(ome: OME) -> ElementTree.Element:
     return root
 
 
-def to_xml(ome: OME, **kwargs) -> str:  # type: ignore
+def to_xml(ome: OME, **kwargs: Any) -> str:
     """
     Dump an OME object to string.
 
@@ -310,5 +310,6 @@ def to_xml(ome: OME, **kwargs) -> str:  # type: ignore
     """
     root = to_xml_element(ome)
     ElementTree.register_namespace("", URI_OME)
-    xml = ElementTree.tostring(root, "unicode", **kwargs)
-    return xml
+    kwargs.setdefault("encoding", "unicode")
+    kwargs.setdefault("method", "xml")
+    return ElementTree.tostring(root, **kwargs)

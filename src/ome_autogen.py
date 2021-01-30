@@ -86,7 +86,7 @@ OVERRIDES = {
     "MetadataOnly": Override(type_="bool", default="False"),
     # FIXME: Type should be xml.etree.ElementTree.Element but isinstance checks
     # with that class often mysteriously fail so the validator fails.
-    "XMLAnnotation/Value": Override(type_="Element", imports="from typing import Any"),
+    "XMLAnnotation/Value": Override(type_="Element"),
     "BinData/Length": Override(type_="int"),
     # FIXME: hard-coded subclass lists
     "Instrument/LightSourceGroup": Override(
@@ -247,7 +247,7 @@ OVERRIDES = {
         imports="""
             from typing import Optional
             from .simple_types import UniversallyUniqueIdentifier
-            from ome_types._base_models._base_model import OMEType
+            from ome_types._base_type import OMEType
 
             class UUID(OMEType):
                 file_name: str
@@ -266,6 +266,7 @@ CLASS_OVERRIDES = {
             from typing import Any
             import weakref
             from ome_types import util
+            from pathlib import Path
         """,
         body="""
             def __init__(self, **data: Any) -> None:
@@ -281,6 +282,20 @@ CLASS_OVERRIDES = {
                 '''Support unpickle of our weakref references.'''
                 super().__setstate__(state)
                 self._link_refs()
+
+            @classmethod
+            def from_xml(cls, xml: Union[Path, str]) -> 'OME':
+                from ome_types._convenience import from_xml
+                return from_xml(xml)
+
+            @classmethod
+            def from_tiff(cls, path: Union[Path, str]) -> 'OME':
+                from ome_types._convenience import from_tiff
+                return from_tiff(path)
+
+            def to_xml(self) -> str:
+                from ome_types.schema import to_xml
+                return to_xml(self)
         """,
     ),
     "Reference": ClassOverride(
@@ -314,6 +329,7 @@ CLASS_OVERRIDES = {
             from typing import Callable, Generator, Any, Dict
 
             class Element(ElementTree.Element):
+                '''ElementTree.Element that supports pydantic validation.'''
                 @classmethod
                 def __get_validators__(cls) -> Generator[Callable[[Any], Any], None, None]:
                     yield cls.validate
@@ -416,7 +432,7 @@ def get_docstring(
 
 def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     class_override = CLASS_OVERRIDES.get(component.local_name, None)
-    lines = ["from ome_types._base_models._base_model import OMEType", ""]
+    lines = ["from ome_types._base_type import OMEType", ""]
     if isinstance(component, XsdType):
         base_type = component.base_type
     else:
@@ -741,8 +757,6 @@ class Member:
         if self.key in OVERRIDES:
             default = OVERRIDES[self.key].default
             return f" = {default}" if default else ""
-        elif self.is_nonref_id:
-            return " = OMEType._AUTO_SEQUENCE"
         elif not self.is_optional:
             return ""
 
@@ -768,7 +782,6 @@ class Member:
 
     @property
     def is_optional(self) -> bool:
-        # FIXME: hack.  doesn't fully capture the restriction
         if self.is_ref_id:
             return False
         if getattr(self.component.parent, "model", "") == "choice":
