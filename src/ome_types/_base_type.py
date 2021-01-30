@@ -12,21 +12,15 @@ from typing import (
 from pydantic import BaseModel, validator
 from pydantic.main import ModelMetaclass
 
+from .util import Sentinel
+
 if TYPE_CHECKING:
     import pint
 
 
-class Sentinel:
-    """Create singleton sentinel objects with a readable repr."""
-
-    def __init__(self, name: str) -> None:
-        self.name = name
-
-    def __repr__(self) -> str:
-        return f"{__name__}.{self.name}.{id(self)}"
-
-
 def quantity_property(field: str) -> property:
+    """create property that returns a ``pint.Quantity`` combining value and unit."""
+
     def quantity(self: Any) -> Optional["pint.Quantity"]:
         from ome_types._units import ureg
 
@@ -40,6 +34,12 @@ def quantity_property(field: str) -> property:
 
 
 class OMEMetaclass(ModelMetaclass):
+    """Metaclass that adds some properties to classes with units.
+
+    It adds ``*_quantity`` property for fields that have both a value and a
+    unit, where ``*_quantity`` is a pint ``Quantity``
+    """
+
     @no_type_check
     def __new__(mcs, name, bases, namespace, **kwargs):
         cls = super().__new__(mcs, name, bases, namespace, **kwargs)
@@ -51,9 +51,18 @@ class OMEMetaclass(ModelMetaclass):
 
 
 class OMEType(BaseModel, metaclass=OMEMetaclass):
+    """The base class that all OME Types inherit from.
+
+    This provides some global conveniences around auto-setting ids. (i.e., making them
+    optional in the class constructor, but never ``None`` after initialization.).
+    It provides a nice __repr__ that hides things that haven't been changed from
+    defaults.  It adds ``*_quantity`` property for fields that have both a value and a
+    unit, where ``*_quantity`` is a pint ``Quantity``.  It also provides pickling
+    support.
+    """
+
     # Default value to support automatic numbering for id field values.
     _AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
-
     # allow use with weakref
     __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
@@ -62,8 +71,8 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
             data.setdefault("id", OMEType._AUTO_SEQUENCE)
         super().__init__(**data)
 
-    # pydantic BaseModel configuration.  see:
-    # https://pydantic-docs.helpmanual.io/usage/model_config/
+    # pydantic BaseModel configuration.
+    # see: https://pydantic-docs.helpmanual.io/usage/model_config/
     class Config:
         # whether to allow arbitrary user types for fields (they are validated
         # simply by checking if the value is an instance of the type). If
@@ -80,8 +89,6 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
         use_enum_values = True
         # whether to validate field defaults (default: False)
         validate_all = True
-        # a dict used to customise the way types are encoded to JSON
-        # https://pydantic-docs.helpmanual.io/usage/exporting_models/#modeljson
 
     def __repr__(self: Any) -> str:
         from datetime import datetime
@@ -130,12 +137,10 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
         """
         from typing import ClassVar
 
-        # get the required LSID type from the annotation
+        # get the required LSID field from the annotation
         id_field = cls.__fields__.get("id")
         if not id_field:
             return value
-
-        type_ = id_field.type_
 
         # Store the highest seen value on the class._max_id attribute.
         if not hasattr(cls, "_max_id"):
@@ -145,7 +150,7 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
             value = cls._max_id + 1
         if isinstance(value, int):
             v_id = value
-            id_string = type_.__name__[:-2]
+            id_string = id_field.type_.__name__[:-2]
             value = f"{id_string}:{value}"
         else:
             value = str(value)
@@ -156,11 +161,10 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
         except ValueError:
             pass
 
-        return type_(value)
+        return id_field.type_(value)
 
     def __getstate__(self: Any) -> Dict[str, Any]:
         """Support pickle of our weakref references."""
-        # don't do copy unless necessary
         state = super().__getstate__()
         state["__private_attribute_values__"].pop("_ref", None)
         return state
