@@ -1,9 +1,11 @@
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import Any, Sequence
+from typing import Any, Optional, Sequence, no_type_check
 
+import pint
 from pydantic import BaseModel, validator
+from pydantic.main import ModelMetaclass
 
 
 class Sentinel:
@@ -13,16 +15,45 @@ class Sentinel:
         self.name = name
 
     def __repr__(self) -> str:
-        return f"{__name__}.{self.name}"
+        return f"{__name__}.{self.name}.{id(self)}"
 
 
 # Default value to support optional fields in dataclass subclasses.
 EMPTY = Sentinel("EMPTY")
-# Default value to support automatic numbering for id field values.
-AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
 
 
-class BaseOMEModel(BaseModel):
+ureg = pint.UnitRegistry(auto_reduce_dimensions=True)
+ureg.define("reference_frame = [_reference_frame]")
+ureg.define("@alias grade = gradian")
+ureg.define("@alias astronomical_unit = ua")
+ureg.define("line = inch / 12 = li")
+
+
+def quantity_property(field: str) -> property:
+    def quantity(self: Any) -> Optional[pint.Quantity]:
+        value = getattr(self, field)
+        if value is None:
+            return None
+        unit = getattr(self, field + "_unit").replace(" ", "_")
+        return ureg.Quantity(value, unit)
+
+    return property(quantity)
+
+
+class OMEMetaclass(ModelMetaclass):
+    @no_type_check
+    def __new__(mcs, name, bases, namespace, **kwargs):
+        cls = super().__new__(mcs, name, bases, namespace, **kwargs)
+
+        _clsdir = set(cls.__fields__)
+        for field in [f for f in _clsdir if f + "_unit" in _clsdir]:
+            setattr(cls, field + "_quantity", quantity_property(field))
+        return cls
+
+
+class BaseOMEModel(BaseModel, metaclass=OMEMetaclass):
+    # Default value to support automatic numbering for id field values.
+    _AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
 
     # __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
@@ -32,7 +63,7 @@ class BaseOMEModel(BaseModel):
         # whether to allow arbitrary user types for fields (they are validated
         # simply by checking if the value is an instance of the type). If
         # False, RuntimeError will be raised on model declaration
-        arbitrary_types_allowed = True
+        arbitrary_types_allowed = False
         # whether to perform validation on assignment to attributes
         validate_assignment = True
         # whether to treat any underscore non-class var attrs as private
@@ -91,20 +122,21 @@ class BaseOMEModel(BaseModel):
         from typing import ClassVar
 
         # get the required LSID type from the annotation
-        id_type = cls.__annotations__.get("id")
-        if not id_type:
+        id_field = cls.__fields__.get("id")
+        if not id_field:
             return value
+
+        type_ = id_field.type_
 
         # Store the highest seen value on the class._max_id attribute.
         if not hasattr(cls, "_max_id"):
             cls._max_id = 0
             cls.__annotations__["_max_id"] = ClassVar[int]
-
-        if value is AUTO_SEQUENCE:
+        if value is BaseOMEModel._AUTO_SEQUENCE:
             value = cls._max_id + 1
         if isinstance(value, int):
             v_id = value
-            id_string = id_type.__name__[:-2]
+            id_string = type_.__name__[:-2]
             value = f"{id_string}:{value}"
         else:
             value = str(value)
@@ -115,4 +147,4 @@ class BaseOMEModel(BaseModel):
         except ValueError:
             pass
 
-        return id_type(value)
+        return type_(value)
