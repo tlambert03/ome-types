@@ -12,10 +12,18 @@ from typing import (
 from pydantic import BaseModel, validator
 from pydantic.main import ModelMetaclass
 
-from .util import Sentinel
-
 if TYPE_CHECKING:
     import pint
+
+
+class Sentinel:
+    """Create singleton sentinel objects with a readable repr."""
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def __repr__(self) -> str:
+        return f"{__name__}.{self.name}.{id(self)}"
 
 
 def quantity_property(field: str) -> property:

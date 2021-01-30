@@ -47,13 +47,3 @@ def collect_ids(value: Any) -> Dict[LSID, OMEType]:
                 ids.update(collect_ids(getattr(value, f)))
     # Do nothing for uninteresting types.
     return ids
-
-
-class Sentinel:
-    """Create singleton sentinel objects with a readable repr."""
-
-    def __init__(self, name: str) -> None:
-        self.name = name
-
-    def __repr__(self) -> str:
-        return f"{__name__}.{self.name}.{id(self)}"
