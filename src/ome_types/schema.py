@@ -1,6 +1,5 @@
 import os.path
 from collections import defaultdict
-from dataclasses import MISSING, fields, is_dataclass
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
@@ -175,7 +174,7 @@ class OMEConverter(XMLSchemaConverter):
         self, obj: Any, xsd_element: xmlschema.XsdElement, level: int = 0
     ) -> ElementData:
         tag = xsd_element.qualified_name
-        if not isinstance(obj, BaseOMEModel) and not is_dataclass(obj):
+        if not isinstance(obj, BaseOMEModel):
             if isinstance(obj, datetime):
                 return ElementData(tag, DateTime10.fromdatetime(obj), None, {})
             elif isinstance(obj, ElementTree.Element):
@@ -205,7 +204,7 @@ class OMEConverter(XMLSchemaConverter):
             lambda: -1,
             ((_camel_to_snake[e.local_name], i) for i, e in enumerate(xsd_element)),
         )
-        _fields = fields(obj) if is_dataclass(obj) else obj.fields.values()
+        _fields = obj.fields.values()
         for field in sorted(
             _fields,
             key=lambda f: tag_index[_plural_to_singular.get(f.name, f.name)],
@@ -213,10 +212,9 @@ class OMEConverter(XMLSchemaConverter):
             name = field.name
             if name.endswith("_"):
                 continue
-            if field.default_factory and field.default_factory is not MISSING:
-                default = field.default_factory()
-            else:
-                default = field.default
+            default = (
+                field.default_factory() if field.default_factory else field.default
+            )
             value = getattr(obj, name)
             if value == default:
                 continue

@@ -1,6 +1,6 @@
-import dataclasses
 from typing import Any, Dict, List
 
+from ._base_models._base_model import BaseOMEModel
 from .model.reference import Reference
 from .model.simple_types import LSID
 
@@ -19,9 +19,9 @@ def collect_references(value: Any) -> List[Reference]:
     elif isinstance(value, list):
         for v in value:
             references.extend(collect_references(v))
-    elif dataclasses.is_dataclass(value):
-        for f in dataclasses.fields(value):
-            references.extend(collect_references(getattr(value, f.name)))
+    elif isinstance(value, BaseOMEModel):
+        for f in value.__fields__:
+            references.extend(collect_references(getattr(value, f)))
     # Do nothing for uninteresting types
     return references
 
@@ -37,13 +37,13 @@ def collect_ids(value: Any) -> Dict[LSID, Any]:
     if isinstance(value, list):
         for v in value:
             ids.update(collect_ids(v))
-    elif dataclasses.is_dataclass(value):
-        for f in dataclasses.fields(value):
-            if f.name == "id" and not isinstance(value, Reference):
+    elif isinstance(value, BaseOMEModel):
+        for f in value.__fields__:
+            if f == "id" and not isinstance(value, Reference):
                 # We don't need to recurse on the id string, so just record it
                 # and move on.
                 ids[value.id] = value
             else:
-                ids.update(collect_ids(getattr(value, f.name)))
+                ids.update(collect_ids(getattr(value, f)))
     # Do nothing for uninteresting types.
     return ids

@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import Any, Optional, Sequence, no_type_check
+from typing import Any, ClassVar, Optional, Sequence, Set, no_type_check
 
 import pint
 from pydantic import BaseModel, validator
@@ -16,10 +16,6 @@ class Sentinel:
 
     def __repr__(self) -> str:
         return f"{__name__}.{self.name}.{id(self)}"
-
-
-# Default value to support optional fields in dataclass subclasses.
-EMPTY = Sentinel("EMPTY")
 
 
 ureg = pint.UnitRegistry(auto_reduce_dimensions=True)
@@ -55,7 +51,8 @@ class BaseOMEModel(BaseModel, metaclass=OMEMetaclass):
     # Default value to support automatic numbering for id field values.
     _AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
 
-    # __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
+    # allow use with weakref
+    __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
     # pydantic BaseModel configuration.  see:
     # https://pydantic-docs.helpmanual.io/usage/model_config/
@@ -114,7 +111,7 @@ class BaseOMEModel(BaseModel, metaclass=OMEMetaclass):
 
     @validator("id", pre=True, always=True, check_fields=False)
     def validate_id(cls, value: Any) -> str:
-        """Pydantic validator for ID fields in OME dataclasses.
+        """Pydantic validator for ID fields in OME models.
 
         If no value is provided, this validator provides and integer ID, and stores the
         maximum previously-seen value on the class.

@@ -268,7 +268,8 @@ CLASS_OVERRIDES = {
             from ome_types import util
         """,
         body="""
-            def __post_init_post_parse__(self: Any, *args: Any) -> None:
+            def __init__(self, **data: Any) -> None:
+                super().__init__(**data)
                 self._link_refs()
 
             def _link_refs(self):
@@ -286,13 +287,14 @@ CLASS_OVERRIDES = {
         imports="""
             from pydantic import Field
             from typing import Any, Optional
+            from weakref import ReferenceType
             from .simple_types import LSID
         """,
         # FIXME Figure out typing for ref_ (weakref). Even with the "correct"
         # typing, Pydantic has a problem.
         fields="""
             id: LSID
-            ref_: Any = Field(default=None, init=False)
+            ref_: 'ReferenceType' = Field(default=None, init=False)
         """,
         # FIXME Could make `ref` abstract and implement stronger-typed overrides
         # in subclasses.
@@ -302,6 +304,9 @@ CLASS_OVERRIDES = {
                 if self.ref_ is None:
                     raise ValueError("references not yet resolved on root OME object")
                 return self.ref_()
+
+            class Config(BaseOMEModel.Config):
+                arbitrary_types_allowed = True
         """,
     ),
     "XMLAnnotation": ClassOverride(
@@ -958,7 +963,7 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
     if isinstance(url, Path):
         url = str(url)
     schema = XMLSchema(url)
-    print("Building dataclasses ...")
+    print("Building model ...")
     shutil.rmtree(target_dir, ignore_errors=True)
     init_imports = []
     simples: List[GlobalElem] = []

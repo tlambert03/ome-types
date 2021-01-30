@@ -167,3 +167,9 @@ def test_required_missing():
     assert "2 validation errors for Label" in str(e.value)
     assert "x\n  field required" in str(e.value)
     assert "y\n  field required" in str(e.value)
+
+
+def test_refs():
+    xml = Path(__file__).parent / "data" / "two-screens-two-plates-four-wells.ome.xml"
+    ome = from_xml(xml)
+    assert ome.screens[0].plate_ref[0].ref is ome.plates[0]
