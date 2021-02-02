@@ -23,7 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install .[test]
       - name: Clone aicsimageio
-        run:
+        run: |
           git clone -b main https://github.com/AllenCellModeling/aicsimageio.git
           cd aicsimageio
           pip install .[test]
