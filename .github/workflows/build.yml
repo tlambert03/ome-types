@@ -24,4 +24,4 @@ jobs:
         with:
           add: 'ome_types'
           branch: build
-          push: origin build --force
+          push: --set-upstream origin build --force
