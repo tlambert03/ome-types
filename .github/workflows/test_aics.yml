@@ -25,10 +25,10 @@ jobs:
       - name: Clone aicsimageio
         run: |
           git clone -b main https://github.com/AllenCellModeling/aicsimageio.git
-          cd aicsimageio
-          pip install .[test]
           pip install quilt3
           python .github/scripts/download_aics_test_data.py
+          cd aicsimageio
+          pip install .[test]
       - name: Run Tests
         run: |
           pytest aicsimageio/tests/readers/test_ome_tiff_reader.py -v -k "not REMOTE"
