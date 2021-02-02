@@ -41,7 +41,6 @@ jobs:
           python .github/scripts/download_aics_test_data.py
 
       - name: Install aicsimageio
-        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           cd aicsimageio
           pip install .[test]
