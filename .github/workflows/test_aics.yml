@@ -2,11 +2,11 @@ name: test_aics
 
 on:
   push:
-    branches:
-      - "master"
-  pull_request:
-    branches:
-      - "master"
+  #   branches:
+  #     - "master"
+  # pull_request:
+  #   branches:
+  #     - "master"
 
 jobs:
   test:
@@ -28,6 +28,7 @@ jobs:
           cd aicsimageio
           pip install .[test]
           pip install quilt3
-          python scripts/download_test_resources.py --debug
+          python .github/scripts/download_aics_test_data.py
       - name: Run Tests
-        run: pytest
+        run: |
+          pytest aicsimageio/tests/readers/test_ome_tiff_reader.py -v -k "not REMOTE"
