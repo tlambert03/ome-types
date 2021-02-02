@@ -1,4 +1,4 @@
-name: tests
+name: build branch
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - "master"
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -20,6 +20,7 @@ jobs:
           python -m pep517.build -b .
           unzip dist/ome_types-*
           rm -rf build
+          rm ome_types/_version.py
       - name: Commit
         uses: EndBug/add-and-commit@v7
         with:
