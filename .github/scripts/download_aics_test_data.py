@@ -6,7 +6,7 @@ from quilt3 import Package
 def download_test_resources() -> None:
     root = Path(__file__).parent.parent.parent
     print("root is", root)
-    resources = (root / "aicsimageio" / "tests" / "resources").resolve()
+    resources = (root / "aicsimageio" / "aicsimageio" / "tests" / "resources").resolve()
     print("resources is", resources)
     resources.mkdir(exist_ok=True)
     package = Package.browse(
