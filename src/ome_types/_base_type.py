@@ -93,8 +93,9 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
         underscore_attrs_are_private = True
         # whether to populate models with the value property of enums, rather
         # than the raw enum. This may be useful if you want to serialise
-        # model.dict() later
-        use_enum_values = True
+        # model.dict() later.  False by default
+        # see conversation in https://github.com/tlambert03/ome-types/pull/74
+        use_enum_values = False
         # whether to validate field defaults (default: False)
         validate_all = True
 
