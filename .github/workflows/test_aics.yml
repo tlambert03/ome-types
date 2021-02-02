@@ -33,14 +33,18 @@ jobs:
           path: aicsimageio/aicsimageio/tests/resources
           key: ${{ runner.os }}-${{ hashFiles('.github/scripts/download_aics_test_data.py') }}
 
-      - name: Install Dependencies
+      - name: Install Test Data
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           pip install quilt3
           python .github/scripts/download_aics_test_data.py
 
-      - name: Run Tests
+      - name: Install aicsimageio
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           cd aicsimageio
           pip install .[test]
+
+      - name: Run Tests
+        run: |
           pytest aicsimageio/tests/readers/test_ome_tiff_reader.py -v -k "not REMOTE"
