@@ -18,7 +18,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pep517
           python -m pep517.build -b .
-          tar -zxvf dist/ome_types-*
+          unzip dist/ome_types-*
       - name: Commit
         uses: EndBug/add-and-commit@v7
         with:
