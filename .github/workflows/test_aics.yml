@@ -24,7 +24,9 @@ jobs:
           pip install .[test]
       - name: Clone aicsimageio
         run: |
+          pwd
           git clone -b main https://github.com/AllenCellModeling/aicsimageio.git
+          ls
           pip install quilt3
           python .github/scripts/download_aics_test_data.py
           cd aicsimageio
