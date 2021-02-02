@@ -22,15 +22,27 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install .[test]
+
       - name: Clone aicsimageio
         run: |
-          pwd
           git clone -b main https://github.com/AllenCellModeling/aicsimageio.git
-          ls
+
+      - uses: actions/cache@v2
+        id: cache
+        with:
+          path: aicsimageio/aicsimageio/tests/resources
+          key: ${{ runner.os }}-${{ hashFiles('.github/scripts/download_aics_test_data.py') }}
+
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
           pip install quilt3
           python .github/scripts/download_aics_test_data.py
-          cd aicsimageio
-          pip install .[test]
+
       - name: Run Tests
         run: |
+          cd aicsimageio
+          pip install .[test]
+          ls -la
+          ls aicsimageio -la
           pytest aicsimageio/tests/readers/test_ome_tiff_reader.py -v -k "not REMOTE"
