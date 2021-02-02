@@ -43,6 +43,4 @@ jobs:
         run: |
           cd aicsimageio
           pip install .[test]
-          ls -la
-          ls aicsimageio -la
           pytest aicsimageio/tests/readers/test_ome_tiff_reader.py -v -k "not REMOTE"
