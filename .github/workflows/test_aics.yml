@@ -18,7 +18,8 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
-      - name: Install dependencies
+
+      - name: Install ome-types
         run: |
           python -m pip install --upgrade pip
           pip install .[test]
@@ -47,4 +48,5 @@ jobs:
 
       - name: Run Tests
         run: |
+          cd aicsimageio
           pytest aicsimageio/tests/readers/test_ome_tiff_reader.py -v -k "not REMOTE"
