@@ -31,7 +31,9 @@ jobs:
           unzip -o ome-types/dist/ome_types-*
       - name: Commit
         if: github.event_name == 'push'
-        uses: EndBug/add-and-commit@v7
-        with:
-          add: "ome_types"
-          push: --set-upstream origin built --force
+        run: |
+          git config user.name "Talley Lambert"
+          git config user.email "talley.lambert@gmail.com"
+          git add ome_types
+          git commit -m 'Commit from GitHub Actions (build.yml)'
+          git push --set-upstream origin built
