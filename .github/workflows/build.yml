@@ -31,5 +31,4 @@ jobs:
         uses: EndBug/add-and-commit@v7
         with:
           add: "ome_types"
-          branch: built-ci
           push: --set-upstream origin built --force
