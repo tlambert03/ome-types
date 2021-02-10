@@ -2,8 +2,8 @@ name: test aicsimageio
 
 on:
   push:
-    # branches:
-    #   - "master"
+    branches:
+      - "master"
   workflow_dispatch:
 
 jobs:
@@ -20,6 +20,7 @@ jobs:
       - name: Install ome-types
         run: |
           python -m pip install --upgrade pip
+          pip install wheel
           pip install .[test]
 
       - name: Clone aicsimageio
@@ -30,7 +31,7 @@ jobs:
         id: cache
         with:
           path: aicsimageio/aicsimageio/tests/resources
-          key: ${{ runner.os }}-${{ hashFiles('aicsimageio/scripts/TEST_RESOURCES_HASH.txt') }}
+          key: ${{ hashFiles('aicsimageio/scripts/TEST_RESOURCES_HASH.txt') }}
 
       - name: Install Test Data
         if: steps.cache.outputs.cache-hit != 'true'
