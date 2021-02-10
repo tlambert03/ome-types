@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: 3.9
       - name: Clone master
-          git clone https://github.com/tlambert03/ome-types
+        run: git clone https://github.com/tlambert03/ome-types
       - name: Build
         run: |
           python -m pip install --upgrade pip
