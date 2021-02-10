@@ -86,12 +86,12 @@ OVERRIDES = {
     "MetadataOnly": Override(type_="bool", default="False"),
     # FIXME: Type should be xml.etree.ElementTree.Element but isinstance checks
     # with that class often mysteriously fail so the validator fails.
-    "XMLAnnotation/Value": Override(type_="Any", imports="from typing import Any"),
+    "XMLAnnotation/Value": Override(type_="Element"),
     "BinData/Length": Override(type_="int"),
     # FIXME: hard-coded subclass lists
     "Instrument/LightSourceGroup": Override(
         type_="List[LightSource]",
-        default="field(default_factory=list)",
+        default="Field(default_factory=list)",
         imports="""
             from typing import Dict, Union, Any
             from pydantic import validator
@@ -137,7 +137,7 @@ OVERRIDES = {
     ),
     "ROI/Union": Override(
         type_="List[Shape]",
-        default="field(default_factory=list)",
+        default="Field(default_factory=list)",
         imports="""
             from typing import Dict, Union, Any
             from pydantic import validator
@@ -187,7 +187,7 @@ OVERRIDES = {
     ),
     "OME/StructuredAnnotations": Override(
         type_="List[Annotation]",
-        default="field(default_factory=list)",
+        default="Field(default_factory=list)",
         imports="""
             from typing import Dict, Union, Any
             from pydantic import validator
@@ -247,9 +247,9 @@ OVERRIDES = {
         imports="""
             from typing import Optional
             from .simple_types import UniversallyUniqueIdentifier
+            from ome_types._base_type import OMEType
 
-            @ome_dataclass
-            class UUID:
+            class UUID(OMEType):
                 file_name: str
                 value: UniversallyUniqueIdentifier
         """,
@@ -266,58 +266,93 @@ CLASS_OVERRIDES = {
             from typing import Any
             import weakref
             from ome_types import util
+            from pathlib import Path
         """,
         body="""
-            def __post_init_post_parse__(self: Any, *args: Any) -> None:
+            def __init__(self, **data: Any) -> None:
+                super().__init__(**data)
                 self._link_refs()
 
-            def _link_refs(self):
+            def _link_refs(self) -> None:
                 ids = util.collect_ids(self)
                 for ref in util.collect_references(self):
-                    ref.ref_ = weakref.ref(ids[ref.id])
+                    ref._ref = weakref.ref(ids[ref.id])
 
             def __setstate__(self: Any, state: Dict[str, Any]) -> None:
                 '''Support unpickle of our weakref references.'''
-                self.__dict__.update(state)
+                super().__setstate__(state)
                 self._link_refs()
+
+            @classmethod
+            def from_xml(cls, xml: Union[Path, str]) -> 'OME':
+                from ome_types._convenience import from_xml
+                return from_xml(xml)
+
+            @classmethod
+            def from_tiff(cls, path: Union[Path, str]) -> 'OME':
+                from ome_types._convenience import from_tiff
+                return from_tiff(path)
+
+            def to_xml(self) -> str:
+                from ome_types.schema import to_xml
+                return to_xml(self)
         """,
     ),
     "Reference": ClassOverride(
         imports="""
-            from dataclasses import field
-            from typing import Any, Optional
+            from pydantic import Field
+            from typing import Any, Optional, TYPE_CHECKING
+            from weakref import ReferenceType
             from .simple_types import LSID
         """,
-        # FIXME Figure out typing for ref_ (weakref). Even with the "correct"
-        # typing, Pydantic has a problem.
         fields="""
+            if TYPE_CHECKING:
+                _ref: Optional["ReferenceType[OMEType]"]
+
             id: LSID
-            ref_: Any = field(default=None, init=False)
+            _ref = None
         """,
         # FIXME Could make `ref` abstract and implement stronger-typed overrides
         # in subclasses.
         body="""
             @property
             def ref(self) -> Any:
-                if self.ref_ is None:
+                if self._ref is None:
                     raise ValueError("references not yet resolved on root OME object")
-                return self.ref_()
+                return self._ref()
         """,
     ),
     "XMLAnnotation": ClassOverride(
+        imports="""
+            from xml.etree import ElementTree
+            from typing import Generator
+            from typing import Callable, Generator, Any, Dict
+
+            class Element(ElementTree.Element):
+                '''ElementTree.Element that supports pydantic validation.'''
+                @classmethod
+                def __get_validators__(cls) -> Generator[Callable[[Any], Any], None, None]:
+                    yield cls.validate
+
+                @classmethod
+                def validate(cls, v: Any) -> ElementTree.Element:
+                    if isinstance(v, ElementTree.Element):
+                        return v
+                    try:
+                        return ElementTree.fromstring(v)
+                    except ElementTree.ParseError as e:
+                        raise ValueError(f"Invalid XML string: {e}")
+        """,
         body="""
             # NOTE: pickling this object requires xmlschema>=1.4.1
 
-            def _to_dict(self):
-                from xml.etree import ElementTree
-
-                d = self.__dict__.copy()
-                d["value"] = ElementTree.tostring(d.pop("value")).strip()
+            def dict(self, **k: Any) -> Dict[str, Any]:
+                d = super().dict(**k)
+                d["value"] = ElementTree.tostring(
+                    d.pop("value"), encoding="unicode", method="xml"
+                ).strip()
                 return d
-
-            def __eq__(self, o: "XMLAnnotation") -> bool:
-                return self._to_dict() == o._to_dict()
-        """
+        """,
     ),
     "BinData": ClassOverride(base_type="object", fields="value: str"),
     "Map": ClassOverride(fields_suppress={"K"}),
@@ -397,7 +432,7 @@ def get_docstring(
 
 def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     class_override = CLASS_OVERRIDES.get(component.local_name, None)
-    lines = ["from ome_types.dataclasses import ome_dataclass", ""]
+    lines = ["from ome_types._base_type import OMEType", ""]
     if isinstance(component, XsdType):
         base_type = component.base_type
     else:
@@ -405,18 +440,18 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
 
     if class_override and class_override.base_type:
         if class_override.base_type == "object":
-            base_name = ""
+            base_name = "(OMEType)"
         else:
-            base_name = f"({class_override.base_type})"
+            base_name = f"({class_override.base_type}, OMEType)"
         base_type = None
     elif base_type and not hasattr(base_type, "python_type"):
-        base_name = f"({base_type.local_name})"
+        base_name = f"({base_type.local_name}, OMEType)"
         if base_type.is_complex():
             lines += [local_import(base_type.local_name)]
         else:
             lines += [f"from .simple_types import {base_type.local_name}"]
     else:
-        base_name = ""
+        base_name = "(OMEType)"
     if class_override and class_override.imports:
         lines.append(class_override.imports)
 
@@ -437,13 +472,7 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     lines += members.imports()
     lines += members.locals()
 
-    cannot_have_required_args = base_type and members.has_non_default_args()
-    if cannot_have_required_args:
-        lines[0] += ", EMPTY"
-    if members.has_nonref_id():
-        lines[0] += ", AUTO_SEQUENCE"
-
-    lines += ["@ome_dataclass", f"class {component.local_name}{base_name}:"]
+    lines += [f"class {component.local_name}{base_name}:"]
     doc = get_docstring(component, summary=True)
     doc = MemberSet(iter_members(component)).docstring(
         doc or f"{component.local_name}."
@@ -452,12 +481,7 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     lines += indent(doc, "    ").splitlines()
     if class_override and class_override.fields:
         lines.append(class_override.fields)
-    lines += members.lines(
-        indent=1,
-        force_defaults=" = EMPTY  # type: ignore"
-        if cannot_have_required_args
-        else None,
-    )
+    lines += members.lines(indent=1)
 
     if class_override and class_override.body:
         lines.append(class_override.body)
@@ -658,7 +682,7 @@ class Member:
         if not self.max_occurs:
             imports.append("from typing import List")
             if self.is_optional:
-                imports.append("from dataclasses import field")
+                imports.append("from pydantic import Field")
         elif self.is_optional:
             imports.append("from typing import Optional")
         if self.is_decimal:
@@ -733,13 +757,11 @@ class Member:
         if self.key in OVERRIDES:
             default = OVERRIDES[self.key].default
             return f" = {default}" if default else ""
-        elif self.is_nonref_id:
-            return " = AUTO_SEQUENCE  # type: ignore"
         elif not self.is_optional:
             return ""
 
         if not self.max_occurs:
-            default_val = "field(default_factory=list)"
+            default_val = "Field(default_factory=list)"
         else:
             default_val = self.component.default
             if default_val is not None:
@@ -760,7 +782,6 @@ class Member:
 
     @property
     def is_optional(self) -> bool:
-        # FIXME: hack.  doesn't fully capture the restriction
         if self.is_ref_id:
             return False
         if getattr(self.component.parent, "model", "") == "choice":
@@ -773,11 +794,8 @@ class Member:
         type_ = "element" if isinstance(self.component, XsdElement) else "attribute"
         return f"<Member {type_} {self.component.local_name}>"
 
-    def format(self, force_default: str = None) -> str:
-        default = self.default_val_str
-        if force_default:
-            default = default or force_default
-        return f"{self.identifier}{self.full_type_string}{default}"
+    def format(self) -> str:
+        return f"{self.identifier}{self.full_type_string}{self.default_val_str}"
 
 
 class MemberSet:
@@ -798,12 +816,12 @@ class MemberSet:
         for member in members:
             self.add(member)
 
-    def lines(self, indent: int = 1, force_defaults: str = None) -> List[str]:
+    def lines(self, indent: int = 1) -> List[str]:
         if not self._members:
             lines = ["    " * indent + "pass"]
         else:
             lines = [
-                "    " * indent + m.format(force_defaults)
+                "    " * indent + m.format()
                 for m in sorted(self._members, key=sort_prop)
             ]
         return lines
@@ -958,7 +976,7 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
     if isinstance(url, Path):
         url = str(url)
     schema = XMLSchema(url)
-    print("Building dataclasses ...")
+    print("Building model ...")
     shutil.rmtree(target_dir, ignore_errors=True)
     init_imports = []
     simples: List[GlobalElem] = []

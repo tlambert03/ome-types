@@ -1,6 +1,5 @@
 import os.path
 from collections import defaultdict
-from dataclasses import MISSING, fields, is_dataclass
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
@@ -11,6 +10,8 @@ from xml.etree import ElementTree
 import xmlschema
 from elementpath.datatypes import DateTime10
 from xmlschema.converters import ElementData, XMLSchemaConverter
+
+from ome_types._base_type import OMEType
 
 from . import util
 from .model import (
@@ -173,7 +174,7 @@ class OMEConverter(XMLSchemaConverter):
         self, obj: Any, xsd_element: xmlschema.XsdElement, level: int = 0
     ) -> ElementData:
         tag = xsd_element.qualified_name
-        if not is_dataclass(obj):
+        if not isinstance(obj, OMEType):
             if isinstance(obj, datetime):
                 return ElementData(tag, DateTime10.fromdatetime(obj), None, {})
             elif isinstance(obj, ElementTree.Element):
@@ -203,17 +204,17 @@ class OMEConverter(XMLSchemaConverter):
             lambda: -1,
             ((_camel_to_snake[e.local_name], i) for i, e in enumerate(xsd_element)),
         )
+        _fields = obj.__fields__.values()
         for field in sorted(
-            fields(obj),
+            _fields,
             key=lambda f: tag_index[_plural_to_singular.get(f.name, f.name)],
         ):
             name = field.name
             if name.endswith("_"):
                 continue
-            if field.default_factory is not MISSING:  # type: ignore
-                default = field.default_factory()  # type: ignore
-            else:
-                default = field.default
+            default = (
+                field.default_factory() if field.default_factory else field.default
+            )
             value = getattr(obj, name)
             if value == default:
                 continue
@@ -291,7 +292,7 @@ def to_xml_element(ome: OME) -> ElementTree.Element:
     return root
 
 
-def to_xml(ome: OME, **kwargs) -> str:  # type: ignore
+def to_xml(ome: OME, **kwargs: Any) -> str:
     """
     Dump an OME object to string.
 
@@ -309,5 +310,6 @@ def to_xml(ome: OME, **kwargs) -> str:  # type: ignore
     """
     root = to_xml_element(ome)
     ElementTree.register_namespace("", URI_OME)
-    xml = ElementTree.tostring(root, "unicode", **kwargs)
-    return xml
+    kwargs.setdefault("encoding", "unicode")
+    kwargs.setdefault("method", "xml")
+    return ElementTree.tostring(root, **kwargs)

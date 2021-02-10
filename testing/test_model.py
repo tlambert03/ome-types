@@ -7,6 +7,7 @@ from xml.etree import ElementTree
 
 import pytest
 import util
+from pydantic import ValidationError
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
@@ -156,10 +157,19 @@ def test_no_id():
 
 def test_required_missing():
     """Test subclasses with non-default arguments still work."""
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(ValidationError) as e:
         _ = model.BooleanAnnotation()
-    assert "missing 1 required argument: ['value']" in str(e)
+    assert "1 validation error for BooleanAnnotation" in str(e.value)
+    assert "value\n  field required" in str(e.value)
 
-    with pytest.raises(TypeError) as e:
+    with pytest.raises(ValidationError) as e:
         _ = model.Label()
-    assert "missing 2 required arguments: ['x', 'y']" in str(e)
+    assert "2 validation errors for Label" in str(e.value)
+    assert "x\n  field required" in str(e.value)
+    assert "y\n  field required" in str(e.value)
+
+
+def test_refs():
+    xml = Path(__file__).parent / "data" / "two-screens-two-plates-four-wells.ome.xml"
+    ome = from_xml(xml)
+    assert ome.screens[0].plate_ref[0].ref is ome.plates[0]
