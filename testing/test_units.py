@@ -3,7 +3,7 @@ from pint import DimensionalityError
 from pydantic import ValidationError
 
 from ome_types._units import ureg
-from ome_types.model import Channel, Laser, Plane
+from ome_types.model import Channel, Laser, Plane, simple_types
 
 
 def test_quantity_math():
@@ -62,3 +62,13 @@ def test_reference_frame():
     conversion_factor = ureg.Quantity(1, "micron/reference_frame")
     position_x = plane.position_x_quantity * conversion_factor
     assert position_x.check("[length]")
+
+
+def test_all_units():
+    """Test that all Unit* enums are in the registry."""
+    for t in dir(simple_types):
+        if not t.startswith("Unit"):
+            continue
+        e = getattr(simple_types, t)
+        for v in e.__members__.values():
+            assert v.value.replace(" ", "_") in ureg
