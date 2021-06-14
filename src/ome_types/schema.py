@@ -82,9 +82,14 @@ class OMEConverter(XMLSchemaConverter):
         self, namespaces: Optional[Dict[str, Any]] = None, **kwargs: Dict[Any, Any]
     ):
         super().__init__(namespaces, attr_prefix="")
+        for name, uri in self._namespaces.items():
+            if uri == URI_OME:
+                self._ome_ns = name
 
     def map_qname(self, qname: str) -> str:
         name = super().map_qname(qname)
+        if name.lower().startswith(self._ome_ns):
+            name = name[len(self._ome_ns) :].lstrip(":")
         return _camel_to_snake.get(name, name)
 
     def element_decode(self, data, xsd_element, xsd_type=None, level=0):  # type: ignore
