@@ -9,7 +9,7 @@ def download_test_resources() -> None:
 
     # Get the specific hash for test resources
     with open(root / "aicsimageio" / "scripts" / "TEST_RESOURCES_HASH.txt", "r") as f:
-        top_hash = f.readline()
+        top_hash = f.readline().strip()
 
     # Download test resources
     resources.mkdir(exist_ok=True)
