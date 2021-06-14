@@ -173,3 +173,9 @@ def test_refs():
     xml = Path(__file__).parent / "data" / "two-screens-two-plates-four-wells.ome.xml"
     ome = from_xml(xml)
     assert ome.screens[0].plate_ref[0].ref is ome.plates[0]
+
+
+def test_with_ome_ns():
+    xml = Path(__file__).parent / "data" / "ome_ns.ome.xml"
+    ome = from_xml(xml)
+    assert ome.experimenters
