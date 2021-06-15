@@ -9,9 +9,10 @@ from xml.etree import ElementTree
 
 import xmlschema
 from elementpath.datatypes import DateTime10
-from xmlschema.converters import ElementData, XMLSchemaConverter
 from xmlschema import XMLSchemaParseError
+from xmlschema.converters import ElementData, XMLSchemaConverter
 from xmlschema.documents import XMLSchemaValueError
+
 from ome_types._base_type import OMEType
 
 from . import util
