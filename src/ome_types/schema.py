@@ -10,6 +10,8 @@ from xml.etree import ElementTree
 import xmlschema
 from elementpath.datatypes import DateTime10
 from xmlschema.converters import ElementData, XMLSchemaConverter
+from xmlschema.resources import XMLResource
+from xmlschema.documents import get_context
 
 from ome_types._base_type import OMEType
 
@@ -33,12 +35,12 @@ __cache__: Dict[str, xmlschema.XMLSchema] = {}
 
 
 @lru_cache(maxsize=8)
-def _build_schema(namespace: str) -> xmlschema.XMLSchema:
+def _build_schema(resource: XMLResource) -> xmlschema.XMLSchema:
     """Return Schema object for a url.
 
     For the special case of retrieving the 2016-06 OME Schema, use local file.
     """
-    if namespace == URI_OME:
+    if resource == URI_OME or resource.namespace == URI_OME:
         schema = xmlschema.XMLSchema(str(Path(__file__).parent / "ome-2016-06.xsd"))
         # FIXME Hack to work around xmlschema poor support for keyrefs to
         # substitution groups
@@ -46,7 +48,7 @@ def _build_schema(namespace: str) -> xmlschema.XMLSchema:
         ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
         ls_id_maps.elements = {e: None for e in ls_sgs}
     else:
-        schema = xmlschema.XMLSchema(namespace)
+        _, schema = get_context(resource)
     return schema
 
 
@@ -66,10 +68,8 @@ def get_schema(source: Union[xmlschema.XMLResource, str]) -> xmlschema.XMLSchema
         An XMLSchema object for the source
     """
     if not isinstance(source, xmlschema.XMLResource):
-        resource = xmlschema.XMLResource(source)
-    else:
-        resource = source
-    return _build_schema(resource.namespace)
+        source = xmlschema.XMLResource(source)
+    return _build_schema(source)
 
 
 def validate(xml: str, schema: Optional[xmlschema.XMLSchema] = None) -> None:
@@ -82,6 +82,7 @@ class OMEConverter(XMLSchemaConverter):
         self, namespaces: Optional[Dict[str, Any]] = None, **kwargs: Dict[Any, Any]
     ):
         super().__init__(namespaces, attr_prefix="")
+        self._ome_ns = ''
         for name, uri in self._namespaces.items():
             if uri == URI_OME:
                 self._ome_ns = name
