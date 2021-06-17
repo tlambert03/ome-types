@@ -9,7 +9,9 @@ from xml.etree import ElementTree
 
 import xmlschema
 from elementpath.datatypes import DateTime10
+from xmlschema import XMLSchemaParseError
 from xmlschema.converters import ElementData, XMLSchemaConverter
+from xmlschema.documents import XMLSchemaValueError
 
 from ome_types._base_type import OMEType
 
@@ -33,12 +35,12 @@ __cache__: Dict[str, xmlschema.XMLSchema] = {}
 
 
 @lru_cache(maxsize=8)
-def _build_schema(namespace: str) -> xmlschema.XMLSchema:
+def _build_schema(ns: str, uri: str = None) -> xmlschema.XMLSchema:
     """Return Schema object for a url.
 
     For the special case of retrieving the 2016-06 OME Schema, use local file.
     """
-    if namespace == URI_OME:
+    if ns == URI_OME:
         schema = xmlschema.XMLSchema(str(Path(__file__).parent / "ome-2016-06.xsd"))
         # FIXME Hack to work around xmlschema poor support for keyrefs to
         # substitution groups
@@ -46,7 +48,7 @@ def _build_schema(namespace: str) -> xmlschema.XMLSchema:
         ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
         ls_id_maps.elements = {e: None for e in ls_sgs}
     else:
-        schema = xmlschema.XMLSchema(namespace)
+        schema = xmlschema.XMLSchema(uri)
     return schema
 
 
@@ -66,10 +68,14 @@ def get_schema(source: Union[xmlschema.XMLResource, str]) -> xmlschema.XMLSchema
         An XMLSchema object for the source
     """
     if not isinstance(source, xmlschema.XMLResource):
-        resource = xmlschema.XMLResource(source)
-    else:
-        resource = source
-    return _build_schema(resource.namespace)
+        source = xmlschema.XMLResource(source)
+
+    for ns, uri in source.get_locations():
+        try:
+            return _build_schema(ns, uri)
+        except XMLSchemaParseError:
+            pass
+    raise XMLSchemaValueError(f"Could not find a schema for XML resource {source!r}.")
 
 
 def validate(xml: str, schema: Optional[xmlschema.XMLSchema] = None) -> None:
@@ -81,6 +87,7 @@ class OMEConverter(XMLSchemaConverter):
     def __init__(
         self, namespaces: Optional[Dict[str, Any]] = None, **kwargs: Dict[Any, Any]
     ):
+        self._ome_ns = ""
         super().__init__(namespaces, attr_prefix="")
         for name, uri in self._namespaces.items():
             if uri == URI_OME:
