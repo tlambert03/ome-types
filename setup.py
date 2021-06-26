@@ -11,5 +11,4 @@ class build_py(_build_py):
 setup(
     cmdclass={"build_py": build_py},
     use_scm_version={"write_to": "src/ome_types/_version.py"},
-    setup_requires=["setuptools_scm"],
 )
