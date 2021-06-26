@@ -25,8 +25,6 @@ class OMETree(QTreeWidget):
         self, ome_dict: dict = None, viewer: "napari.viewer.Viewer" = None, parent=None
     ) -> None:
         super().__init__(parent=parent)
-        if viewer is not None:
-            viewer.layers.selection.events.active.connect(self._on_layer_change)
         self._viewer = viewer
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(True)
@@ -39,21 +37,34 @@ class OMETree(QTreeWidget):
         self.clear()
 
         self._current_path: Optional[str] = None
-        self.update(ome_dict)
+        if ome_dict:
+            self.update(ome_dict)
+
+        if viewer is not None:
+            viewer.layers.selection.events.active.connect(
+                lambda e: self._try_load_layer(e.value)
+            )
+            self._try_load_layer(viewer.layers.selection.active)
 
     def clear(self):
         self.headerItem().setText(0, "drag/drop file...")
         super().clear()
 
-    def _on_layer_change(self, event):
-        layer = event.value
+    def _try_load_layer(self, layer):
+        """Handle napari viewer behavior"""
         if layer is not None:
             path = str(layer.source.path)
-            if path.endswith((".tiff", ".tif")) and path != self._current_path:
+            ome = None
+            if callable(layer.metadata):
+                ome = layer.metadata()
+            elif isinstance(layer.metadata, OME):
+                ome = layer.metadata
+            elif path.endswith((".tiff", ".tif")) and path != self._current_path:
                 try:
                     ome = OME.from_tiff(path)
                 except Exception:
                     return
+            if isinstance(ome, OME):
                 self._current_path = path
                 self.update(ome)
                 self.headerItem().setText(0, os.path.basename(path))
