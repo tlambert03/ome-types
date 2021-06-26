@@ -23,4 +23,4 @@ repos:
     rev: "v0.902"
     hooks:
       - id: mypy
-        exclude: ^testing|^docs
+        exclude: ^testing|^docs|_napari_plugin
