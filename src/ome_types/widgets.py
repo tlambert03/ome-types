@@ -50,15 +50,18 @@ class OMETree(QTreeWidget):
         self.headerItem().setText(0, "drag/drop file...")
         super().clear()
 
-    def _try_load_layer(self, layer):
+    def _try_load_layer(self, layer: "napari.layers.Layer"):
         """Handle napari viewer behavior"""
+        from ._napari_plugin import METADATA_KEY
+
         if layer is not None:
             path = str(layer.source.path)
             ome = None
-            if callable(layer.metadata):
-                ome = layer.metadata()
-            elif isinstance(layer.metadata, OME):
-                ome = layer.metadata
+            ome_meta = layer.metadata.get(METADATA_KEY)
+            if callable(ome_meta):
+                ome_meta = ome_meta()
+            if isinstance(ome_meta, OME):
+                ome = ome_meta
             elif path.endswith((".tiff", ".tif")) and path != self._current_path:
                 try:
                     ome = OME.from_tiff(path)

@@ -2,6 +2,8 @@ from napari_plugin_engine import napari_hook_implementation
 
 from .widgets import OMETree
 
+METADATA_KEY = "ome_types"
+
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
