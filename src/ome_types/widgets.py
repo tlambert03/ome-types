@@ -56,10 +56,18 @@ class OMETree(QTreeWidget):
 
         if layer is not None:
             path = str(layer.source.path)
+
+            # deprecated... don't do this ... it should be a dict
+            if callable(layer.metadata):
+                ome_meta = layer.metadata()
+            elif isinstance(layer.metadata, OME):
+                ome_meta = layer.metadata
+            else:
+                ome_meta = layer.metadata.get(METADATA_KEY)
+                if callable(ome_meta):
+                    ome_meta = ome_meta()
+
             ome = None
-            ome_meta = layer.metadata.get(METADATA_KEY)
-            if callable(ome_meta):
-                ome_meta = ome_meta()
             if isinstance(ome_meta, OME):
                 ome = ome_meta
             elif path.endswith((".tiff", ".tif")) and path != self._current_path:
