@@ -545,6 +545,9 @@ def make_color() -> List[str]:
             if isinstance(o, Color):
                 return self.as_int32() == o.as_int32()
             return False
+
+        def __int__(self) -> int:
+            return self.as_int32()
     """
     return dedent(color).strip().splitlines()
 
