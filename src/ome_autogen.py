@@ -521,6 +521,34 @@ def make_enum(component: XsdComponent) -> List[str]:
     return lines
 
 
+def make_color() -> List[str]:
+    color = """
+    from pydantic import color
+    class Color(color.Color):
+        def __init__(self, val: color.ColorType) -> None:
+            if isinstance(val, int):
+                val = self._int2tuple(val)
+            super().__init__(val)
+
+        @classmethod
+        def _int2tuple(cls, val: int):
+            return (val >> 24 & 255, val >> 16 & 255, val >> 8 & 255, (val & 255) / 255)
+
+        def as_int32(self) -> int:
+            r, g, b, *a = self.as_rgb_tuple()
+            v = r << 24 | g << 16 | b << 8 | int((a[0] if a else 1) * 255)
+            if v < 2 ** 32 // 2:
+                return v
+            return v - 2 ** 32
+
+        def __eq__(self, o: object) -> bool:
+            if isinstance(o, Color):
+                return self.as_int32() == o.as_int32()
+            return False
+    """
+    return dedent(color).strip().splitlines()
+
+
 facet_converters = {
     qnames.XSD_PATTERN: lambda f: [f"regex = re.compile(r'{f.regexps[0]}')"],
     qnames.XSD_MIN_INCLUSIVE: lambda f: [f"ge = {f.value}"],
@@ -888,6 +916,8 @@ class GlobalElem:
         return is_enum
 
     def _simple_class(self) -> List[str]:
+        if self.type.local_name == "Color":
+            return make_color()
         if self.is_enum:
             return make_enum(self.elem)
 

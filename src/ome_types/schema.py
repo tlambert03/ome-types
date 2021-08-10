@@ -23,6 +23,7 @@ from .model import (
     _plural_to_singular,
     _singular_to_plural,
     _snake_to_camel,
+    simple_types,
 )
 
 URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
@@ -228,10 +229,10 @@ class OMEConverter(XMLSchemaConverter):
                 field.default_factory() if field.default_factory else field.default
             )
             value = getattr(obj, name)
-            if value == default:
+            if value == default or name == "metadata_only" and not value:
                 continue
-            elif name == "metadata_only" and not value:
-                continue
+            if isinstance(value, simple_types.Color):
+                value = value.as_int32()
             name = _plural_to_singular.get(name, name)
             name = _snake_to_camel.get(name, name)
             if name in xsd_element.attributes:
