@@ -116,10 +116,10 @@ def _download(url: str, progress: bool = True) -> bytes:
 
 def _load_loci(
     java_mem: str = "1024m",
-    loci_tools: Union[str, Path] = Path(__file__).parent / "loci_tools.jar",
 ) -> "jpype.JPackage":
     import jpype
 
+    loci_tools = get_loci_tools()
     if not jpype.isJVMStarted():
         jpype.startJVM(
             jpype.getDefaultJVMPath(),
@@ -136,7 +136,7 @@ def _load_loci(
     return jpype.JPackage("loci")
 
 
-def bioformats_xml(path: str) -> str:
+def bioformats_xml(path: Union[str, Path]) -> str:
     """Return OME-XML for a file at `path` using bioformats reader."""
     loci = _load_loci()
     _meta = loci.formats.MetadataTools.createOMEXMLMetadata()

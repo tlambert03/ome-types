@@ -104,7 +104,7 @@ def _tiff2xml(path: Union[Path, str]) -> str:
     return desc.decode("utf-8")
 
 
-def from_bioformats(path: str) -> OME:
+def from_bioformats(path: Union[str, Path]) -> OME:
     from .bioformats import bioformats_xml
 
     return from_xml(bioformats_xml(path))
