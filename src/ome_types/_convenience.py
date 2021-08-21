@@ -104,7 +104,13 @@ def _tiff2xml(path: Union[Path, str]) -> str:
     return desc.decode("utf-8")
 
 
-def from_bioformats(path: Union[str, Path]) -> OME:
-    from .bioformats import bioformats_xml
+def _bioformats2xml(path: Union[str, Path]) -> str:
+    """Get OME-XML using bioformats reader"""
+    from ._bioformats import bioformats_xml
 
-    return from_xml(bioformats_xml(path))
+    return bioformats_xml(path)
+
+
+def from_bioformats(path: Union[str, Path]) -> OME:
+    """Get OME model using Bioformats reader."""
+    return from_xml(_bioformats2xml(path))
