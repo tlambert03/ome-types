@@ -1,11 +1,8 @@
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import Union
 
 from .model import OME
-
-if TYPE_CHECKING:
-    import jpype
 
 
 def from_xml(xml: Union[Path, str]) -> OME:  # type: ignore
@@ -107,36 +104,7 @@ def _tiff2xml(path: Union[Path, str]) -> str:
     return desc.decode("utf-8")
 
 
-def _load_loci(
-    java_mem: str = "1024m",
-    loci_tools: Union[str, Path] = Path(__file__).parent / "loci_tools.jar",
-) -> "jpype.JPackage":
-    import jpype
-
-    if not jpype.isJVMStarted():
-        jpype.startJVM(
-            jpype.getDefaultJVMPath(),
-            "-ea",
-            f"-Djava.class.path={loci_tools}",
-            "-Xmx" + java_mem,
-            convertStrings=False,
-        )
-        log4j = jpype.JPackage("org.apache.log4j")
-        log4j.BasicConfigurator.configure()
-        log4j_logger = log4j.Logger.getRootLogger()
-        log4j_logger.setLevel(log4j.Level.ERROR)
-
-    return jpype.JPackage("loci")
-
-
-def bioformats_xml(path: str) -> str:
-    loci = _load_loci()
-    _meta = loci.formats.MetadataTools.createOMEXMLMetadata()
-    rdr = loci.formats.ChannelSeparator(loci.formats.ChannelFiller())
-    rdr.setMetadataStore(_meta)
-    rdr.setId(str(path))
-    return str(_meta.dumpXML())
-
-
 def from_bioformats(path: str) -> OME:
+    from .bioformats import bioformats_xml
+
     return from_xml(bioformats_xml(path))
