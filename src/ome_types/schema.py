@@ -160,7 +160,7 @@ class OMEConverter(XMLSchemaConverter):
                 return ElementData(tag, obj, None, {})
             elif xsd_element.local_name == "MetadataOnly":
                 return ElementData(tag, None, None, {})
-            elif xsd_element.local_name in {"StructuredAnnotations"}:
+            elif xsd_element.local_name in {"Union", "StructuredAnnotations"}:
                 names = [type(v).__name__ for v in obj]
                 content = [(f"{NS_OME}{n}", v) for n, v in zip(names, obj)]
                 return ElementData(tag, None, content, {})
@@ -209,6 +209,7 @@ class OMEConverter(XMLSchemaConverter):
                 text = value
             else:
                 if not isinstance(value, list) or name in {
+                    "Union",
                     "StructuredAnnotations",
                 }:
                     value = [value]

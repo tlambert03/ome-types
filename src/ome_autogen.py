@@ -120,10 +120,9 @@ OVERRIDES = {
         type_="List[ShapeGroupType]",
         default="Field(default_factory=list)",
         imports="""
-            from typing import Dict, Union, Any, Sequence
+            from typing import Dict, Union, Any, Sequence, Iterator
             from pydantic import validator
 
-            from ..util import _flatten_union_dict
             from .annotation_ref import AnnotationRef
             from .shape_group import ShapeGroupType
             from .simple_types import ROIID
@@ -132,10 +131,20 @@ OVERRIDES = {
             @validator("union", pre=True)
             def _validate_union(cls, value: Any) -> Sequence[Dict[str, Any]]:
                 if isinstance(value, dict):
-                    return list(_flatten_union_dict(value))
+                    return list(cls._flatten_union_dict(value))
                 if not isinstance(value, Sequence):
                     raise TypeError("must be dict or sequence of dicts")
                 return value
+
+            @classmethod
+            def _flatten_union_dict(cls, nested: Dict[str, Any], keyname: str = "kind"
+            ) -> Iterator[Dict[str, Any]]:
+                for key, value in nested.items():
+                    keydict = {keyname: key} if keyname else {}
+                    if isinstance(value, list):
+                        yield from ({**x, **keydict} for x in value)
+                    else:
+                        yield {**value, **keydict}
         """,
     ),
     "OME/StructuredAnnotations": Override(
@@ -328,6 +337,22 @@ CLASS_OVERRIDES = {
     ),
     "GenericExcitationSource": ClassOverride(
         fields='kind: Literal["generic_excitation_source"] = "generic_excitation_source"',
+        imports="from typing_extensions import Literal",
+    ),
+    "Label": ClassOverride(
+        fields='kind: Literal["label"] = "label"',
+        imports="from typing_extensions import Literal",
+    ),
+    "Point": ClassOverride(
+        fields='kind: Literal["point"] = "point"',
+        imports="from typing_extensions import Literal",
+    ),
+    "Mask": ClassOverride(
+        fields='kind: Literal["mask"] = "mask"',
+        imports="from typing_extensions import Literal",
+    ),
+    "Rectangle": ClassOverride(
+        fields='kind: Literal["rectangle"] = "rectangle"',
         imports="from typing_extensions import Literal",
     ),
 }
