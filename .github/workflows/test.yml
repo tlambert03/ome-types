@@ -25,9 +25,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install java
-        if: runner.os == 'macOS'
-        run: brew install openjdk
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
 
       - name: Install dependencies
         run: |
