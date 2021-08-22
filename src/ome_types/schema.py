@@ -112,44 +112,6 @@ class OMEConverter(XMLSchemaConverter):
         elif xsd_element.local_name == "BinData":
             if result["length"] == 0 and "value" not in result:
                 result["value"] = ""
-        elif xsd_element.local_name == "Instrument":
-            light_sources = []
-            for _type in (
-                "laser",
-                "arc",
-                "filament",
-                "light_emitting_diode",
-                "generic_excitation_source",
-            ):
-                if _type in result:
-                    values = result.pop(_type)
-                    if isinstance(values, dict):
-                        values = [values]
-                    for v in values:
-                        v["_type"] = _type
-                    light_sources.extend(values)
-            if light_sources:
-                result["light_source_group"] = light_sources
-        elif xsd_element.local_name == "Union":
-            shapes = []
-            for _type in (
-                "point",
-                "line",
-                "rectangle",
-                "ellipse",
-                "polyline",
-                "polygon",
-                "mask",
-                "label",
-            ):
-                if _type in result:
-                    values = result.pop(_type)
-                    if isinstance(values, dict):
-                        values = [values]
-                    for v in values:
-                        v["_type"] = _type
-                    shapes.extend(values)
-            result = shapes
         elif xsd_element.local_name == "StructuredAnnotations":
             annotations = []
             for _type in (
@@ -198,7 +160,7 @@ class OMEConverter(XMLSchemaConverter):
                 return ElementData(tag, obj, None, {})
             elif xsd_element.local_name == "MetadataOnly":
                 return ElementData(tag, None, None, {})
-            elif xsd_element.local_name in {"Union", "StructuredAnnotations"}:
+            elif xsd_element.local_name in {"StructuredAnnotations"}:
                 names = [type(v).__name__ for v in obj]
                 content = [(f"{NS_OME}{n}", v) for n, v in zip(names, obj)]
                 return ElementData(tag, None, content, {})
@@ -247,7 +209,6 @@ class OMEConverter(XMLSchemaConverter):
                 text = value
             else:
                 if not isinstance(value, list) or name in {
-                    "Union",
                     "StructuredAnnotations",
                 }:
                     value = [value]

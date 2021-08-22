@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterator, List
 
 from ._base_type import OMEType
 from .model.reference import Reference
@@ -47,3 +47,30 @@ def collect_ids(value: Any) -> Dict[LSID, OMEType]:
                 ids.update(collect_ids(getattr(value, f)))
     # Do nothing for uninteresting types.
     return ids
+
+
+def _flatten_union_dict(
+    nested: Dict[str, Any], keyname: str = "type_"
+) -> Iterator[Dict[str, Any]]:
+    """Convert dict of dict-or-list to list of dict.
+
+    (This shows up a lot in Union declarations)
+    {
+        'key1': {...},
+        'key2: [{...}, {...}]
+    }
+
+    returns
+
+    [
+        {..., 'type_': 'key1'},
+        {..., 'type_': 'key2'},
+        {..., 'type_': 'key2'}
+    ]
+    """
+    for key, value in nested.items():
+        keydict = {keyname: key} if keyname else {}
+        if isinstance(value, list):
+            yield from ({**x, **keydict} for x in value)
+        else:
+            yield {**value, **keydict}
