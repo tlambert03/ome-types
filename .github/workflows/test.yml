@@ -43,6 +43,8 @@ jobs:
           key: ${{ hashFiles('src/ome_types/_bioformats.py') }}
 
       - name: Test with tox
-        run: tox
+        run: |
+          echo "JAVA $JAVA_HOME"
+          tox
         env:
           PLATFORM: ${{ matrix.platform }}
