@@ -24,6 +24,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+      
+      - name: Install java
+        if: runner.os == 'macOS'
+        run: brew install openjdk
 
       - name: Install dependencies
         run: |
