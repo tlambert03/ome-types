@@ -5,7 +5,7 @@ from typing import Union
 from .model import OME
 
 
-def from_xml(xml: Union[Path, str]) -> OME:  # type: ignore
+def from_xml(xml: Union[Path, str], validate=False) -> OME:  # type: ignore
     """Generate OME metadata object from XML string or path.
 
     Parameters
@@ -18,14 +18,18 @@ def from_xml(xml: Union[Path, str]) -> OME:  # type: ignore
     ome: ome_types.model.ome.OME
         ome_types.OME metadata object
     """
-    from .schema import to_dict
+    if validate:
+        from .schema import to_dict
 
-    xml = os.fspath(xml)
-    d = to_dict(xml)
-    for key in list(d.keys()):
-        if key.startswith(("xml", "xsi")):
-            d.pop(key)
+        xml = os.fspath(xml)
+        d = to_dict(xml)
+        for key in list(d.keys()):
+            if key.startswith(("xml", "xsi")):
+                d.pop(key)
+    else:
+        from .util import lxml2dict
 
+        d = lxml2dict(xml)
     return OME(**d)  # type: ignore
 
 
