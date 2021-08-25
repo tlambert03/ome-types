@@ -8,7 +8,6 @@ from typing import Any, Dict, Optional, Union
 from xml.etree import ElementTree
 
 import xmlschema
-from elementpath.datatypes import DateTime10
 from xmlschema import ElementData, XMLSchemaParseError
 from xmlschema.converters import XMLSchemaConverter
 from xmlschema.documents import XMLSchemaValueError
@@ -189,7 +188,9 @@ class OMEConverter(XMLSchemaConverter):
         tag = xsd_element.qualified_name
         if not isinstance(obj, OMEType):
             if isinstance(obj, datetime):
-                return ElementData(tag, DateTime10.fromdatetime(obj), None, {})
+                return ElementData(
+                    tag, obj.isoformat().replace("+00:00", "Z"), None, {}
+                )
             elif isinstance(obj, ElementTree.Element):
                 # ElementData can't represent mixed content, so we'll leave this
                 # element empty and fix it up after encoding is complete.
@@ -241,7 +242,7 @@ class OMEConverter(XMLSchemaConverter):
                 elif isinstance(value, Enum):
                     value = value.value
                 elif isinstance(value, datetime):
-                    value = DateTime10.fromdatetime(value)
+                    value = value.isoformat().replace("+00:00", "Z")
                 attributes[name] = value
             elif name == "Value" and xsd_element.local_name in {"BinData", "UUID", "M"}:
                 text = value
