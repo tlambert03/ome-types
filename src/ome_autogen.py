@@ -29,6 +29,7 @@ from xmlschema import XMLSchema
 from xmlschema.validators import (
     XsdAnyAttribute,
     XsdAnyElement,
+    XsdAtomicBuiltin,
     XsdAttribute,
     XsdComponent,
     XsdElement,
@@ -638,7 +639,7 @@ class Member:
 
     @property
     def is_builtin_type(self) -> bool:
-        return hasattr(self.type, "python_type")
+        return isinstance(self.type, XsdAtomicBuiltin)
 
     @property
     def is_decimal(self) -> bool:
@@ -923,6 +924,15 @@ class GlobalElem:
             return make_color()
         if self.is_enum:
             return make_enum(self.elem)
+        # Hack for xmlschema > 1.4.1
+        if self.type.local_name == "base64Binary":
+            return ["class base64Binary(ConstrainedStr):", "    pass"]
+        if self.type.local_name == "Hex40":
+            return [
+                "class Hex40(ConstrainedStr):",
+                "    min_length = 20",
+                "    max_length = 20",
+            ]
 
         lines = []
         if self.type.base_type.is_restriction():
