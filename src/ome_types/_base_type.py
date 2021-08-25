@@ -177,3 +177,9 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
         state = super().__getstate__()
         state["__private_attribute_values__"].pop("_ref", None)
         return state
+
+    @classmethod
+    def snake_name(cls) -> str:
+        from .model import _camel_to_snake
+
+        return _camel_to_snake[cls.__name__]
