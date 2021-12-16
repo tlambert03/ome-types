@@ -158,7 +158,7 @@ In [15]: instrument = Instrument(
 
 In [16]: ome.instruments.append(instrument)
 
-In [17]: ome.images[0].instrument_ref = InstrumentRef(instrument.id)
+In [17]: ome.images[0].instrument_ref = InstrumentRef(id=instrument.id)
 
 In [18]: ome.instruments
 Out[18]:
