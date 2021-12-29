@@ -22,18 +22,8 @@ SHOULD_FAIL_ROUNDTRIP = {
     # Order of elements in StructuredAnnotations and Union are jumbled.
     "timestampannotation-posix-only",
     "transformations-downgrade",
-    "transformations-upgrade",
 }
-SKIP_ROUNDTRIP = {
-    # These have XMLAnnotations with extra namespaces and mixed content, which
-    # the automated round-trip test code doesn't properly verify yet. So even
-    # though these files do appear to round-trip correctly when checked by eye,
-    # we'll play it safe and skip them until the test is fixed.
-    "spim",
-    "xmlannotation-body-space",
-    "xmlannotation-multi-value",
-    "xmlannotation-svg",
-}
+SKIP_ROUNDTRIP = set()
 
 
 def mark_xfail(fname):
