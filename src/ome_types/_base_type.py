@@ -72,7 +72,7 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
     # Default value to support automatic numbering for id field values.
     _AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
     # allow use with weakref
-    __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
+    __slots__: ClassVar[Set[str]] = {"__weakref__", "_max_id"}  # type: ignore
 
     def __init__(__pydantic_self__, **data: Any) -> None:
         if "id" in __pydantic_self__.__fields__:
