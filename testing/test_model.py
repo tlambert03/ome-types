@@ -22,7 +22,6 @@ SHOULD_FAIL_ROUNDTRIP = {
     # Order of elements in StructuredAnnotations and Union are jumbled.
     "timestampannotation-posix-only",
     "transformations-downgrade",
-    "transformations-upgrade",
 }
 SKIP_ROUNDTRIP = {
     # These have XMLAnnotations with extra namespaces and mixed content, which

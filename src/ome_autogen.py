@@ -356,6 +356,22 @@ CLASS_OVERRIDES = {
         fields='kind: Literal["rectangle"] = "rectangle"',
         imports="from typing_extensions import Literal",
     ),
+    "Polygon": ClassOverride(
+        fields='kind: Literal["polygon"] = "polygon"',
+        imports="from typing_extensions import Literal",
+    ),
+    "Polyline": ClassOverride(
+        fields='kind: Literal["polyline"] = "polyline"',
+        imports="from typing_extensions import Literal",
+    ),
+    "Line": ClassOverride(
+        fields='kind: Literal["line"] = "line"',
+        imports="from typing_extensions import Literal",
+    ),
+    "Ellipse": ClassOverride(
+        fields='kind: Literal["ellipse"] = "ellipse"',
+        imports="from typing_extensions import Literal",
+    ),
 }
 
 
