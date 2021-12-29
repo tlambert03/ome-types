@@ -841,7 +841,7 @@ class Member:
         return f" = {default_val}"
 
     @property
-    def max_occurs(self) -> bool:
+    def max_occurs(self) -> Optional[int]:
         default = None if self.type.is_list() else 1
         return getattr(self.component, "max_occurs", default)
 
