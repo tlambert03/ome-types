@@ -12,6 +12,9 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools_scm]
+write_to = "src/ome_types/_version.py"
+
 [tool.check-manifest]
 ignore = [
   "*src/ome_types/model/*",
