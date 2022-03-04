@@ -153,7 +153,7 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
 
         # Store the highest seen value on the class._max_id attribute.
         if not hasattr(cls, "_max_id"):
-            cls._max_id = 0
+            setattr(cls, "_max_id", 0)
             cls.__annotations__["_max_id"] = ClassVar[int]
         if value is OMEType._AUTO_SEQUENCE:
             value = cls._max_id + 1
@@ -166,7 +166,7 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
             v_id = value.rsplit(":", 1)[-1]
         try:
             v_id = int(v_id)
-            cls._max_id = max(cls._max_id, v_id)
+            setattr(cls, "_max_id", max(cls._max_id, v_id))
         except ValueError:
             pass
 
@@ -177,3 +177,9 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
         state = super().__getstate__()
         state["__private_attribute_values__"].pop("_ref", None)
         return state
+
+    @classmethod
+    def snake_name(cls) -> str:
+        from .model import _camel_to_snake
+
+        return _camel_to_snake[cls.__name__]
