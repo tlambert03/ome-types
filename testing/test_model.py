@@ -66,14 +66,23 @@ for f in all_xml:
     xml_roundtrip.append(f)
 
 
+validate = [True, False]
+
+
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
-def test_from_xml(xml, benchmark):
+@pytest.mark.parametrize("validate", validate)
+def test_from_xml(xml, validate, benchmark):
 
     if true_stem(xml) in SHOULD_RAISE_READ:
-        with pytest.raises(XMLSchemaValidationError):
-            assert benchmark(from_xml, xml)
+
+        if validate:
+            with pytest.raises(XMLSchemaValidationError):
+                assert benchmark(from_xml, xml, validate=validate)
+        else:
+            with pytest.raises(ValidationError):
+                assert benchmark(from_xml, xml, validate=validate)
     else:
-        assert benchmark(from_xml, xml)
+        assert benchmark(from_xml, xml, validate=validate)
 
 
 def test_from_tiff(benchmark):

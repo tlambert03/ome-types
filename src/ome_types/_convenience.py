@@ -5,7 +5,7 @@ from typing import Union
 from .model import OME
 
 
-def from_xml(xml: Union[Path, str], validate=False) -> OME:  # type: ignore
+def from_xml(xml: Union[Path, str], validate=True) -> OME:  # type: ignore
     """Generate OME metadata object from XML string or path.
 
     Parameters

@@ -1,9 +1,15 @@
+from collections.abc import MutableSequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Union, get_args
 
 from ._base_type import OMEType
+from .model import _lists
 from .model.reference import Reference
+from .model.shape_group import ShapeGroupType
 from .model.simple_types import LSID
+
+NEED_INT = [s.__name__ for s in get_args(ShapeGroupType)]
+NEED_INT.extend(["Channel", "Well"])
 
 URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
 NS_OME = "{" + URI_OME + "}"
@@ -16,6 +22,22 @@ try:
 except ModuleNotFoundError:
     # Maybe when a logger is created, issue a warning
     pass
+
+
+def cast_number(qnum: str) -> Union[str, int, float]:
+    """Attempt to cast a number from a string
+
+    This function attempts to cast a string to a number. It will first try to parse an
+    int, then a float, and finally returns a string if both fail.
+    """
+
+    try:
+        return int(qnum)
+    except ValueError:
+        try:
+            return float(qnum)
+        except ValueError:
+            return qnum
 
 
 def collect_references(value: Any) -> List[Reference]:
@@ -70,22 +92,25 @@ def camel_to_snake(name: str) -> str:
     return result.lower().replace(" ", "_")
 
 
-def norm_key(key: str):
+def norm_key(key: str) -> str:
 
     return etree.QName(key).localname
 
 
-def elem2dict(node: "lxml.etree._Element", exclude_null=True) -> Dict[str, Any]:
+def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[str, Any]:
     """
     Convert an lxml.etree node tree into a dict.
     """
-    from .model import _lists, _singular_to_plural
 
     result: Dict[str, Any] = {}
 
     for key, val in node.attrib.items():
         is_list = key in _lists.get(norm_key(node.tag), {})
         key = camel_to_snake(norm_key(key))
+        if key == "schema_location":
+            continue
+        if norm_key(node.tag) in NEED_INT:
+            val = cast_number(val)
         if is_list:
             key = _get_plural(key, node.tag)
             if key not in result:
@@ -148,24 +173,35 @@ def elem2dict(node: "lxml.etree._Element", exclude_null=True) -> Dict[str, Any]:
                             v["value"] = etree.tostring(elt)
 
                         # Normalize empty element to zero-length string.
-                        if "value" in v and v["value"] is None:
+                        if "value" not in v or v["value"] is None:
                             v["value"] = ""
                     annotations.extend(values)
 
             assert key not in result.keys()
             result[key] = annotations
         elif value or not exclude_null:
-            if key in result.keys():
-                if not isinstance(result[key], list):
-                    result[key] = [result[key]]
-                result[key].append(value)
+
+            try:
+                rv = result[key]
+            except KeyError:
+                if key == "m":
+                    result[key] = [value]
+                else:
+                    result[key] = value
             else:
-                result[key] = value
+                if not isinstance(rv, MutableSequence) or not rv:
+                    result[key] = list([rv, value])
+                elif isinstance(rv[0], MutableSequence) or not isinstance(
+                    value, MutableSequence
+                ):
+                    rv.append(value)
+                else:
+                    result[key] = list([result, value])
 
     return result
 
 
-def _get_plural(key, tag):
+def _get_plural(key: str, tag: str) -> str:
     from .model import _singular_to_plural
 
     try:
@@ -174,10 +210,7 @@ def _get_plural(key, tag):
         return f"{key}s"
 
 
-def lxml2dict(path_or_str) -> dict:
-    if hasattr(path_or_str, "read"):
-        text = path_or_str.read().encode()
-    else:
-        text = Path(path_or_str).read_bytes()
+def lxml2dict(path_or_str: Union[Path, str]) -> Dict[str, Any]:
+    text = Path(path_or_str).read_bytes()
 
     return elem2dict(etree.XML(text))
