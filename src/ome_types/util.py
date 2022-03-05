@@ -2,8 +2,8 @@ from collections.abc import MutableSequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Union, get_args
 
+from . import model
 from ._base_type import OMEType
-from .model import _lists
 from .model.reference import Reference
 from .model.shape_group import ShapeGroupType
 from .model.simple_types import LSID
@@ -105,7 +105,7 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
     result: Dict[str, Any] = {}
 
     for key, val in node.attrib.items():
-        is_list = key in _lists.get(norm_key(node.tag), {})
+        is_list = key in model._lists.get(norm_key(node.tag), {})
         key = camel_to_snake(norm_key(key))
         if key == "schema_location":
             continue
@@ -134,7 +134,7 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
         else:
             value = elem2dict(element)
 
-        is_list = key in _lists.get(norm_key(node.tag), {})
+        is_list = key in model._lists.get(norm_key(node.tag), {})
         key = camel_to_snake(key)
         if is_list:
             key = _get_plural(key, node.tag)
@@ -179,8 +179,8 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
 
             assert key not in result.keys()
             result[key] = annotations
-        elif value or not exclude_null:
 
+        elif value or not exclude_null:
             try:
                 rv = result[key]
             except KeyError:
