@@ -33,7 +33,7 @@ def from_xml(xml: Union[Path, str], validate=True) -> OME:  # type: ignore
     return OME(**d)  # type: ignore
 
 
-def from_tiff(path: Union[Path, str]) -> OME:
+def from_tiff(path: Union[Path, str], validate: bool = True) -> OME:
     """Generate OME metadata object from OME-TIFF path.
 
     This will use the first ImageDescription tag found in the TIFF header.
@@ -53,7 +53,7 @@ def from_tiff(path: Union[Path, str]) -> OME:
     ValueError
         If the TIFF file has no OME metadata.
     """
-    return from_xml(_tiff2xml(path))
+    return from_xml(_tiff2xml(path), validate)
 
 
 def _tiff2xml(path: Union[Path, str]) -> str:

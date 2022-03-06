@@ -1,12 +1,15 @@
+import re
 from collections.abc import MutableSequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Union, get_args
+from typing import TYPE_CHECKING, Any, Dict, List, Set, Union, get_args
 
 from . import model
 from ._base_type import OMEType
 from .model.reference import Reference
 from .model.shape_group import ShapeGroupType
 from .model.simple_types import LSID
+
+CAMEL_REGEX = re.compile(r"(?<!^)(?=[A-Z])")
 
 NEED_INT = [s.__name__ for s in get_args(ShapeGroupType)]
 NEED_INT.extend(["Channel", "Well"])
@@ -85,16 +88,12 @@ def collect_ids(value: Any) -> Dict[LSID, OMEType]:
 
 
 def camel_to_snake(name: str) -> str:
-    import re
-
-    result = re.sub("([A-Z]+)([A-Z][a-z]+)", r"\1_\2", name)
-    result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", result)
-    return result.lower().replace(" ", "_")
+    return model._camel_to_snake.get(name, CAMEL_REGEX.sub("_", name).lower())
 
 
 def norm_key(key: str) -> str:
 
-    return etree.QName(key).localname
+    return key.replace(NS_OME, "")
 
 
 def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[str, Any]:
@@ -104,12 +103,16 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
 
     result: Dict[str, Any] = {}
 
+    # Re-used valued
+    norm_node = norm_key(node.tag)
+    norm_list: Union[Set[str], Dict[Any, Any]] = model._lists.get(norm_node, {})
+
     for key, val in node.attrib.items():
-        is_list = key in model._lists.get(norm_key(node.tag), {})
+        is_list = key in norm_list
         key = camel_to_snake(norm_key(key))
         if key == "schema_location":
             continue
-        if norm_key(node.tag) in NEED_INT:
+        if norm_node in NEED_INT:
             val = cast_number(val)
         if is_list:
             key = _get_plural(key, node.tag)
@@ -134,7 +137,7 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
         else:
             value = elem2dict(element)
 
-        is_list = key in model._lists.get(norm_key(node.tag), {})
+        is_list = key in norm_list
         key = camel_to_snake(key)
         if is_list:
             key = _get_plural(key, node.tag)
@@ -202,12 +205,8 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
 
 
 def _get_plural(key: str, tag: str) -> str:
-    from .model import _singular_to_plural
 
-    try:
-        return _singular_to_plural[(etree.QName(tag).localname, key)]
-    except KeyError:
-        return f"{key}s"
+    return model._singular_to_plural.get((norm_key(tag), key), f"{key}s")
 
 
 def lxml2dict(path_or_str: Union[Path, str]) -> Dict[str, Any]:

@@ -85,10 +85,11 @@ def test_from_xml(xml, validate, benchmark):
         assert benchmark(from_xml, xml, validate=validate)
 
 
-def test_from_tiff(benchmark):
+@pytest.mark.parametrize("validate", validate)
+def test_from_tiff(benchmark, validate):
     """Test that OME metadata extractions from Tiff headers works."""
     _path = Path(__file__).parent / "data" / "ome.tiff"
-    ome = benchmark(from_tiff, _path)
+    ome = benchmark(from_tiff, _path, validate)
     assert len(ome.images) == 1
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
