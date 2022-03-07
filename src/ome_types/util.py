@@ -1,5 +1,6 @@
 import re
 from collections.abc import MutableSequence
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Set, Union, get_args
 
@@ -87,15 +88,17 @@ def collect_ids(value: Any) -> Dict[LSID, OMEType]:
     return ids
 
 
+@lru_cache
 def camel_to_snake(name: str) -> str:
     return model._camel_to_snake.get(name, CAMEL_REGEX.sub("_", name).lower())
 
 
+@lru_cache
 def norm_key(key: str) -> str:
+    return key.split("}")[-1]
 
-    return key.replace(NS_OME, "")
 
-
+# @profile
 def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[str, Any]:
     """
     Convert an lxml.etree node tree into a dict.
@@ -110,15 +113,13 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
     for key, val in node.attrib.items():
         is_list = key in norm_list
         key = camel_to_snake(norm_key(key))
-        if key == "schema_location":
-            continue
         if norm_node in NEED_INT:
             val = cast_number(val)
         if is_list:
             key = _get_plural(key, node.tag)
             if key not in result:
                 result[key] = []
-            result[key].append(val)
+            result[key].extend(val.split())
         else:
             result[key] = val
 
@@ -126,6 +127,7 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
         if isinstance(element, etree._Comment):
             continue
         key = norm_key(element.tag)
+
         # Process element as tree element if the inner XML contains non-whitespace content
         if element.text and element.text.strip():
             value = element.text
@@ -134,16 +136,23 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
                 for k, val in element.attrib.items():
                     value[camel_to_snake(norm_key(k))] = val
 
+        elif key == "MetadataOnly":
+            value = True
+
         else:
             value = elem2dict(element)
 
         is_list = key in norm_list
         key = camel_to_snake(key)
         if is_list:
+            if key == "bin_data":
+                if value["length"] == "0" and "value" not in value:
+                    value["value"] = ""
             key = _get_plural(key, node.tag)
             if key not in result:
                 result[key] = []
             result[key].append(value)
+
         elif key == "structured_annotations":
             annotations = []
             for _type in (
@@ -206,10 +215,21 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
 
 def _get_plural(key: str, tag: str) -> str:
 
-    return model._singular_to_plural.get((norm_key(tag), key), f"{key}s")
+    return model._singular_to_plural.get((norm_key(tag), key), key)
 
 
-def lxml2dict(path_or_str: Union[Path, str]) -> Dict[str, Any]:
-    text = Path(path_or_str).read_bytes()
+def lxml2dict(path_or_str: Union[Path, str, bytes]) -> Dict[str, Any]:
+
+    if isinstance(path_or_str, Path):
+        text = path_or_str.read_bytes()
+    elif isinstance(path_or_str, str):
+        if Path(path_or_str).exists():
+            text = Path(path_or_str).read_bytes()
+        else:
+            text = path_or_str.encode()
+    elif isinstance(path_or_str, bytes):
+        text = path_or_str
+    else:
+        raise TypeError("path_or_str must be one of [Path, str, bytes].")
 
     return elem2dict(etree.XML(text))

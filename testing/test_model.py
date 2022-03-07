@@ -23,6 +23,10 @@ SHOULD_FAIL_ROUNDTRIP = {
     "timestampannotation-posix-only",
     "transformations-downgrade",
 }
+SHOULD_FAIL_ROUNDTRIP_NO_VALID = {
+    "folders-simple-taxonomy",
+    "folders-larger-taxonomy",
+}
 SKIP_ROUNDTRIP = {
     # These have XMLAnnotations with extra namespaces and mixed content, which
     # the automated round-trip test code doesn't properly verify yet. So even
@@ -97,8 +101,10 @@ def test_from_tiff(benchmark, validate):
 
 
 @pytest.mark.parametrize("xml", xml_roundtrip, ids=true_stem)
-def test_roundtrip(xml, benchmark):
+@pytest.mark.parametrize("validate", validate)
+def test_roundtrip(xml, validate, benchmark):
     """Ensure we can losslessly round-trip XML through the model and back."""
+    should_raise = true_stem(xml) in SHOULD_FAIL_ROUNDTRIP_NO_VALID and not validate
     xml = str(xml)
     schema = get_schema(xml)
 
@@ -124,14 +130,20 @@ def test_roundtrip(xml, benchmark):
         return xml_out
 
     original = canonicalize(xml, True)
-    ome = from_xml(xml)
+    ome = from_xml(xml, validate)
     rexml = benchmark(to_xml, ome)
-    assert canonicalize(rexml, False) == original
+
+    if should_raise:
+        with pytest.raises(AssertionError):
+            assert canonicalize(rexml, False) == original
+    else:
+        assert canonicalize(rexml, False) == original
 
 
-def test_to_xml_with_kwargs():
+@pytest.mark.parametrize("validate", validate)
+def test_to_xml_with_kwargs(validate):
     """Ensure kwargs are passed to ElementTree"""
-    ome = from_xml(Path(__file__).parent / "data" / "example.ome.xml")
+    ome = from_xml(Path(__file__).parent / "data" / "example.ome.xml", validate)
 
     with mock.patch("xml.etree.ElementTree.tostring") as mocked_et_tostring:
         element = to_xml_element(ome)
@@ -141,12 +153,13 @@ def test_to_xml_with_kwargs():
 
 
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
-def test_serialization(xml):
+@pytest.mark.parametrize("validate", validate)
+def test_serialization(xml, validate):
     """Test pickle serialization and reserialization."""
     if true_stem(xml) in SHOULD_RAISE_READ:
         pytest.skip("Can't pickle unreadable xml")
 
-    ome = from_xml(xml)
+    ome = from_xml(xml, validate)
     serialized = pickle.dumps(ome)
     deserialized = pickle.loads(serialized)
     assert ome == deserialized
@@ -178,13 +191,15 @@ def test_required_missing():
     assert "y\n  field required" in str(e.value)
 
 
-def test_refs():
+@pytest.mark.parametrize("validate", validate)
+def test_refs(validate):
     xml = Path(__file__).parent / "data" / "two-screens-two-plates-four-wells.ome.xml"
-    ome = from_xml(xml)
+    ome = from_xml(xml, validate=validate)
     assert ome.screens[0].plate_ref[0].ref is ome.plates[0]
 
 
-def test_with_ome_ns():
+@pytest.mark.parametrize("validate", validate)
+def test_with_ome_ns(validate):
     xml = Path(__file__).parent / "data" / "ome_ns.ome.xml"
-    ome = from_xml(xml)
+    ome = from_xml(xml, validate=validate)
     assert ome.experimenters

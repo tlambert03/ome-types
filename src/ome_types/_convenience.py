@@ -5,7 +5,7 @@ from typing import Union
 from .model import OME
 
 
-def from_xml(xml: Union[Path, str], validate=True) -> OME:  # type: ignore
+def from_xml(xml: Union[Path, str, bytes], validate=True) -> OME:  # type: ignore
     """Generate OME metadata object from XML string or path.
 
     Parameters
@@ -22,6 +22,8 @@ def from_xml(xml: Union[Path, str], validate=True) -> OME:  # type: ignore
         from .schema import to_dict
 
         xml = os.fspath(xml)
+        if isinstance(xml, bytes):
+            xml = xml.decode("utf-8")
         d = to_dict(xml)
         for key in list(d.keys()):
             if key.startswith(("xml", "xsi")):
@@ -56,7 +58,7 @@ def from_tiff(path: Union[Path, str], validate: bool = True) -> OME:
     return from_xml(_tiff2xml(path), validate)
 
 
-def _tiff2xml(path: Union[Path, str]) -> str:
+def _tiff2xml(path: Union[Path, str]) -> bytes:
     """Extract OME XML from OME-TIFF path.
 
     This will use the first ImageDescription tag found in the TIFF header.
@@ -105,4 +107,4 @@ def _tiff2xml(path: Union[Path, str]) -> str:
             raise ValueError(f"No OME metadata found in file: {path}")
     if desc[-1] == 0:
         desc = desc[:-1]
-    return desc.decode("utf-8")
+    return desc
