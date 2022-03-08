@@ -2,7 +2,7 @@ import re
 from collections.abc import MutableSequence
 from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Set, Union, get_args
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union, get_args
 
 from . import model
 from ._base_type import OMEType
@@ -17,6 +17,7 @@ NEED_INT.extend(["Channel", "Well"])
 
 URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
 NS_OME = "{" + URI_OME + "}"
+NS_XSI = "{http://www.w3.org/2001/XMLSchema-instance}"
 
 if TYPE_CHECKING:
     import lxml.etree
@@ -98,7 +99,6 @@ def norm_key(key: str) -> str:
     return key.split("}")[-1]
 
 
-# @profile
 def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[str, Any]:
     """
     Convert an lxml.etree node tree into a dict.
@@ -218,7 +218,9 @@ def _get_plural(key: str, tag: str) -> str:
     return model._singular_to_plural.get((norm_key(tag), key), key)
 
 
-def lxml2dict(path_or_str: Union[Path, str, bytes]) -> Dict[str, Any]:
+def lxml2dict(
+    path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False
+) -> Dict[str, Any]:
 
     if isinstance(path_or_str, Path):
         text = path_or_str.read_bytes()
@@ -232,4 +234,22 @@ def lxml2dict(path_or_str: Union[Path, str, bytes]) -> Dict[str, Any]:
     else:
         raise TypeError("path_or_str must be one of [Path, str, bytes].")
 
-    return elem2dict(etree.XML(text))
+    result = etree.XML(text)
+    if validate:
+        for key, val in result.attrib.items():
+            if "schemaLocation" in key:
+                ns, uri = val.split()
+                if ns == URI_OME:
+                    schema_doc = etree.parse(
+                        str(Path(__file__).parent / "ome-2016-06.xsd")
+                    )
+                else:
+                    schema_doc = etree.parse(uri)
+                break
+        schema = etree.XMLSchema(schema_doc)
+        if not schema.validate(result):
+            raise etree.XMLSchemaValidateError(
+                f"XML did not pass validation error against {uri}"
+            )
+
+    return elem2dict(result)

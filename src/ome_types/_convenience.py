@@ -1,11 +1,16 @@
 import os
 from pathlib import Path
-from typing import Union
+from typing import Any, Callable, Dict, Optional, Union
 
 from .model import OME
+from .util import lxml2dict
 
 
-def from_xml(xml: Union[Path, str, bytes], validate=True) -> OME:  # type: ignore
+def from_xml(
+    xml: Union[Path, str, bytes],
+    parser: Callable[..., Dict[str, Any]] = lxml2dict,
+    validate: Optional[bool] = None,
+) -> OME:  # type: ignore
     """Generate OME metadata object from XML string or path.
 
     Parameters
@@ -18,24 +23,26 @@ def from_xml(xml: Union[Path, str, bytes], validate=True) -> OME:  # type: ignor
     ome: ome_types.model.ome.OME
         ome_types.OME metadata object
     """
-    if validate:
-        from .schema import to_dict
+    xml = os.fspath(xml)
 
-        xml = os.fspath(xml)
-        if isinstance(xml, bytes):
-            xml = xml.decode("utf-8")
-        d = to_dict(xml)
-        for key in list(d.keys()):
-            if key.startswith(("xml", "xsi")):
-                d.pop(key)
+    if validate is None:
+        # Use the default validation preference of the parser
+        d = parser(xml)
     else:
-        from .util import lxml2dict
+        d = parser(xml, validate)
 
-        d = lxml2dict(xml)
+    for key in list(d.keys()):
+        if key.startswith(("xml", "xsi")):
+            d.pop(key)
+
     return OME(**d)  # type: ignore
 
 
-def from_tiff(path: Union[Path, str], validate: bool = True) -> OME:
+def from_tiff(
+    path: Union[Path, str],
+    parser: Callable[..., Dict[str, Any]] = lxml2dict,
+    validate: Optional[bool] = True,
+) -> OME:
     """Generate OME metadata object from OME-TIFF path.
 
     This will use the first ImageDescription tag found in the TIFF header.
@@ -55,7 +62,7 @@ def from_tiff(path: Union[Path, str], validate: bool = True) -> OME:
     ValueError
         If the TIFF file has no OME metadata.
     """
-    return from_xml(_tiff2xml(path), validate)
+    return from_xml(_tiff2xml(path), parser=parser, validate=validate)
 
 
 def _tiff2xml(path: Union[Path, str]) -> bytes:

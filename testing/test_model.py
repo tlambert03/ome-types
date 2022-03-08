@@ -7,11 +7,13 @@ from xml.etree import ElementTree
 
 import pytest
 import util
+from lxml.etree import XMLSchemaValidateError
 from pydantic import ValidationError
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types.schema import NS_OME, URI_OME, get_schema, to_xml_element
+from ome_types.schema import NS_OME, URI_OME, get_schema, to_dict, to_xml_element
+from ome_types.util import lxml2dict
 
 SHOULD_FAIL_READ = {
     # Some timestamps have negative years which datetime doesn't support.
@@ -72,28 +74,32 @@ for f in all_xml:
 
 validate = [True, False]
 
+parser = [lxml2dict, to_dict]
+
 
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
+@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_from_xml(xml, validate, benchmark):
+def test_from_xml(xml, parser, validate, benchmark):
 
     if true_stem(xml) in SHOULD_RAISE_READ:
 
-        if validate:
+        if parser == to_dict:
             with pytest.raises(XMLSchemaValidationError):
-                assert benchmark(from_xml, xml, validate=validate)
+                assert benchmark(from_xml, xml, parser=parser, validate=validate)
         else:
-            with pytest.raises(ValidationError):
-                assert benchmark(from_xml, xml, validate=validate)
+            with pytest.raises((XMLSchemaValidateError, ValidationError)):
+                assert benchmark(from_xml, xml, parser=parser, validate=validate)
     else:
-        assert benchmark(from_xml, xml, validate=validate)
+        assert benchmark(from_xml, xml, parser=parser, validate=validate)
 
 
+@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_from_tiff(benchmark, validate):
+def test_from_tiff(benchmark, validate, parser):
     """Test that OME metadata extractions from Tiff headers works."""
     _path = Path(__file__).parent / "data" / "ome.tiff"
-    ome = benchmark(from_tiff, _path, validate)
+    ome = benchmark(from_tiff, _path, parser=parser, validate=validate)
     assert len(ome.images) == 1
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
@@ -101,10 +107,13 @@ def test_from_tiff(benchmark, validate):
 
 
 @pytest.mark.parametrize("xml", xml_roundtrip, ids=true_stem)
+@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_roundtrip(xml, validate, benchmark):
+def test_roundtrip(xml, parser, validate, benchmark):
     """Ensure we can losslessly round-trip XML through the model and back."""
-    should_raise = true_stem(xml) in SHOULD_FAIL_ROUNDTRIP_NO_VALID and not validate
+    should_raise = (
+        true_stem(xml) in SHOULD_FAIL_ROUNDTRIP_NO_VALID and parser == lxml2dict
+    )
     xml = str(xml)
     schema = get_schema(xml)
 
@@ -130,7 +139,7 @@ def test_roundtrip(xml, validate, benchmark):
         return xml_out
 
     original = canonicalize(xml, True)
-    ome = from_xml(xml, validate)
+    ome = from_xml(xml, parser=parser, validate=validate)
     rexml = benchmark(to_xml, ome)
 
     if should_raise:
@@ -140,10 +149,15 @@ def test_roundtrip(xml, validate, benchmark):
         assert canonicalize(rexml, False) == original
 
 
+@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_to_xml_with_kwargs(validate):
+def test_to_xml_with_kwargs(validate, parser):
     """Ensure kwargs are passed to ElementTree"""
-    ome = from_xml(Path(__file__).parent / "data" / "example.ome.xml", validate)
+    ome = from_xml(
+        Path(__file__).parent / "data" / "example.ome.xml",
+        parser=parser,
+        validate=validate,
+    )
 
     with mock.patch("xml.etree.ElementTree.tostring") as mocked_et_tostring:
         element = to_xml_element(ome)
@@ -153,13 +167,14 @@ def test_to_xml_with_kwargs(validate):
 
 
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
+@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_serialization(xml, validate):
+def test_serialization(xml, validate, parser):
     """Test pickle serialization and reserialization."""
     if true_stem(xml) in SHOULD_RAISE_READ:
         pytest.skip("Can't pickle unreadable xml")
 
-    ome = from_xml(xml, validate)
+    ome = from_xml(xml, parser=parser, validate=validate)
     serialized = pickle.dumps(ome)
     deserialized = pickle.loads(serialized)
     assert ome == deserialized
@@ -191,15 +206,17 @@ def test_required_missing():
     assert "y\n  field required" in str(e.value)
 
 
+@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_refs(validate):
+def test_refs(validate, parser):
     xml = Path(__file__).parent / "data" / "two-screens-two-plates-four-wells.ome.xml"
-    ome = from_xml(xml, validate=validate)
+    ome = from_xml(xml, parser=parser, validate=validate)
     assert ome.screens[0].plate_ref[0].ref is ome.plates[0]
 
 
 @pytest.mark.parametrize("validate", validate)
-def test_with_ome_ns(validate):
+@pytest.mark.parametrize("parser", parser)
+def test_with_ome_ns(validate, parser):
     xml = Path(__file__).parent / "data" / "ome_ns.ome.xml"
-    ome = from_xml(xml, validate=validate)
+    ome = from_xml(xml, parser=parser, validate=validate)
     assert ome.experimenters
