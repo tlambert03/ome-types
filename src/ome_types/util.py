@@ -101,7 +101,9 @@ def norm_key(key: str) -> str:
     return key.split("}")[-1]
 
 
-def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[str, Any]:
+def elem2dict(
+    node: "lxml.etree._Element", parent_name: str = None, exclude_null: bool = True
+) -> Dict[str, Any]:
     """
     Convert an lxml.etree node tree into a dict.
     """
@@ -132,6 +134,7 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
 
         # Process element as tree element if the inner XML contains non-whitespace content
         if element.text and element.text.strip():
+
             value = element.text
             if element.attrib.items():
                 value = {"value": value}
@@ -142,7 +145,9 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
             value = True
 
         else:
-            value = elem2dict(element)
+            value = elem2dict(element, norm_node)
+            if key == "XMLAnnotation":
+                value["value"] = etree.tostring(element[0])
 
         is_list = key in norm_list
         key = camel_to_snake(key)
@@ -177,14 +182,6 @@ def elem2dict(node: "lxml.etree._Element", exclude_null: bool = True) -> Dict[st
 
                     for v in values:
                         v["_type"] = _type
-
-                        # Special catch for xml_annotations
-                        if _type == "xml_annotation":
-                            aid = v["id"]
-                            elt = element.find(
-                                f".//{NS_OME}XMLAnnotation[@ID='{aid}']/{NS_OME}Value"
-                            )
-                            v["value"] = etree.tostring(elt)
 
                         # Normalize empty element to zero-length string.
                         if "value" not in v or v["value"] is None:
@@ -227,7 +224,7 @@ def lxml2dict(
     if isinstance(path_or_str, Path):
         text = path_or_str.read_bytes()
     elif isinstance(path_or_str, str):
-        if Path(path_or_str).exists():
+        if "xml" not in path_or_str[:10] and Path(path_or_str).exists():
             text = Path(path_or_str).read_bytes()
         else:
             text = path_or_str.encode()
