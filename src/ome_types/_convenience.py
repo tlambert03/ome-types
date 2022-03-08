@@ -29,7 +29,7 @@ def from_xml(
         # Use the default validation preference of the parser
         d = parser(xml)
     else:
-        d = parser(xml, validate)
+        d = parser(xml, validate=validate)
 
     for key in list(d.keys()):
         if key.startswith(("xml", "xsi")):

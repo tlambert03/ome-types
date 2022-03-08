@@ -2,7 +2,9 @@ import re
 from collections.abc import MutableSequence
 from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union, get_args
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
+
+from typing_extensions import get_args
 
 from . import model
 from ._base_type import OMEType
