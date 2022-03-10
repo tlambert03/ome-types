@@ -96,7 +96,7 @@ def camel_to_snake(name: str) -> str:
     return model._camel_to_snake.get(name, CAMEL_REGEX.sub("_", name).lower())
 
 
-@lru_cache
+@lru_cache()
 def norm_key(key: str) -> str:
     return key.split("}")[-1]
 
