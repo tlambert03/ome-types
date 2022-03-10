@@ -91,7 +91,7 @@ def collect_ids(value: Any) -> Dict[LSID, OMEType]:
     return ids
 
 
-@lru_cache
+@lru_cache()
 def camel_to_snake(name: str) -> str:
     return model._camel_to_snake.get(name, CAMEL_REGEX.sub("_", name).lower())
 
