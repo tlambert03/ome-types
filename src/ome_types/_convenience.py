@@ -1,14 +1,24 @@
 import os
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
+
+from typing_extensions import Protocol
 
 from .model import OME
 from .util import lxml2dict
 
 
+class Parser(Protocol):
+    # Used for type checks on xml parsers
+    def __call__(
+        self, path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False
+    ) -> Dict[str, Any]:
+        ...
+
+
 def from_xml(
     xml: Union[Path, str, bytes],
-    parser: Callable[..., Dict[str, Any]] = lxml2dict,
+    parser: Parser = lxml2dict,
     validate: Optional[bool] = None,
 ) -> OME:  # type: ignore
     """Generate OME metadata object from XML string or path.
@@ -40,7 +50,7 @@ def from_xml(
 
 def from_tiff(
     path: Union[Path, str],
-    parser: Callable[..., Dict[str, Any]] = lxml2dict,
+    parser: Parser = lxml2dict,
     validate: Optional[bool] = True,
 ) -> OME:
     """Generate OME metadata object from OME-TIFF path.
