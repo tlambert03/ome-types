@@ -25,7 +25,7 @@ SHOULD_FAIL_ROUNDTRIP = {
     "timestampannotation-posix-only",
     "transformations-downgrade",
 }
-SHOULD_FAIL_ROUNDTRIP_NO_VALID = {
+SHOULD_FAIL_ROUNDTRIP_LXML = {
     "folders-simple-taxonomy",
     "folders-larger-taxonomy",
 }
@@ -111,9 +111,6 @@ def test_from_tiff(benchmark, validate, parser):
 @pytest.mark.parametrize("validate", validate)
 def test_roundtrip(xml, parser, validate, benchmark):
     """Ensure we can losslessly round-trip XML through the model and back."""
-    should_raise = (
-        true_stem(xml) in SHOULD_FAIL_ROUNDTRIP_NO_VALID and parser == lxml2dict
-    )
     xml = str(xml)
     schema = get_schema(xml)
 
@@ -142,11 +139,16 @@ def test_roundtrip(xml, parser, validate, benchmark):
     ome = from_xml(xml, parser=parser, validate=validate)
     rexml = benchmark(to_xml, ome)
 
-    if should_raise:
-        with pytest.raises(AssertionError):
-            assert canonicalize(rexml, False) == original
-    else:
+    try:
         assert canonicalize(rexml, False) == original
+    except AssertionError:
+        # Special xfail catch since two files fail only with lxml2dict
+        if true_stem(xml) in SHOULD_FAIL_ROUNDTRIP_LXML and parser == lxml2dict:
+            pytest.xfail(
+                f"Expected failure on roundtrip using lxml2dict on file: {stem}"
+            )
+        else:
+            raise
 
 
 @pytest.mark.parametrize("parser", parser)
