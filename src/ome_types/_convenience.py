@@ -1,11 +1,26 @@
 import os
 from pathlib import Path
-from typing import Union
+from typing import Any, Dict, Optional, Union
+
+from typing_extensions import Protocol
 
 from .model import OME
+from .util import lxml2dict
 
 
-def from_xml(xml: Union[Path, str]) -> OME:  # type: ignore
+class Parser(Protocol):
+    # Used for type checks on xml parsers
+    def __call__(
+        self, path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False
+    ) -> Dict[str, Any]:
+        ...
+
+
+def from_xml(
+    xml: Union[Path, str, bytes],
+    parser: Parser = lxml2dict,
+    validate: Optional[bool] = None,
+) -> OME:  # type: ignore
     """Generate OME metadata object from XML string or path.
 
     Parameters
@@ -18,10 +33,14 @@ def from_xml(xml: Union[Path, str]) -> OME:  # type: ignore
     ome: ome_types.model.ome.OME
         ome_types.OME metadata object
     """
-    from .schema import to_dict
-
     xml = os.fspath(xml)
-    d = to_dict(xml)
+
+    if validate is None:
+        # Use the default validation preference of the parser
+        d = parser(xml)
+    else:
+        d = parser(xml, validate=validate)
+
     for key in list(d.keys()):
         if key.startswith(("xml", "xsi")):
             d.pop(key)
@@ -29,7 +48,11 @@ def from_xml(xml: Union[Path, str]) -> OME:  # type: ignore
     return OME(**d)  # type: ignore
 
 
-def from_tiff(path: Union[Path, str]) -> OME:
+def from_tiff(
+    path: Union[Path, str],
+    parser: Parser = lxml2dict,
+    validate: Optional[bool] = True,
+) -> OME:
     """Generate OME metadata object from OME-TIFF path.
 
     This will use the first ImageDescription tag found in the TIFF header.
@@ -49,10 +72,10 @@ def from_tiff(path: Union[Path, str]) -> OME:
     ValueError
         If the TIFF file has no OME metadata.
     """
-    return from_xml(_tiff2xml(path))
+    return from_xml(_tiff2xml(path), parser=parser, validate=validate)
 
 
-def _tiff2xml(path: Union[Path, str]) -> str:
+def _tiff2xml(path: Union[Path, str]) -> bytes:
     """Extract OME XML from OME-TIFF path.
 
     This will use the first ImageDescription tag found in the TIFF header.
@@ -101,4 +124,4 @@ def _tiff2xml(path: Union[Path, str]) -> str:
             raise ValueError(f"No OME metadata found in file: {path}")
     if desc[-1] == 0:
         desc = desc[:-1]
-    return desc.decode("utf-8")
+    return desc

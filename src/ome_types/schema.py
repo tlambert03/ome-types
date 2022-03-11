@@ -226,10 +226,15 @@ def to_dict(  # type: ignore
     xml: str,
     schema: Optional[xmlschema.XMLSchema] = None,
     converter: XMLSchemaConverter = OMEConverter,
+    validate: bool = True,
     **kwargs,
 ) -> Dict[str, Any]:
-    schema = schema or get_schema(xml)
-    result = schema.to_dict(xml, converter=converter, **kwargs)
+    if isinstance(xml, bytes):
+        xml = xml.decode("utf-8")
+
+    if validate:
+        schema = schema or get_schema(xml)
+    result = xmlschema.to_dict(xml, schema=schema, converter=converter, **kwargs)
     # xmlschema doesn't provide usable access to mixed XML content, so we'll
     # fill the XMLAnnotation value attributes ourselves by re-parsing the XML
     # with ElementTree and using the Element objects as the values.

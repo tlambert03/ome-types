@@ -10,6 +10,7 @@ from pathlib import Path
 from textwrap import dedent, indent, wrap
 from typing import (
     Any,
+    DefaultDict,
     Dict,
     Generator,
     Iterable,
@@ -46,7 +47,7 @@ except ImportError:
 # Track all camel-to-snake and pluralization results so we can include them in the model.
 camel_snake_registry: Dict[str, str] = {}
 plural_registry: Dict[Tuple[str, str], str] = {}
-
+LISTS: DefaultDict[str, Set[str]] = DefaultDict(set)
 
 # FIXME: Work out a better way to implement these override hacks.
 
@@ -828,6 +829,8 @@ class Member:
         if not type_string:
             return ""
         if not self.max_occurs:
+            LISTS[self.parent_name].add(self.component.local_name)
+
             type_string = f"List[{type_string}]"
         elif self.is_optional:
             type_string = f"Optional[{type_string}]"
@@ -1085,6 +1088,7 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
     text += "\n\n_snake_to_camel = " + repr(
         {camel_snake_registry[k]: k for k in sorted(camel_snake_registry)}
     )
+    text += "\n\n_lists = " + repr(dict(LISTS))
     text = black_format(text)
     with open(os.path.join(target_dir, "__init__.py"), "w", encoding="utf-8") as f:
         f.write(text)

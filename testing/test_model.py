@@ -7,11 +7,13 @@ from xml.etree import ElementTree
 
 import pytest
 import util
+from lxml.etree import XMLSchemaValidateError
 from pydantic import ValidationError
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types.schema import NS_OME, URI_OME, get_schema, to_xml_element
+from ome_types.schema import NS_OME, URI_OME, get_schema, to_dict, to_xml_element
+from ome_types.util import lxml2dict
 
 SHOULD_FAIL_READ = {
     # Some timestamps have negative years which datetime doesn't support.
@@ -22,6 +24,10 @@ SHOULD_FAIL_ROUNDTRIP = {
     # Order of elements in StructuredAnnotations and Union are jumbled.
     "timestampannotation-posix-only",
     "transformations-downgrade",
+}
+SHOULD_FAIL_ROUNDTRIP_LXML = {
+    "folders-simple-taxonomy",
+    "folders-larger-taxonomy",
 }
 SKIP_ROUNDTRIP = {
     # These have XMLAnnotations with extra namespaces and mixed content, which
@@ -66,20 +72,34 @@ for f in all_xml:
     xml_roundtrip.append(f)
 
 
+validate = [True, False]
+
+parser = [lxml2dict, to_dict]
+
+
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
-def test_from_xml(xml, benchmark):
+@pytest.mark.parametrize("parser", parser)
+@pytest.mark.parametrize("validate", validate)
+def test_from_xml(xml, parser, validate, benchmark):
 
     if true_stem(xml) in SHOULD_RAISE_READ:
-        with pytest.raises(XMLSchemaValidationError):
-            assert benchmark(from_xml, xml)
+
+        if parser == to_dict:
+            with pytest.raises(XMLSchemaValidationError):
+                assert benchmark(from_xml, xml, parser=parser, validate=validate)
+        else:
+            with pytest.raises((XMLSchemaValidateError, ValidationError)):
+                assert benchmark(from_xml, xml, parser=parser, validate=validate)
     else:
-        assert benchmark(from_xml, xml)
+        assert benchmark(from_xml, xml, parser=parser, validate=validate)
 
 
-def test_from_tiff(benchmark):
+@pytest.mark.parametrize("parser", parser)
+@pytest.mark.parametrize("validate", validate)
+def test_from_tiff(benchmark, validate, parser):
     """Test that OME metadata extractions from Tiff headers works."""
     _path = Path(__file__).parent / "data" / "ome.tiff"
-    ome = benchmark(from_tiff, _path)
+    ome = benchmark(from_tiff, _path, parser=parser, validate=validate)
     assert len(ome.images) == 1
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
@@ -87,7 +107,9 @@ def test_from_tiff(benchmark):
 
 
 @pytest.mark.parametrize("xml", xml_roundtrip, ids=true_stem)
-def test_roundtrip(xml, benchmark):
+@pytest.mark.parametrize("parser", parser)
+@pytest.mark.parametrize("validate", validate)
+def test_roundtrip(xml, parser, validate, benchmark):
     """Ensure we can losslessly round-trip XML through the model and back."""
     xml = str(xml)
     schema = get_schema(xml)
@@ -114,14 +136,30 @@ def test_roundtrip(xml, benchmark):
         return xml_out
 
     original = canonicalize(xml, True)
-    ome = from_xml(xml)
+    ome = from_xml(xml, parser=parser, validate=validate)
     rexml = benchmark(to_xml, ome)
-    assert canonicalize(rexml, False) == original
+
+    try:
+        assert canonicalize(rexml, False) == original
+    except AssertionError:
+        # Special xfail catch since two files fail only with lxml2dict
+        if true_stem(Path(xml)) in SHOULD_FAIL_ROUNDTRIP_LXML and parser == lxml2dict:
+            pytest.xfail(
+                f"Expected failure on roundtrip using lxml2dict on file: {stem}"
+            )
+        else:
+            raise
 
 
-def test_to_xml_with_kwargs():
+@pytest.mark.parametrize("parser", parser)
+@pytest.mark.parametrize("validate", validate)
+def test_to_xml_with_kwargs(validate, parser):
     """Ensure kwargs are passed to ElementTree"""
-    ome = from_xml(Path(__file__).parent / "data" / "example.ome.xml")
+    ome = from_xml(
+        Path(__file__).parent / "data" / "example.ome.xml",
+        parser=parser,
+        validate=validate,
+    )
 
     with mock.patch("xml.etree.ElementTree.tostring") as mocked_et_tostring:
         element = to_xml_element(ome)
@@ -131,12 +169,14 @@ def test_to_xml_with_kwargs():
 
 
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
-def test_serialization(xml):
+@pytest.mark.parametrize("parser", parser)
+@pytest.mark.parametrize("validate", validate)
+def test_serialization(xml, validate, parser):
     """Test pickle serialization and reserialization."""
     if true_stem(xml) in SHOULD_RAISE_READ:
         pytest.skip("Can't pickle unreadable xml")
 
-    ome = from_xml(xml)
+    ome = from_xml(xml, parser=parser, validate=validate)
     serialized = pickle.dumps(ome)
     deserialized = pickle.loads(serialized)
     assert ome == deserialized
@@ -168,13 +208,17 @@ def test_required_missing():
     assert "y\n  field required" in str(e.value)
 
 
-def test_refs():
+@pytest.mark.parametrize("parser", parser)
+@pytest.mark.parametrize("validate", validate)
+def test_refs(validate, parser):
     xml = Path(__file__).parent / "data" / "two-screens-two-plates-four-wells.ome.xml"
-    ome = from_xml(xml)
+    ome = from_xml(xml, parser=parser, validate=validate)
     assert ome.screens[0].plate_ref[0].ref is ome.plates[0]
 
 
-def test_with_ome_ns():
+@pytest.mark.parametrize("validate", validate)
+@pytest.mark.parametrize("parser", parser)
+def test_with_ome_ns(validate, parser):
     xml = Path(__file__).parent / "data" / "ome_ns.ome.xml"
-    ome = from_xml(xml)
+    ome = from_xml(xml, parser=parser, validate=validate)
     assert ome.experimenters
