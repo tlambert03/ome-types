@@ -143,7 +143,7 @@ def test_roundtrip(xml, parser, validate, benchmark):
         assert canonicalize(rexml, False) == original
     except AssertionError:
         # Special xfail catch since two files fail only with lxml2dict
-        if true_stem(xml) in SHOULD_FAIL_ROUNDTRIP_LXML and parser == lxml2dict:
+        if true_stem(Path(xml)) in SHOULD_FAIL_ROUNDTRIP_LXML and parser == lxml2dict:
             pytest.xfail(
                 f"Expected failure on roundtrip using lxml2dict on file: {stem}"
             )
