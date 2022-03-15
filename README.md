@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/github/license/tlambert03/ome-types)](LICENSE)
 [![Version](https://img.shields.io/pypi/v/ome-types.svg)](https://pypi.python.org/pypi/ome-types)
+[![CondaVersion](https://img.shields.io/conda/v/conda-forge/ome-types)](https://anaconda.org/conda-forge/ome-types)
 [![Python
 Version](https://img.shields.io/pypi/pyversions/ome-types.svg)](https://python.org)
 [![Tests](https://github.com/tlambert03/ome-types/workflows/tests/badge.svg)](https://github.com/tlambert03/ome-types/actions)
