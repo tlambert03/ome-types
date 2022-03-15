@@ -1,3 +1,5 @@
+from typing import Any
+
 from ._units import ureg
 
 try:
@@ -32,3 +34,17 @@ __all__ = [
     "model",
     "ureg",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    if name == "validate":
+        import warnings
+
+        warnings.warn(
+            "'ome_types.validate' has been renamed to 'ome_types.validate_xml. "
+            "This will raise an exception in the future.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        return validate_xml
+    raise AttributeError("module {__name__!r} has no attribute {name!r}")
