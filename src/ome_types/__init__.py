@@ -13,12 +13,18 @@ except ModuleNotFoundError as e:
         "Could not import 'ome_types.model.OME'.\nIf you are in a dev environment, "
         "you may need to run 'python -m src.ome_autogen'" + str(e)
     ) from None
-from .schema import to_xml, validate  # isort:skip
-from ._convenience import from_tiff, from_xml, to_dict  # isort:skip
+
+from ._convenience import (  # isort:skip
+    from_tiff,
+    from_xml,
+    to_dict,
+    to_xml,
+    validate_xml,
+)
 
 __all__ = [
     "to_dict",
-    "validate",
+    "validate_xml",
     "from_xml",
     "to_xml",
     "from_tiff",

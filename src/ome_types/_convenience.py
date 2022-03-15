@@ -47,11 +47,11 @@ def to_dict(
     """
     if isinstance(parser, str):
         if parser == "lxml":
-            from .util import lxml2dict
+            from ._lxml import lxml2dict
 
             parser = cast(Parser, lxml2dict)
         elif parser == "xmlschema":
-            from .schema import xmlschema2dict
+            from ._xmlschema import xmlschema2dict
 
             parser = cast(Parser, xmlschema2dict)
         else:
@@ -180,3 +180,30 @@ def _tiff2xml(path: Union[Path, str]) -> bytes:
     if desc[-1] == 0:
         desc = desc[:-1]
     return desc
+
+
+def to_xml(ome: OME, **kwargs: Any) -> str:
+    """
+    Dump an OME object to string.
+
+    Parameters
+    ----------
+    ome: OME
+        OME object to dump.
+    **kwargs
+        Extra kwargs to pass to ElementTree.tostring.
+
+    Returns
+    -------
+    ome_string: str
+        The XML string of the OME object.
+    """
+    from ._xmlschema import to_xml
+
+    return to_xml(ome, **kwargs)
+
+
+def validate_xml(xml: str, schema: Any = None) -> None:
+    from ._xmlschema import validate
+
+    validate(xml, schema=schema)
