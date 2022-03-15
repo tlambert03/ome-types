@@ -7,7 +7,7 @@
 Version](https://img.shields.io/pypi/pyversions/ome-types.svg)](https://python.org)
 [![Tests](https://github.com/tlambert03/ome-types/workflows/tests/badge.svg)](https://github.com/tlambert03/ome-types/actions)
 [![Docs](https://readthedocs.org/projects/ome-types/badge/?version=latest)](https://ome-types.readthedocs.io/en/latest/?badge=latest)
-<!-- [![conda-forge](https://img.shields.io/conda/vn/conda-forge/ome-types)](https://anaconda.org/conda-forge/ome-types) -->
+[![codecov](https://codecov.io/gh/tlambert03/ome-types/branch/master/graph/badge.svg?token=GocY9y8A32)](https://codecov.io/gh/tlambert03/ome-types)
 
 ## A pure-python implementation of the OME data model
 
