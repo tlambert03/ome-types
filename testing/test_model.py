@@ -12,8 +12,7 @@ from pydantic import ValidationError
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types.schema import NS_OME, URI_OME, get_schema, to_dict, to_xml_element
-from ome_types.util import lxml2dict
+from ome_types.schema import NS_OME, URI_OME, get_schema, to_xml_element
 
 SHOULD_FAIL_READ = {
     # Some timestamps have negative years which datetime doesn't support.
@@ -74,22 +73,19 @@ for f in all_xml:
 
 validate = [True, False]
 
-parser = [lxml2dict, to_dict]
+parser = ["lxml", "xmlschema"]
 
 
 @pytest.mark.parametrize("xml", xml_read, ids=true_stem)
 @pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_from_xml(xml, parser, validate, benchmark):
+def test_from_xml(xml, parser: str, validate: bool, benchmark):
 
     if true_stem(xml) in SHOULD_RAISE_READ:
-
-        if parser == to_dict:
-            with pytest.raises(XMLSchemaValidationError):
-                assert benchmark(from_xml, xml, parser=parser, validate=validate)
-        else:
-            with pytest.raises((XMLSchemaValidateError, ValidationError)):
-                assert benchmark(from_xml, xml, parser=parser, validate=validate)
+        with pytest.raises(
+            (XMLSchemaValidateError, ValidationError, XMLSchemaValidationError)
+        ):
+            assert benchmark(from_xml, xml, parser=parser, validate=validate)
     else:
         assert benchmark(from_xml, xml, parser=parser, validate=validate)
 
@@ -143,7 +139,7 @@ def test_roundtrip(xml, parser, validate, benchmark):
         assert canonicalize(rexml, False) == original
     except AssertionError:
         # Special xfail catch since two files fail only with lxml2dict
-        if true_stem(Path(xml)) in SHOULD_FAIL_ROUNDTRIP_LXML and parser == lxml2dict:
+        if true_stem(Path(xml)) in SHOULD_FAIL_ROUNDTRIP_LXML and parser == "lxml":
             pytest.xfail(
                 f"Expected failure on roundtrip using lxml2dict on file: {stem}"
             )

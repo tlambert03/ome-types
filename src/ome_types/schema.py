@@ -222,7 +222,7 @@ class OMEConverter(XMLSchemaConverter):
         return ElementData(tag, text, content, attributes)
 
 
-def to_dict(  # type: ignore
+def xmlschema2dict(  # type: ignore
     xml: str,
     schema: Optional[xmlschema.XMLSchema] = None,
     converter: XMLSchemaConverter = OMEConverter,

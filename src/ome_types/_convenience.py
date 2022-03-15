@@ -1,11 +1,10 @@
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, cast
 
 from typing_extensions import Protocol
 
 from .model import OME
-from .util import lxml2dict
 
 
 class Parser(Protocol):
@@ -16,41 +15,89 @@ class Parser(Protocol):
         ...
 
 
+def to_dict(
+    xml: Union[Path, str, bytes],
+    *,
+    parser: Union[Parser, str] = "lxml",
+    validate: Optional[bool] = None,
+) -> Dict[str, Any]:
+    """Convert OME XML to dict.
+
+    Parameters
+    ----------
+    xml : Union[Path, str, bytes]
+        XML string or path to XML file.
+    parser : Union[Parser, str]
+        Either a parser callable with signature:
+        `(path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False) -> Dict`,
+        or a string.  If a string, must be either 'lxml' or 'xmlschema'. by default "lxml"
+    validate : Optional[bool], optional
+        Whether to validate XML as valid OME XML, by default (`None`), the choices is left
+        to the parser (which is `False` for the lxml parser)
+
+    Returns
+    -------
+    Dict[str, Any]
+        OME model dict.
+
+    Raises
+    ------
+    KeyError
+        If `parser` is a string, and not one of `'lxml'` or `'xmlschema'`
+    """
+    if isinstance(parser, str):
+        if parser == "lxml":
+            from .util import lxml2dict
+
+            parser = cast(Parser, lxml2dict)
+        elif parser == "xmlschema":
+            from .schema import xmlschema2dict
+
+            parser = cast(Parser, xmlschema2dict)
+        else:
+            raise KeyError("parser string must be one of {'lxml', 'xmlschema'}")
+
+    d = parser(xml) if validate is None else parser(xml, validate=validate)
+    for key in list(d.keys()):
+        if key.startswith(("xml", "xsi")):
+            d.pop(key)
+    return d
+
+
 def from_xml(
     xml: Union[Path, str, bytes],
-    parser: Parser = lxml2dict,
+    *,
+    parser: Union[Parser, str] = "lxml",
     validate: Optional[bool] = None,
-) -> OME:  # type: ignore
+) -> OME:
     """Generate OME metadata object from XML string or path.
 
     Parameters
     ----------
-    xml : Union[Path, str]
-        Path to an XML file, or literal XML string.
+    xml : Union[Path, str, bytes]
+        XML string or path to XML file.
+    parser : Union[Parser, str]
+        Either a parser callable with signature:
+        `(path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False) -> Dict`,
+        or a string.  If a string, must be either 'lxml' or 'xmlschema'. by default "lxml"
+    validate : Optional[bool], optional
+        Whether to validate XML as valid OME XML, by default (`None`), the choices is left
+        to the parser (which is `False` for the lxml parser)
+
 
     Returns
     -------
     ome: ome_types.model.ome.OME
         ome_types.OME metadata object
     """
-    xml = os.fspath(xml)
-
-    if validate is None:
-        # Use the default validation preference of the parser
-        d = parser(xml)
-    else:
-        d = parser(xml, validate=validate)
-
-    for key in list(d.keys()):
-        if key.startswith(("xml", "xsi")):
-            d.pop(key)
-
-    return OME(**d)  # type: ignore
+    d = to_dict(os.fspath(xml), parser=parser, validate=validate)
+    return OME(**d)
 
 
 def from_tiff(
     path: Union[Path, str],
-    parser: Parser = lxml2dict,
+    *,
+    parser: Union[Parser, str] = "lxml",
     validate: Optional[bool] = True,
 ) -> OME:
     """Generate OME metadata object from OME-TIFF path.
@@ -61,6 +108,14 @@ def from_tiff(
     ----------
     path : Union[Path, str]
         Path to OME TIFF.
+    parser : Union[Parser, str]
+        Either a parser callable with signature:
+        `(path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False) -> Dict`,
+        or a string.  If a string, must be either 'lxml' or 'xmlschema'. by default "lxml"
+    validate : Optional[bool], optional
+        Whether to validate XML as valid OME XML, by default (`None`), the choices is left
+        to the parser (which is `False` for the lxml parser)
+
 
     Returns
     -------
@@ -105,8 +160,8 @@ def _tiff2xml(path: Union[Path, str]) -> bytes:
                 b"II+\0": (8, "<Q", 8, "<Q", 20, "<H"),
                 b"MM\0+": (8, ">Q", 8, ">Q", 20, ">H"),
             }[fh.read(4)]
-        except KeyError:
-            raise ValueError(f"{path!r} does not have a recognized TIFF header")
+        except KeyError as e:
+            raise ValueError(f"{path!r} does not have a recognized TIFF header") from e
 
         fh.read(4 if offsetsize == 8 else 0)
         fh.seek(unpack(offsetformat, fh.read(offsetsize))[0])
