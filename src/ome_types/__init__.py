@@ -1,3 +1,5 @@
+from typing import Any
+
 from ._units import ureg
 
 try:
@@ -13,12 +15,18 @@ except ModuleNotFoundError as e:
         "Could not import 'ome_types.model.OME'.\nIf you are in a dev environment, "
         "you may need to run 'python -m src.ome_autogen'" + str(e)
     ) from None
-from .schema import to_dict, to_xml, validate  # isort:skip
-from ._convenience import from_tiff, from_xml  # isort:skip
+
+from ._convenience import (  # isort:skip
+    from_tiff,
+    from_xml,
+    to_dict,
+    to_xml,
+    validate_xml,
+)
 
 __all__ = [
     "to_dict",
-    "validate",
+    "validate_xml",
     "from_xml",
     "to_xml",
     "from_tiff",
@@ -26,3 +34,17 @@ __all__ = [
     "model",
     "ureg",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    if name == "validate":
+        import warnings
+
+        warnings.warn(
+            "'ome_types.validate' has been renamed to 'ome_types.validate_xml. "
+            "This will raise an exception in the future.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        return validate_xml
+    raise AttributeError("module {__name__!r} has no attribute {name!r}")

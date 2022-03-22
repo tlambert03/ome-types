@@ -1,34 +1,16 @@
+from __future__ import annotations
+
 import re
-from collections.abc import MutableSequence
 from functools import lru_cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
-
-from typing_extensions import get_args
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 from . import model
 from ._base_type import OMEType
 from .model.reference import Reference
-from .model.shape_group import ShapeGroupType
-from .model.simple_types import LSID
-
-CAMEL_REGEX = re.compile(r"(?<!^)(?=[A-Z])")
-
-NEED_INT = [s.__name__ for s in get_args(ShapeGroupType)]
-NEED_INT.extend(["Channel", "Well"])
-
-URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
-NS_OME = "{" + URI_OME + "}"
-NS_XSI = "{http://www.w3.org/2001/XMLSchema-instance}"
 
 if TYPE_CHECKING:
-    import lxml.etree
-
-try:
-    from lxml import etree
-except ModuleNotFoundError:
-    # Maybe when a logger is created, issue a warning
-    pass
+    from .model.simple_types import LSID
 
 
 def cast_number(qnum: str) -> Union[str, int, float]:
@@ -73,7 +55,6 @@ def collect_ids(value: Any) -> Dict[LSID, OMEType]:
 
     Recursively walks all dataclass fields and iterates over lists. The base
     case is when value is neither a dataclass nor a list.
-
     """
     ids: Dict[LSID, OMEType] = {}
     if isinstance(value, list):
@@ -91,6 +72,9 @@ def collect_ids(value: Any) -> Dict[LSID, OMEType]:
     return ids
 
 
+CAMEL_REGEX = re.compile(r"(?<!^)(?=[A-Z])")
+
+
 @lru_cache()
 def camel_to_snake(name: str) -> str:
     return model._camel_to_snake.get(name, CAMEL_REGEX.sub("_", name).lower())
@@ -101,154 +85,21 @@ def norm_key(key: str) -> str:
     return key.split("}")[-1]
 
 
-def elem2dict(
-    node: "lxml.etree._Element", parent_name: str = None, exclude_null: bool = True
-) -> Dict[str, Any]:
-    """
-    Convert an lxml.etree node tree into a dict.
-    """
-
-    result: Dict[str, Any] = {}
-
-    # Re-used valued
-    norm_node = norm_key(node.tag)
-    norm_list: Union[Set[str], Dict[Any, Any]] = model._lists.get(norm_node, {})
-
-    for key, val in node.attrib.items():
-        is_list = key in norm_list
-        key = camel_to_snake(norm_key(key))
-        if norm_node in NEED_INT:
-            val = cast_number(val)
-        if is_list:
-            key = _get_plural(key, node.tag)
-            if key not in result:
-                result[key] = []
-            result[key].extend(val.split())
-        else:
-            result[key] = val
-
-    for element in node.iterchildren():
-        if isinstance(element, etree._Comment):
-            continue
-        key = norm_key(element.tag)
-
-        # Process element as tree element if the inner XML contains non-whitespace content
-        if element.text and element.text.strip():
-
-            value = element.text
-            if element.attrib.items():
-                value = {"value": value}
-                for k, val in element.attrib.items():
-                    value[camel_to_snake(norm_key(k))] = val
-
-        elif key == "MetadataOnly":
-            value = True
-
-        else:
-            value = elem2dict(element, norm_node)
-            if key == "XMLAnnotation":
-                value["value"] = etree.tostring(element[0])
-
-        is_list = key in norm_list
-        key = camel_to_snake(key)
-        if is_list:
-            if key == "bin_data":
-                if value["length"] == "0" and "value" not in value:
-                    value["value"] = ""
-            key = _get_plural(key, node.tag)
-            if key not in result:
-                result[key] = []
-            result[key].append(value)
-
-        elif key == "structured_annotations":
-            annotations = []
-            for _type in (
-                "boolean_annotation",
-                "comment_annotation",
-                "double_annotation",
-                "file_annotation",
-                "list_annotation",
-                "long_annotation",
-                "map_annotation",
-                "tag_annotation",
-                "term_annotation",
-                "timestamp_annotation",
-                "xml_annotation",
-            ):
-                if _type in value:
-                    values = value.pop(_type)
-                    if not isinstance(values, list):
-                        values = [values]
-
-                    for v in values:
-                        v["_type"] = _type
-
-                        # Normalize empty element to zero-length string.
-                        if "value" not in v or v["value"] is None:
-                            v["value"] = ""
-                    annotations.extend(values)
-
-            assert key not in result.keys()
-            result[key] = annotations
-
-        elif value or not exclude_null:
-            try:
-                rv = result[key]
-            except KeyError:
-                if key == "m":
-                    result[key] = [value]
-                else:
-                    result[key] = value
-            else:
-                if not isinstance(rv, MutableSequence) or not rv:
-                    result[key] = list([rv, value])
-                elif isinstance(rv[0], MutableSequence) or not isinstance(
-                    value, MutableSequence
-                ):
-                    rv.append(value)
-                else:
-                    result[key] = list([result, value])
-
-    return result
-
-
 def _get_plural(key: str, tag: str) -> str:
-
     return model._singular_to_plural.get((norm_key(tag), key), key)
 
 
-def lxml2dict(
-    path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False
-) -> Dict[str, Any]:
-
+def _ensure_xml_bytes(path_or_str: Union[Path, str, bytes]) -> bytes:
+    """Ensure that `path_or_str` is bytes.  Read from disk if it's an existing file."""
     if isinstance(path_or_str, Path):
-        text = path_or_str.read_bytes()
-    elif isinstance(path_or_str, str):
+        return path_or_str.read_bytes()
+    if isinstance(path_or_str, str):
+        # FIXME: deal with magic number 10.  I think it's to avoid Path.exists
+        # failure on a full string
         if "xml" not in path_or_str[:10] and Path(path_or_str).exists():
-            text = Path(path_or_str).read_bytes()
+            return Path(path_or_str).read_bytes()
         else:
-            text = path_or_str.encode()
-    elif isinstance(path_or_str, bytes):
-        text = path_or_str
-    else:
-        raise TypeError("path_or_str must be one of [Path, str, bytes].")
-
-    result = etree.XML(text)
-    if validate:
-        for key, val in result.attrib.items():
-            if "schemaLocation" in key:
-                ns, uri = val.split()
-                if ns == URI_OME:
-                    schema_doc = etree.parse(
-                        str(Path(__file__).parent / "ome-2016-06.xsd")
-                    )
-                else:
-                    schema_doc = etree.parse(uri)
-                break
-        schema = etree.XMLSchema(schema_doc)
-        if not schema.validate(result):
-            raise etree.XMLSchemaValidateError(
-                f"XML did not pass validation error against {uri}"
-            )
-
-    return elem2dict(result)
+            return path_or_str.encode()
+    if isinstance(path_or_str, bytes):
+        return path_or_str
+    raise TypeError("path_or_str must be one of [Path, str, bytes].  I")
