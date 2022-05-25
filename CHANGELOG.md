@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.3.0](https://github.com/tlambert03/ome-types/tree/v0.3.0) (2022-05-25)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.2.10...v0.3.0)
+
+**Implemented enhancements:**
+
+- Performance: Lxml parsing [\#127](https://github.com/tlambert03/ome-types/pull/127) ([Nicholas-Schaub](https://github.com/Nicholas-Schaub))
+
+**Tests & CI:**
+
+- update release action [\#140](https://github.com/tlambert03/ome-types/pull/140) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- Minor documentation updates [\#139](https://github.com/tlambert03/ome-types/pull/139) ([tlambert03](https://github.com/tlambert03))
+- Revert default parser, add FutureWarning for v0.4.0 change [\#138](https://github.com/tlambert03/ome-types/pull/138) ([tlambert03](https://github.com/tlambert03))
+- Package reorganization [\#131](https://github.com/tlambert03/ome-types/pull/131) ([tlambert03](https://github.com/tlambert03))
+- Bump ipython from 7.15.0 to 7.16.3 in /docs [\#123](https://github.com/tlambert03/ome-types/pull/123) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Add changelog generator, and minor release stuff [\#121](https://github.com/tlambert03/ome-types/pull/121) ([tlambert03](https://github.com/tlambert03))
+
 ## [v0.2.10](https://github.com/tlambert03/ome-types/tree/v0.2.10) (2021-12-29)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.2.9...v0.2.10)
