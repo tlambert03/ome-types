@@ -229,11 +229,12 @@ As an example, the
 model will be rendered as the following dataclass in `ome_types/model/image.py`
 
 ```python
-from dataclasses import field
 from datetime import datetime
 from typing import List, Optional
 
-from ome_types.dataclasses import AUTO_SEQUENCE, ome_dataclass
+from pydantic import Field
+
+from ome_types._base_type import OMEType
 
 from .annotation_ref import AnnotationRef
 from .experiment_ref import ExperimentRef
@@ -249,29 +250,23 @@ from .simple_types import ImageID
 from .stage_label import StageLabel
 
 
-@ome_dataclass
-class Image:
-    """This element describes the actual image and its meta-data.
-
-    <docstring truncated for this example>
-    """
-
+class Image(OMEType):
+    id: ImageID
     pixels: Pixels
     acquisition_date: Optional[datetime] = None
-    annotation_ref: List[AnnotationRef] = field(default_factory=list)
+    annotation_ref: List[AnnotationRef] = Field(default_factory=list)
     description: Optional[str] = None
     experiment_ref: Optional[ExperimentRef] = None
     experimenter_group_ref: Optional[ExperimenterGroupRef] = None
     experimenter_ref: Optional[ExperimenterRef] = None
-    id: ImageID = AUTO_SEQUENCE  # type: ignore
     imaging_environment: Optional[ImagingEnvironment] = None
     instrument_ref: Optional[InstrumentRef] = None
-    microbeam_manipulation_ref: List[MicrobeamManipulationRef] = field(
+    microbeam_manipulation_ref: List[MicrobeamManipulationRef] = Field(
         default_factory=list
     )
     name: Optional[str] = None
     objective_settings: Optional[ObjectiveSettings] = None
-    roi_ref: List[ROIRef] = field(default_factory=list)
+    roi_ref: List[ROIRef] = Field(default_factory=list)
     stage_label: Optional[StageLabel] = None
 ```
 

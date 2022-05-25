@@ -25,14 +25,14 @@ from ._convenience import (  # isort:skip
 )
 
 __all__ = [
-    "to_dict",
-    "validate_xml",
-    "from_xml",
-    "to_xml",
     "from_tiff",
-    "OME",
+    "from_xml",
     "model",
+    "OME",
+    "to_dict",
+    "to_xml",
     "ureg",
+    "validate_xml",
 ]
 
 

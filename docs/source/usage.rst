@@ -10,11 +10,20 @@ For example, you can parse an ome.xml, and then explore it with pythonic
 ``camel_case`` syntax and readable object representations:
 
 
+Reading
+-------
+
 .. code-block:: python
 
     In [1]: from ome_types import from_xml
 
     In [2]: ome = from_xml('testing/data/hcs.ome.xml')
+
+Note that :func:`~ome_types._convenience.from_xml` returns an instance of
+:class:`~ome_types.model.OME`, This object is a container for all information
+objects accessible by OME.
+
+.. code-block:: python
 
     In [3]: ome
     Out[3]: 
@@ -84,7 +93,10 @@ For example, you can parse an ome.xml, and then explore it with pythonic
     In [8]: ome.images[0].pixels.channels[0].emission_wavelength                                                                               
     Out[8]: 523.0
 
-Then you might want to make some changes:
+Modifying or Creating
+---------------------
+
+The ``OME`` object is mutable, and you may changes:
 
 .. code-block:: python
 
@@ -139,6 +151,9 @@ And add elements by constructing new OME model objects:
        ),
        objectives=[<1 Objectives>],
     )]
+
+Exporting
+---------
 
 Finally, you can generate the OME-XML representation of the OME model object,
 for writing to a standalone .ome.xml file or inserting into the header of an
