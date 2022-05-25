@@ -8,6 +8,12 @@ It converts the `ome.xsd schema
 <https://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd>`_ into a set of
 python types.
 
+For a basic example on using the library to parse or write OME metadata,
+see :doc:`usage`. For details on the attributes of each type, see the :doc:`api`.
+
+The best place to start in the API is the :class:`~ome_types.model.OME` class.
+It is the root model object that ultimately contains all the data.  Follow
+the links in the parameters to learn more about each sub-field.
 
 .. toctree::
    :maxdepth: 3

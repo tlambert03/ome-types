@@ -16,6 +16,7 @@ import sys
 sys.path.insert(0, os.path.abspath("../../src"))
 from ome_types import __version__  # isort:skip  # noqa
 
+
 # -- Project information -----------------------------------------------------
 
 project = "ome-types"
@@ -37,7 +38,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
-    'sphinx_autodoc_typehints',
+    'docs._my_sigs',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'IPython.sphinxext.ipython_directive',

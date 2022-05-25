@@ -249,16 +249,16 @@ CLASS_OVERRIDES = {
 
             @classmethod
             def from_xml(cls, xml: Union[Path, str]) -> 'OME':
-                from ome_types._convenience import from_xml
+                from ome_types import from_xml
                 return from_xml(xml)
 
             @classmethod
             def from_tiff(cls, path: Union[Path, str]) -> 'OME':
-                from ome_types._convenience import from_tiff
+                from ome_types import from_tiff
                 return from_tiff(path)
 
             def to_xml(self) -> str:
-                from ome_types.schema import to_xml
+                from ome_types import to_xml
                 return to_xml(self)
         """,
     ),
@@ -434,6 +434,9 @@ def get_docstring(
 ) -> str:
     try:
         doc = dedent(component.annotation.documentation[0].text).strip()
+        # some docstrings include a start ('*Word') which makes sphinx angry
+        # this line wraps those in backticks
+        doc = re.sub(r"(\*\w+)\s", r"`\1` ", doc)
         # make sure the first line is followed by a double newline
         # and preserve paragraphs
         if summary:
