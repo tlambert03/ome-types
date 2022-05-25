@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional, Union, cast
+from warnings import warn
 
 from typing_extensions import Protocol
 
@@ -18,7 +19,7 @@ class Parser(Protocol):
 def to_dict(
     xml: Union[Path, str, bytes],
     *,
-    parser: Union[Parser, str] = "lxml",
+    parser: Union[Parser, str, None] = None,
     validate: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """Convert OME XML to dict.
@@ -45,6 +46,17 @@ def to_dict(
     KeyError
         If `parser` is a string, and not one of `'lxml'` or `'xmlschema'`
     """
+    if parser is None:
+        warn(
+            "The default XML parser will be changing from 'xmlschema' to 'lxml' in "
+            "version 0.4.0.  To silence this warning, please provide the `parser` "
+            "argument, specifying either 'lxml' (to opt into the new behavior), or"
+            "'xmlschema' (to retain the old behavior).",
+            FutureWarning,
+            stacklevel=2,
+        )
+        parser = "xmlschema"
+
     if isinstance(parser, str):
         if parser == "lxml":
             from ._lxml import lxml2dict
@@ -67,7 +79,7 @@ def to_dict(
 def from_xml(
     xml: Union[Path, str, bytes],
     *,
-    parser: Union[Parser, str] = "lxml",
+    parser: Union[Parser, str, None] = None,
     validate: Optional[bool] = None,
 ) -> OME:
     """Generate OME metadata object from XML string or path.
@@ -97,7 +109,7 @@ def from_xml(
 def from_tiff(
     path: Union[Path, str],
     *,
-    parser: Union[Parser, str] = "lxml",
+    parser: Union[Parser, str, None] = None,
     validate: Optional[bool] = True,
 ) -> OME:
     """Generate OME metadata object from OME-TIFF path.
