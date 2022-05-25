@@ -9,6 +9,19 @@ on:
       - "main"
 
 jobs:
+  check_manifest:
+    name: check-manifest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: check-manifest
+        run: |
+          pip install check-manifest
+          check-manifest
+
   test:
     name: test ${{ matrix.platform }} (${{ matrix.python-version }})
     runs-on: ${{ matrix.platform }}
