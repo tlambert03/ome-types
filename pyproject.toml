@@ -21,6 +21,7 @@ ignore = [
   "mypy.ini",
   "coverage.yml",
   ".pre-commit-config.yaml",
+  ".github_changelog_generator",
   "src/ome_autogen.py",
   ".readthedocs.yml",
   "src/ome_types/_version.py", # added by setuptools_scm during build
