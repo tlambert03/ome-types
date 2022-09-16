@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/tlambert03/ome-types/tree/0.3.1) (2022-09-16)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.0...0.3.1)
+
+**Fixed bugs:**
+
+- fix: Update Hex40 definition [\#146](https://github.com/tlambert03/ome-types/pull/146) ([joshmoore](https://github.com/joshmoore))
+
 ## [v0.3.0](https://github.com/tlambert03/ome-types/tree/v0.3.0) (2022-05-25)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.2.10...v0.3.0)
@@ -14,6 +22,8 @@
 
 **Merged pull requests:**
 
+- fix and test check-manifest [\#142](https://github.com/tlambert03/ome-types/pull/142) ([tlambert03](https://github.com/tlambert03))
+- add v0.3.0 changelog [\#141](https://github.com/tlambert03/ome-types/pull/141) ([tlambert03](https://github.com/tlambert03))
 - Minor documentation updates [\#139](https://github.com/tlambert03/ome-types/pull/139) ([tlambert03](https://github.com/tlambert03))
 - Revert default parser, add FutureWarning for v0.4.0 change [\#138](https://github.com/tlambert03/ome-types/pull/138) ([tlambert03](https://github.com/tlambert03))
 - Package reorganization [\#131](https://github.com/tlambert03/ome-types/pull/131) ([tlambert03](https://github.com/tlambert03))
@@ -95,13 +105,13 @@
 
 **Merged pull requests:**
 
-- admin/update-build-infra [\#79](https://github.com/tlambert03/ome-types/pull/79) ([JacksonMaxfield](https://github.com/JacksonMaxfield))
+- admin/update-build-infra [\#79](https://github.com/tlambert03/ome-types/pull/79) ([evamaxfield](https://github.com/evamaxfield))
 - Add aicsimageio test [\#77](https://github.com/tlambert03/ome-types/pull/77) ([tlambert03](https://github.com/tlambert03))
 - slight fix to built-branch workflow [\#76](https://github.com/tlambert03/ome-types/pull/76) ([tlambert03](https://github.com/tlambert03))
 - Add a built branch [\#75](https://github.com/tlambert03/ome-types/pull/75) ([tlambert03](https://github.com/tlambert03))
 - pin xmlschema to 1.4.1 [\#73](https://github.com/tlambert03/ome-types/pull/73) ([tlambert03](https://github.com/tlambert03))
 - Pull out `_tiff2xml` from `from_tiff` [\#72](https://github.com/tlambert03/ome-types/pull/72) ([tlambert03](https://github.com/tlambert03))
-- feature/pass-kwargs-to-xml [\#69](https://github.com/tlambert03/ome-types/pull/69) ([JacksonMaxfield](https://github.com/JacksonMaxfield))
+- feature/pass-kwargs-to-xml [\#69](https://github.com/tlambert03/ome-types/pull/69) ([evamaxfield](https://github.com/evamaxfield))
 - Add benchmark option to tests [\#63](https://github.com/tlambert03/ome-types/pull/63) ([tlambert03](https://github.com/tlambert03))
 
 ## [v0.2.3](https://github.com/tlambert03/ome-types/tree/v0.2.3) (2020-12-24)
