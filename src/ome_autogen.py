@@ -985,8 +985,8 @@ class GlobalElem:
         if self.type.local_name == "Hex40":
             return [
                 "class Hex40(ConstrainedStr):",
-                "    min_length = 20",
-                "    max_length = 20",
+                "    min_length = 40",
+                "    max_length = 40",
             ]
 
         lines = []
