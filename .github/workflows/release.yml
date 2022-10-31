@@ -13,7 +13,7 @@ jobs:
     # if: github.repository == 'tlambert03/ome-types'
     steps:
       - uses: actions/checkout@master
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.9
 
