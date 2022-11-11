@@ -33,6 +33,7 @@ __all__ = [
     "to_xml",
     "ureg",
     "validate_xml",
+    "__version__",
 ]
 
 
