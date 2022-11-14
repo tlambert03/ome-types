@@ -27,7 +27,7 @@ jobs:
         run: |
           git clone --recurse-submodules -b main https://github.com/AllenCellModeling/aicsimageio.git
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: cache
         with:
           path: aicsimageio/aicsimageio/tests/resources
