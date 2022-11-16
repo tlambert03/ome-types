@@ -26,6 +26,9 @@ from .model import (
 )
 
 __cache__: Dict[str, xmlschema.XMLSchema] = {}
+_XMLSCHEMA_VERSION: tuple[int, ...] = tuple(
+    int(v) if v.isnumeric() else v for v in xmlschema.__version__.split(".")
+)
 
 
 @lru_cache(maxsize=8)
@@ -228,7 +231,14 @@ def xmlschema2dict(
 
     if validate:
         schema = schema or get_schema(xml)
+
+    if _XMLSCHEMA_VERSION >= (2,):
+        kwargs["validation"] = "strict" if validate else "lax"
+
     result = xmlschema.to_dict(xml, schema=schema, converter=converter, **kwargs)
+
+    if _XMLSCHEMA_VERSION >= (2,) and not validate:
+        result, _ = result
     # xmlschema doesn't provide usable access to mixed XML content, so we'll
     # fill the XMLAnnotation value attributes ourselves by re-parsing the XML
     # with ElementTree and using the Element objects as the values.
