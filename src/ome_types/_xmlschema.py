@@ -3,7 +3,7 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Tuple, Union
 from xml.etree import ElementTree
 
 import xmlschema
@@ -26,7 +26,7 @@ from .model import (
 )
 
 __cache__: Dict[str, xmlschema.XMLSchema] = {}
-_XMLSCHEMA_VERSION: tuple[int, ...] = tuple(
+_XMLSCHEMA_VERSION: Tuple[int, ...] = tuple(
     int(v) if v.isnumeric() else v for v in xmlschema.__version__.split(".")
 )
 
