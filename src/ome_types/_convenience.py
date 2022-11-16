@@ -59,7 +59,12 @@ def to_dict(
 
     if isinstance(parser, str):
         if parser == "lxml":
-            from ._lxml import lxml2dict
+            try:
+                from ._lxml import lxml2dict
+            except ImportError:
+                raise ImportError(
+                    "To use `parser='lxml'` run `pip install ome-types[lxml]`"
+                )
 
             parser = cast(Parser, lxml2dict)
         elif parser == "xmlschema":
