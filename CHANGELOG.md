@@ -1,8 +1,25 @@
 # Changelog
 
-## [0.3.1](https://github.com/tlambert03/ome-types/tree/0.3.1) (2022-09-16)
+## [0.3.2](https://github.com/tlambert03/ome-types/tree/0.3.2) (2022-11-17)
 
-[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.0...0.3.1)
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.1...0.3.2)
+
+**Tests & CI:**
+
+- ci: add dependabot [\#149](https://github.com/tlambert03/ome-types/pull/149) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- build: Remove upper version bound of xmlschema dependency [\#156](https://github.com/tlambert03/ome-types/pull/156) ([ap--](https://github.com/ap--))
+- ci\(dependabot\): bump actions/cache from 2 to 3 [\#155](https://github.com/tlambert03/ome-types/pull/155) ([dependabot[bot]](https://github.com/apps/dependabot))
+- docs:  Fix readthedocs build [\#154](https://github.com/tlambert03/ome-types/pull/154) ([tlambert03](https://github.com/tlambert03))
+- ci\(dependabot\): bump actions/checkout from 2 to 3 [\#152](https://github.com/tlambert03/ome-types/pull/152) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci\(dependabot\): bump actions/setup-python from 2 to 4 [\#151](https://github.com/tlambert03/ome-types/pull/151) ([dependabot[bot]](https://github.com/apps/dependabot))
+- feat: support python 3.11 [\#150](https://github.com/tlambert03/ome-types/pull/150) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.3.1](https://github.com/tlambert03/ome-types/tree/v0.3.1) (2022-09-16)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.0...v0.3.1)
 
 **Fixed bugs:**
 
