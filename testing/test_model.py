@@ -24,6 +24,7 @@ SHOULD_FAIL_ROUNDTRIP = {
     # Order of elements in StructuredAnnotations and Union are jumbled.
     "timestampannotation-posix-only",
     "transformations-downgrade",
+    "invalid_xml_annotation",
 }
 SHOULD_FAIL_ROUNDTRIP_LXML = {
     "folders-simple-taxonomy",
