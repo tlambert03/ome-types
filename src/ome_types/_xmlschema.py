@@ -223,7 +223,7 @@ def xmlschema2dict(
     xml: str,
     schema: Optional[xmlschema.XMLSchema] = None,
     converter: XMLSchemaConverter = OMEConverter,
-    validate: bool = True,
+    validate: bool = False,
     **kwargs: Any,
 ) -> Dict[str, Any]:
     if isinstance(xml, bytes):
