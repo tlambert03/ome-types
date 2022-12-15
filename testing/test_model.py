@@ -18,6 +18,7 @@ SHOULD_FAIL_READ = {
     # Some timestamps have negative years which datetime doesn't support.
     "timestampannotation",
 }
+SHOULD_FAIL_VALIDATION = {"invalid_xml_annotation"}
 SHOULD_RAISE_READ = {"bad"}
 SHOULD_FAIL_ROUNDTRIP = {
     # Order of elements in StructuredAnnotations and Union are jumbled.
@@ -81,7 +82,8 @@ parser = ["lxml", "xmlschema"]
 @pytest.mark.parametrize("validate", validate)
 def test_from_xml(xml, parser: str, validate: bool, benchmark):
 
-    if true_stem(xml) in SHOULD_RAISE_READ:
+    should_raise = SHOULD_RAISE_READ.union(SHOULD_FAIL_VALIDATION if validate else [])
+    if true_stem(xml) in should_raise:
         with pytest.raises(
             (XMLSchemaValidateError, ValidationError, XMLSchemaValidationError)
         ):
