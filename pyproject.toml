@@ -165,8 +165,10 @@ filterwarnings = ["error"]
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
 files = "src/**/*/*.py"
-strict = true
+follow_imports = 'silent'
+strict_optional = true
+warn_redundant_casts = true
 disallow_any_generics = false
-disallow_subclassing_any = false
-show_error_codes = true
-pretty = true
+no_implicit_reexport = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
