@@ -18,11 +18,13 @@ SHOULD_FAIL_READ = {
     # Some timestamps have negative years which datetime doesn't support.
     "timestampannotation",
 }
+SHOULD_FAIL_VALIDATION = {"invalid_xml_annotation"}
 SHOULD_RAISE_READ = {"bad"}
 SHOULD_FAIL_ROUNDTRIP = {
     # Order of elements in StructuredAnnotations and Union are jumbled.
     "timestampannotation-posix-only",
     "transformations-downgrade",
+    "invalid_xml_annotation",
 }
 SHOULD_FAIL_ROUNDTRIP_LXML = {
     "folders-simple-taxonomy",
@@ -81,7 +83,8 @@ parser = ["lxml", "xmlschema"]
 @pytest.mark.parametrize("validate", validate)
 def test_from_xml(xml, parser: str, validate: bool, benchmark):
 
-    if true_stem(xml) in SHOULD_RAISE_READ:
+    should_raise = SHOULD_RAISE_READ.union(SHOULD_FAIL_VALIDATION if validate else [])
+    if true_stem(xml) in should_raise:
         with pytest.raises(
             (XMLSchemaValidateError, ValidationError, XMLSchemaValidationError)
         ):
@@ -171,6 +174,8 @@ def test_serialization(xml, validate, parser):
     """Test pickle serialization and reserialization."""
     if true_stem(xml) in SHOULD_RAISE_READ:
         pytest.skip("Can't pickle unreadable xml")
+    if validate and true_stem(xml) in SHOULD_FAIL_VALIDATION:
+        pytest.skip("Can't pickle invalid xml with validate=True")
 
     ome = from_xml(xml, parser=parser, validate=validate)
     serialized = pickle.dumps(ome)

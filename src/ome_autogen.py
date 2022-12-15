@@ -1023,6 +1023,30 @@ _this_dir = os.path.dirname(__file__)
 _url = os.path.join(_this_dir, "ome_types", "ome-2016-06.xsd")
 _target = os.path.join(_this_dir, "ome_types", "model")
 
+AnnotationID_Override = r"""class AnnotationID(LSID):
+    regex = re.compile(
+        r"(urn:lsid:([\w\-\.]+\.[\w\-\.]+)+:Annotation:\S+)|(Annotation:\S+)"
+    )
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v) -> "AnnotationID":
+        if not cls.regex.match(v):
+            search = cls.regex.search(v)
+            if search:
+                import warnings
+
+                new_v = search.group()
+                warnings.warn(f"Casting invalid AnnotationID {v!r} to {new_v!r}")
+                v = new_v
+        return v
+"""
+
+_SIMPLE_OVERRIDES = {"AnnotationID": AnnotationID_Override}
+
 
 def convert_schema(url: str = _url, target_dir: str = _target) -> None:
     print("Inspecting XML schema ...")
@@ -1052,7 +1076,9 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
         init_imports.append((converter.fname, elem.local_name))
         converter.write(filename=targetfile)
 
-    text = "\n".join([s.format() for s in simples])
+    text = "\n".join(
+        [_SIMPLE_OVERRIDES.get(s.elem.local_name) or s.format() for s in simples]
+    )
     text = black_format(sort_imports(text))
     with open(os.path.join(target_dir, "simple_types.py"), "w", encoding="utf-8") as f:
         f.write(text)
