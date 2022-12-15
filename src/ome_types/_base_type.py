@@ -27,7 +27,7 @@ class Sentinel:
 
 
 def quantity_property(field: str) -> property:
-    """c=Create property that returns a ``pint.Quantity`` combining value and unit."""
+    """Create property that returns a ``pint.Quantity`` combining value and unit."""
 
     def quantity(self: Any) -> Optional["pint.Quantity"]:
         from ome_types._units import ureg
@@ -72,7 +72,7 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
     # Default value to support automatic numbering for id field values.
     _AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
     # allow use with weakref
-    __slots__: ClassVar[Set[str]] = {"__weakref__", "_max_id"}
+    __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
     def __init__(__pydantic_self__, **data: Any) -> None:
         if "id" in __pydantic_self__.__fields__:
@@ -153,7 +153,7 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
 
         # Store the highest seen value on the class._max_id attribute.
         if not hasattr(cls, "_max_id"):
-            cls._max_id = 0
+            cls._max_id = 0  # type: ignore [misc]
             cls.__annotations__["_max_id"] = ClassVar[int]
         if value is OMEType._AUTO_SEQUENCE:
             value = cls._max_id + 1
@@ -166,7 +166,7 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
             v_id = value.rsplit(":", 1)[-1]
         try:
             v_id = int(v_id)
-            cls._max_id = max(cls._max_id, v_id)
+            cls._max_id = max(cls._max_id, v_id)  # type: ignore [misc]
         except ValueError:
             pass
 

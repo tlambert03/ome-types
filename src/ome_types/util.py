@@ -74,13 +74,13 @@ def collect_ids(value: Any) -> dict[LSID, OMEType]:
 CAMEL_REGEX = re.compile(r"(?<!^)(?=[A-Z])")
 
 
-@lru_cache
+@lru_cache()
 def camel_to_snake(name: str) -> str:
     """Return a snake_case version of a camelCase string."""
     return model._camel_to_snake.get(name, CAMEL_REGEX.sub("_", name).lower())
 
 
-@lru_cache
+@lru_cache()
 def norm_key(key: str) -> str:
     """Return a normalized key."""
     return key.split("}")[-1]
