@@ -11,7 +11,7 @@ source = "vcs"
 artifacts = ["src/ome_types/model"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src", "tests"]
+include = ["src", "tests", "CHANGELOG.md"]
 
 [tool.hatch.build.hooks.custom]
 # requirements to run the autogen script in hatch_build.py
@@ -122,14 +122,13 @@ extend-ignore = [
 
 [tool.check-manifest]
 ignore = [
-  "*src/ome_types/model/*",
-  "mypy.ini",
+  "src/ome_types/model/*",
   "coverage.yml",
   ".pre-commit-config.yaml",
   ".github_changelog_generator",
-  "src/ome_autogen.py",
   ".readthedocs.yml",
-  "src/ome_types/_version.py",   # added by setuptools_scm during build
+  "docs/**/*",
+  "tox.ini",
 ]
 
 
