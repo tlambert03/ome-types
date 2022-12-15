@@ -417,9 +417,7 @@ def local_import(item_type: str) -> str:
     return f"from .{camel_to_snake(item_type)} import {item_type}"
 
 
-def get_docstring(
-    component: XsdComponent | XsdType, summary: bool = False
-) -> str:
+def get_docstring(component: XsdComponent | XsdType, summary: bool = False) -> str:
     try:
         doc = dedent(component.annotation.documentation[0].text).strip()
         # some docstrings include a start ('*Word') which makes sphinx angry
@@ -616,7 +614,7 @@ def iter_all_members(
 
 
 def iter_members(
-    component: XsdElement | XsdType
+    component: XsdElement | XsdType,
 ) -> Generator[XsdElement | XsdAttribute, None, None]:
     if isinstance(component, XsdElement):
         for attr in component.attributes.values():

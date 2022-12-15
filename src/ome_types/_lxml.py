@@ -16,7 +16,7 @@ NEED_INT.extend(["Channel", "Well"])
 
 
 def elem2dict(
-    node: lxml.etree._Element, parent_name: str = None, exclude_null: bool = True
+    node: lxml.etree._Element, parent_name: str | None = None, exclude_null: bool = True
 ) -> dict[str, Any]:
     """Convert an lxml.etree node tree into a dict."""
     result: dict[str, Any] = {}

@@ -145,7 +145,7 @@ class OMETree(QTreeWidget):
         """Return the supported mime types for drag/drop events."""
         return ["text/uri-list"]
 
-    def supportedDropActions(self) -> 'Qt.DropActions':
+    def supportedDropActions(self) -> "Qt.DropActions":
         """Return the supported drop actions for drag/drop events."""
         return Qt.CopyAction
 

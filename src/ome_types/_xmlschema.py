@@ -32,7 +32,7 @@ _XMLSCHEMA_VERSION: Tuple[int, ...] = tuple(
 
 
 @lru_cache(maxsize=8)
-def _build_schema(ns: str, uri: str = None) -> xmlschema.XMLSchema:
+def _build_schema(ns: str, uri: Optional[str] = None) -> xmlschema.XMLSchema:
     """Return Schema object for a url.
 
     For the special case of retrieving the 2016-06 OME Schema, use local file.
