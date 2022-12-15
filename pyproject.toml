@@ -1,16 +1,84 @@
+# https://peps.python.org/pep-0517/
 [build-system]
-requires = [
-  "setuptools>=42",
-  "wheel",
-  "setuptools_scm[toml]>=3.4",
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+# https://hatch.pypa.io/latest/config/metadata/
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build]
+artifacts = ["src/ome_types/model"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests"]
+
+[tool.hatch.build.hooks.custom]
+# requirements to run the autogen script in hatch_build.py
+dependencies = [
   "black",
   "isort>=5.0",
   "xmlschema==1.4.1",
   "autoflake",
   "numpydoc",
-  "pydantic",
 ]
-build-backend = "setuptools.build_meta"
+
+# https://peps.python.org/pep-0621/
+[project]
+name = "ome-types"
+description = "Python dataclasses for the OME data model"
+keywords = ["ome", "ome-model", "microscopy", "schema", "types"]
+readme = "README.md"
+requires-python = ">=3.7"
+license = { text = "MIT" }
+authors = [{ name = "Talley Lambert", email = "talley.lambert@gmail.com" }]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+]
+dynamic = ["version"]
+dependencies = [
+  "Pint >=0.15",
+  "lxml >=4.8.0",
+  "pydantic[email] >=1.0",
+  "xmlschema >=1.4.1",
+]
+
+[project.urls]
+Source = "https://github.com/tlambert03/ome-types"
+Tracker = "https://github.com/tlambert03/ome-types/issues"
+Documentation = "https://ome-types.readthedocs.io/en/latest/"
+
+[project.entry-points."napari.plugin"]
+ome-types = "ome_types._napari_plugin"
+
+# extras
+# https://peps.python.org/pep-0621/#dependencies-optional-dependencies
+[project.optional-dependencies]
+autogen = ["autoflake", "black", "isort>=5.0", "numpydoc"]
+docs = [
+  "autoflake",
+  "black",
+  "ipython",
+  "isort>=5.0",
+  "numpydoc",
+  "pygments",
+  "sphinx==5.3.0",
+  "sphinx-rtd-theme==1.1.1",
+]
+test = ["pytest", "pytest-cov", "pytest-benchmark", "tox"]
+
 
 [tool.setuptools_scm]
 write_to = "src/ome_types/_version.py"
@@ -21,28 +89,28 @@ line-length = 88
 src = ["src", "tests"]
 target-version = "py37"
 extend-select = [
-    "E",    # style errors
-    "F",    # flakes
-    "D",    # pydocstyle
-    "I001", # isort
-    "UP",   # pyupgrade
-    # "N",  # pep8-naming
-    "S",    # bandit
-    "C",    # flake8-comprehensions
-    "B",    # flake8-bugbear
-    "A001", # flake8-builtins
-    "RUF",  # ruff-specific rules
+  "E",    # style errors
+  "F",    # flakes
+  "D",    # pydocstyle
+  "I001", # isort
+  "UP",   # pyupgrade
+  # "N",  # pep8-naming
+  "S",    # bandit
+  "C",    # flake8-comprehensions
+  "B",    # flake8-bugbear
+  "A001", # flake8-builtins
+  "RUF",  # ruff-specific rules
 ]
 extend-ignore = [
-    "D100", # Missing docstring in public module
-    "D107", # Missing docstring in __init__
-    "D203", # 1 blank line required before class docstring
-    "D212", # Multi-line docstring summary should start at the first line
-    "D213", # Multi-line docstring summary should start at the second line
-    "D400", # First line should end with a period
-    "D413", # Missing blank line after last section
-    "D416", # Section name should end with a colon
-    "C901", # Function is too complex
+  "D100", # Missing docstring in public module
+  "D107", # Missing docstring in __init__
+  "D203", # 1 blank line required before class docstring
+  "D212", # Multi-line docstring summary should start at the first line
+  "D213", # Multi-line docstring summary should start at the second line
+  "D400", # First line should end with a period
+  "D413", # Missing blank line after last section
+  "D416", # Section name should end with a colon
+  "C901", # Function is too complex
 ]
 
 [tool.ruff.per-file-ignores]
@@ -61,7 +129,7 @@ ignore = [
   ".github_changelog_generator",
   "src/ome_autogen.py",
   ".readthedocs.yml",
-  "src/ome_types/_version.py", # added by setuptools_scm during build
+  "src/ome_types/_version.py",   # added by setuptools_scm during build
 ]
 
 
@@ -87,3 +155,19 @@ exclude = '''
   | docs
 )/
 '''
+
+# https://docs.pytest.org/en/6.2.x/customize.html
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--benchmark-disable"
+testpaths = ["tests"]
+filterwarnings = ["error"]
+
+# https://mypy.readthedocs.io/en/stable/config_file.html
+[tool.mypy]
+files = "src/**/*/*.py"
+strict = true
+disallow_any_generics = false
+disallow_subclassing_any = false
+show_error_codes = true
+pretty = true
