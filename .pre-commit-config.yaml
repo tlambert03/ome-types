@@ -8,9 +8,9 @@ repos:
     rev: v4.3.0 # Use the ref you want to point at
     hooks:
       - id: trailing-whitespace
-        exclude: ^testing|^docs|.xsd
+        exclude: ^tests|^docs|.xsd
       - id: end-of-file-fixer
-        exclude: ^testing|^docs
+        exclude: ^tests|^docs
   - repo: https://github.com/asottile/setup-cfg-fmt
     rev: v2.2.0
     hooks:
@@ -32,4 +32,4 @@ repos:
     rev: "v0.982"
     hooks:
       - id: mypy
-        exclude: ^testing|^docs|_napari_plugin|widgets
+        exclude: ^tests|^docs|_napari_plugin|widgets

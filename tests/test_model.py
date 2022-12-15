@@ -6,11 +6,11 @@ from xml.dom import minidom
 from xml.etree import ElementTree
 
 import pytest
-import util
 from lxml.etree import XMLSchemaValidateError
 from pydantic import ValidationError
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
+import util
 from ome_types import from_tiff, from_xml, model, to_xml
 from ome_types._xmlschema import NS_OME, URI_OME, get_schema, to_xml_element
 

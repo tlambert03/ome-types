@@ -27,7 +27,7 @@ class Sentinel:
 
 
 def quantity_property(field: str) -> property:
-    """create property that returns a ``pint.Quantity`` combining value and unit."""
+    """c=Create property that returns a ``pint.Quantity`` combining value and unit."""
 
     def quantity(self: Any) -> Optional["pint.Quantity"]:
         from ome_types._units import ureg
@@ -35,7 +35,7 @@ def quantity_property(field: str) -> property:
         value = getattr(self, field)
         if value is None:
             return None
-        unit = getattr(self, field + "_unit").value.replace(" ", "_")
+        unit = getattr(self, f"{field}_unit").value.replace(" ", "_")
         return ureg.Quantity(value, unit)
 
     return property(quantity)
@@ -153,7 +153,7 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
 
         # Store the highest seen value on the class._max_id attribute.
         if not hasattr(cls, "_max_id"):
-            setattr(cls, "_max_id", 0)
+            cls._max_id = 0
             cls.__annotations__["_max_id"] = ClassVar[int]
         if value is OMEType._AUTO_SEQUENCE:
             value = cls._max_id + 1
@@ -166,7 +166,7 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
             v_id = value.rsplit(":", 1)[-1]
         try:
             v_id = int(v_id)
-            setattr(cls, "_max_id", max(cls._max_id, v_id))
+            cls._max_id = max(cls._max_id, v_id)
         except ValueError:
             pass
 

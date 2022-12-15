@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, MutableSequence, Optional, Set, Union
+from typing import Any, MutableSequence
 
 import lxml.etree
 from typing_extensions import get_args
@@ -17,16 +17,13 @@ NEED_INT.extend(["Channel", "Well"])
 
 def elem2dict(
     node: lxml.etree._Element, parent_name: str = None, exclude_null: bool = True
-) -> Dict[str, Any]:
-    """
-    Convert an lxml.etree node tree into a dict.
-    """
-
-    result: Dict[str, Any] = {}
+) -> dict[str, Any]:
+    """Convert an lxml.etree node tree into a dict."""
+    result: dict[str, Any] = {}
 
     # Re-used valued
     norm_node = norm_key(node.tag)
-    norm_list: Union[Set[str], Dict[Any, Any]] = model._lists.get(norm_node, {})
+    norm_list: set[str] | dict[Any, Any] = model._lists.get(norm_node, {})
 
     for key, val in node.attrib.items():
         is_list = key in norm_list
@@ -46,7 +43,7 @@ def elem2dict(
             continue
         key = norm_key(element.tag)
 
-        # Process element as tree element if the inner XML contains non-whitespace content
+        # Process element as tree element if inner XML contains non-whitespace content
         if element.text and element.text.strip():
 
             value = element.text
@@ -102,7 +99,8 @@ def elem2dict(
                             v["value"] = ""
                     annotations.extend(values)
 
-            assert key not in result.keys()
+            if key in result:
+                raise ValueError("Duplicate structured_annotations")
             result[key] = annotations
 
         elif value or not exclude_null:
@@ -115,13 +113,13 @@ def elem2dict(
                     result[key] = value
             else:
                 if not isinstance(rv, MutableSequence) or not rv:
-                    result[key] = list([rv, value])
+                    result[key] = [rv, value]
                 elif isinstance(rv[0], MutableSequence) or not isinstance(
                     value, MutableSequence
                 ):
                     rv.append(value)
                 else:
-                    result[key] = list([result, value])
+                    result[key] = [result, value]
 
     return result
 
@@ -150,8 +148,8 @@ def validate_lxml(node: lxml.etree._Element) -> lxml.etree._Element:
 
 
 def lxml2dict(
-    path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False
-) -> Dict[str, Any]:
+    path_or_str: Path | str | bytes, validate: bool | None = False
+) -> dict[str, Any]:
     """Convert XML string or path to dict using lxml.
 
     xml : Union[Path, str, bytes]
@@ -169,7 +167,6 @@ def lxml2dict(
     TypeError
         _description_
     """
-
     result = lxml.etree.XML(_ensure_xml_bytes(path_or_str))
     if validate:
         validate_lxml(result)

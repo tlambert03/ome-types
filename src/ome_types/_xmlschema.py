@@ -137,7 +137,8 @@ class OMEConverter(XMLSchemaConverter):
                 plural = _singular_to_plural.get((xsd_element.local_name, name), None)
                 if plural:
                     value = result.pop(name)
-                    assert isinstance(value, list), "expected list for plural attr"
+                    if not isinstance(value, list):
+                        raise TypeError("expected list for plural attr")
                     result[plural] = value
         return result
 

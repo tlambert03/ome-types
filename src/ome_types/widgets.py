@@ -1,17 +1,17 @@
 import os
 import warnings
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from .model import OME
 
 try:
     from qtpy.QtCore import QMimeData, Qt
     from qtpy.QtWidgets import QTreeWidget, QTreeWidgetItem
-except ImportError:
+except ImportError as e:
     raise ImportError(
         "qtpy and a Qt backend (pyside or pyqt) is required to use the OME widget:\n"
         "pip install qtpy pyqt5"
-    )
+    ) from e
 
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class OMETree(QTreeWidget):
-    """A Widget that can show OME XML"""
+    """A Widget that can show OME XML."""
 
     def __init__(
         self, ome_dict: dict = None, viewer: "napari.viewer.Viewer" = None, parent=None
@@ -46,12 +46,13 @@ class OMETree(QTreeWidget):
             )
             self._try_load_layer(viewer.layers.selection.active)
 
-    def clear(self):
+    def clear(self) -> None:
+        """Clear the widget and reset the header text."""
         self.headerItem().setText(0, "drag/drop file...")
         super().clear()
 
     def _try_load_layer(self, layer: "napari.layers.Layer"):
-        """Handle napari viewer behavior"""
+        """Handle napari viewer behavior."""
         from ._napari_plugin import METADATA_KEY
 
         if layer is not None:
@@ -83,7 +84,8 @@ class OMETree(QTreeWidget):
             self._current_path = None
             self.clear()
 
-    def update(self, ome: Union[OME, str]):
+    def update(self, ome: Union[OME, str]) -> None:
+        """Update the widget with a new OME object or path to an OME XML file."""
         if not ome:
             return
         if isinstance(ome, OME):
@@ -128,8 +130,9 @@ class OMETree(QTreeWidget):
             item.setText(0, f"{item.text(0)}: {t}")
 
     def dropMimeData(
-        self, parent: QTreeWidgetItem, index: int, data: QMimeData, a
+        self, parent: QTreeWidgetItem, index: int, data: QMimeData, _: Any
     ) -> bool:
+        """Handle drag/drop events to load OME XML files."""
         if data.hasUrls():
             for url in data.urls():
                 lf = url.toLocalFile()
@@ -138,10 +141,12 @@ class OMETree(QTreeWidget):
                     return True
         return False
 
-    def mimeTypes(self):
+    def mimeTypes(self) -> list[str]:
+        """Return the supported mime types for drag/drop events."""
         return ["text/uri-list"]
 
-    def supportedDropActions(self):
+    def supportedDropActions(self) -> 'Qt.DropActions':
+        """Return the supported drop actions for drag/drop events."""
         return Qt.CopyAction
 
 
