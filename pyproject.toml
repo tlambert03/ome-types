@@ -160,7 +160,10 @@ exclude = '''
 minversion = "6.0"
 addopts = "--benchmark-disable"
 testpaths = ["tests"]
-filterwarnings = ["error"]
+filterwarnings = [
+  "error",
+  "ignore:Casting invalid AnnotationID:UserWarning",
+]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
