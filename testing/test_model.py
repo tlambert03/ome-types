@@ -174,6 +174,8 @@ def test_serialization(xml, validate, parser):
     """Test pickle serialization and reserialization."""
     if true_stem(xml) in SHOULD_RAISE_READ:
         pytest.skip("Can't pickle unreadable xml")
+    if validate and true_stem(xml) in SHOULD_FAIL_VALIDATION:
+        pytest.skip("Can't pickle invalid xml with validate=True")
 
     ome = from_xml(xml, parser=parser, validate=validate)
     serialized = pickle.dumps(ome)
