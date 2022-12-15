@@ -8,7 +8,7 @@ def download_test_resources() -> None:
     resources = (root / "aicsimageio" / "aicsimageio" / "tests" / "resources").resolve()
 
     # Get the specific hash for test resources
-    with open(root / "aicsimageio" / "scripts" / "TEST_RESOURCES_HASH.txt", "r") as f:
+    with open(root / "aicsimageio" / "scripts" / "TEST_RESOURCES_HASH.txt") as f:
         top_hash = f.readline().strip()
 
     # Download test resources

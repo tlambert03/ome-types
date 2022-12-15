@@ -32,7 +32,7 @@ _XMLSCHEMA_VERSION: Tuple[int, ...] = tuple(
 
 
 @lru_cache(maxsize=8)
-def _build_schema(ns: str, uri: str = None) -> xmlschema.XMLSchema:
+def _build_schema(ns: str, uri: Optional[str] = None) -> xmlschema.XMLSchema:
     """Return Schema object for a url.
 
     For the special case of retrieving the 2016-06 OME Schema, use local file.
@@ -137,7 +137,8 @@ class OMEConverter(XMLSchemaConverter):
                 plural = _singular_to_plural.get((xsd_element.local_name, name), None)
                 if plural:
                     value = result.pop(name)
-                    assert isinstance(value, list), "expected list for plural attr"
+                    if not isinstance(value, list):
+                        raise TypeError("expected list for plural attr")
                     result[plural] = value
         return result
 

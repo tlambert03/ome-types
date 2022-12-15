@@ -1,5 +1,5 @@
 include LICENSE README.md setup.py pyproject.toml CHANGELOG.md
 include src/ome_types/py.typed
 recursive-include src *.xsd
-recursive-exclude testing *
+recursive-exclude tests *
 recursive-exclude docs *

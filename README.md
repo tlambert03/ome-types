@@ -51,7 +51,7 @@ schema](https://www.openmicroscopy.org/Schemas/Documentation/Generated/OME-2016-
 ```python
 from ome_types import from_xml
 
-ome = from_xml('testing/data/hcs.ome.xml')
+ome = from_xml('tests/data/hcs.ome.xml')
 ```
 
 ### extract OME metadata from an OME-TIFF
@@ -59,7 +59,7 @@ ome = from_xml('testing/data/hcs.ome.xml')
 ```python
 from ome_types import from_tiff
 
-ome2 = from_tiff('testing/data/ome.tiff')
+ome2 = from_tiff('tests/data/ome.tiff')
 ```
 
 ### manipulate the metadata via python objects
@@ -71,7 +71,7 @@ but use `snake_case` attribute names instead of `CamelCase`, to be consistent
 with the python ecosystem.
 
 ```python
-In [2]: ome = from_xml('testing/data/hcs.ome.xml')
+In [2]: ome = from_xml('tests/data/hcs.ome.xml')
 
 In [3]: ome
 Out[3]:

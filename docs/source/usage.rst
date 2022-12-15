@@ -17,7 +17,7 @@ Reading
 
     In [1]: from ome_types import from_xml
 
-    In [2]: ome = from_xml('testing/data/hcs.ome.xml')
+    In [2]: ome = from_xml('tests/data/hcs.ome.xml')
 
 Note that :func:`~ome_types._convenience.from_xml` returns an instance of
 :class:`~ome_types.model.OME`, This object is a container for all information
