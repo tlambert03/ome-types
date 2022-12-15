@@ -8,19 +8,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
 from textwrap import dedent, indent, wrap
-from typing import (
-    Any,
-    DefaultDict,
-    Dict,
-    Generator,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, DefaultDict, Generator, Iterable, Iterator
 
 import black
 import isort.api
@@ -44,10 +32,10 @@ except ImportError:
     from xmlschema import qnames
 
 
-# Track all camel-to-snake and pluralization results so we can include them in the model.
-camel_snake_registry: Dict[str, str] = {}
-plural_registry: Dict[Tuple[str, str], str] = {}
-LISTS: DefaultDict[str, Set[str]] = DefaultDict(set)
+# Track all camel-to-snake and pluralization results so we can include them in the model
+camel_snake_registry: dict[str, str] = {}
+plural_registry: dict[tuple[str, str], str] = {}
+LISTS: DefaultDict[str, set[str]] = DefaultDict(set)
 
 # FIXME: Work out a better way to implement these override hacks.
 
@@ -55,9 +43,9 @@ LISTS: DefaultDict[str, Set[str]] = DefaultDict(set)
 @dataclass
 class Override:
     type_: str
-    default: Optional[str] = None
-    imports: Optional[str] = None
-    body: Optional[str] = None
+    default: str | None = None
+    imports: str | None = None
+    body: str | None = None
 
     def __post_init__(self) -> None:
         if self.imports:
@@ -68,11 +56,11 @@ class Override:
 
 @dataclass
 class ClassOverride:
-    base_type: Optional[str] = None
-    imports: Optional[str] = None
-    fields: Optional[str] = None
-    fields_suppress: Set[str] = field(default_factory=set)
-    body: Optional[str] = None
+    base_type: str | None = None
+    imports: str | None = None
+    fields: str | None = None
+    fields_suppress: set[str] = field(default_factory=set)
+    body: str | None = None
 
     def __post_init__(self) -> None:
         if self.imports:
@@ -429,9 +417,7 @@ def local_import(item_type: str) -> str:
     return f"from .{camel_to_snake(item_type)} import {item_type}"
 
 
-def get_docstring(
-    component: Union[XsdComponent, XsdType], summary: bool = False
-) -> str:
+def get_docstring(component: XsdComponent | XsdType, summary: bool = False) -> str:
     try:
         doc = dedent(component.annotation.documentation[0].text).strip()
         # some docstrings include a start ('*Word') which makes sphinx angry
@@ -449,7 +435,7 @@ def get_docstring(
         return ""
 
 
-def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
+def make_dataclass(component: XsdComponent | XsdType) -> list[str]:
     class_override = CLASS_OVERRIDES.get(component.local_name, None)
     lines = ["from ome_types._base_type import OMEType", ""]
     if isinstance(component, XsdType):
@@ -509,7 +495,7 @@ def make_dataclass(component: Union[XsdComponent, XsdType]) -> List[str]:
     return lines
 
 
-def make_abstract_class(component: XsdComponent) -> List[str]:
+def make_abstract_class(component: XsdComponent) -> list[str]:
     # FIXME: ? this might be a bit of an OME-schema-specific hack
     # this seems to be how abstract is used in the OME schema
     for e in component.iter_components():
@@ -544,7 +530,7 @@ def make_abstract_class(component: XsdComponent) -> List[str]:
     return lines
 
 
-def make_enum(component: XsdComponent) -> List[str]:
+def make_enum(component: XsdComponent) -> list[str]:
     name = component.local_name
     _type = component.type if hasattr(component, "type") else component
     if _type.is_list():
@@ -559,7 +545,7 @@ def make_enum(component: XsdComponent) -> List[str]:
         lines += indent(doc, "    ").splitlines()
     enum_elems = list(_type.elem.iter("enum"))
     facets = _type.get_facet(qnames.XSD_ENUMERATION)
-    members: List[Tuple[str, str]] = []
+    members: list[tuple[str, str]] = []
     if enum_elems:
         for el, value in zip(enum_elems, facets.enumeration):
             _name = el.attrib["enum"]
@@ -575,7 +561,7 @@ def make_enum(component: XsdComponent) -> List[str]:
     return lines
 
 
-def make_color() -> List[str]:
+def make_color() -> list[str]:
     color = """
     from pydantic import color
     class Color(color.Color):
@@ -620,7 +606,7 @@ facet_converters = {
 
 def iter_all_members(
     component: XsdComponent,
-) -> Generator[Union[XsdElement, XsdAttribute], None, None]:
+) -> Generator[XsdElement | XsdAttribute, None, None]:
     for c in component.iter_components((XsdElement, XsdAttribute)):
         if c is component:
             continue
@@ -628,8 +614,8 @@ def iter_all_members(
 
 
 def iter_members(
-    component: Union[XsdElement, XsdType]
-) -> Generator[Union[XsdElement, XsdAttribute], None, None]:
+    component: XsdElement | XsdType,
+) -> Generator[XsdElement | XsdAttribute, None, None]:
     if isinstance(component, XsdElement):
         for attr in component.attributes.values():
             if isinstance(attr, XsdAttribute):
@@ -646,9 +632,10 @@ def is_enum_type(obj: XsdType) -> bool:
 
 
 class Member:
-    def __init__(self, component: Union[XsdElement, XsdAttribute]):
+    def __init__(self, component: XsdElement | XsdAttribute):
         self.component = component
-        assert not component.is_global()
+        if component.is_global():
+            raise ValueError(f"global component {component!r} not allowed")
 
     @property
     def identifier(self) -> str:
@@ -664,7 +651,7 @@ class Member:
         return name
 
     @property
-    def plural(self) -> Optional[str]:
+    def plural(self) -> str | None:
         """Plural form of component name, if available."""
         if (
             isinstance(self.component, XsdElement)
@@ -673,7 +660,8 @@ class Member:
             and self.component.ref.annotation
         ):
             appinfo = self.component.ref.annotation.appinfo
-            assert len(appinfo) == 1, "unexpected multiple appinfo elements"
+            if len(appinfo) != 1:
+                raise ValueError("unexpected multiple appinfo elements")
             plural = appinfo[0].find("xsdfu/plural")
             if plural is not None:
                 return plural.text
@@ -740,14 +728,14 @@ class Member:
             return self.component.local_name
         return name
 
-    def locals(self) -> List[str]:
+    def locals(self) -> list[str]:
         if self.key in OVERRIDES:
             return []
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
             return []
         if not self.type or self.type.is_global():
             return []
-        locals_: List[str] = []
+        locals_: list[str] = []
         # FIXME: this bit is mostly hacks
         if self.type.is_complex() and self.component.ref is None:
             locals_.append("\n".join(make_dataclass(self.component)) + "\n")
@@ -757,7 +745,7 @@ class Member:
             locals_.append("\n".join(make_enum(self.component)) + "\n")
         return locals_
 
-    def imports(self) -> List[str]:
+    def imports(self) -> list[str]:
         if self.key in OVERRIDES:
             _imp = OVERRIDES[self.key].imports
             return [_imp] if _imp else []
@@ -801,7 +789,8 @@ class Member:
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
             return "Any"
         if self.component.ref is not None:
-            assert self.component.ref.is_global()
+            if not self.component.ref.is_global():
+                raise ValueError("local ref not supported")
             return self.component.ref.local_name
 
         if self.type.is_datetime():
@@ -825,7 +814,7 @@ class Member:
 
     @property
     def full_type_string(self) -> str:
-        """full type, like Optional[List[str]]"""
+        """full type, like Optional[List[str]]."""
         if self.key in OVERRIDES and self.type_string:
             return f": {self.type_string}"
         type_string = self.type_string
@@ -863,7 +852,7 @@ class Member:
         return f" = {default_val}"
 
     @property
-    def max_occurs(self) -> Optional[int]:
+    def max_occurs(self) -> int | None:
         default = None if self.type.is_list() else 1
         return getattr(self.component, "max_occurs", default)
 
@@ -888,7 +877,7 @@ class Member:
 class MemberSet:
     def __init__(self, initial: Iterable[Member] = ()):
         # Use a list to maintain insertion order.
-        self._members: List[Member] = []
+        self._members: list[Member] = []
         self.update(initial)
 
     def add(self, member: Member) -> None:
@@ -903,7 +892,7 @@ class MemberSet:
         for member in members:
             self.add(member)
 
-    def lines(self, indent: int = 1) -> List[str]:
+    def lines(self, indent: int = 1) -> list[str]:
         if not self._members:
             lines = ["    " * indent + "pass"]
         else:
@@ -913,13 +902,13 @@ class MemberSet:
             ]
         return lines
 
-    def imports(self) -> List[str]:
+    def imports(self) -> list[str]:
         return list(chain.from_iterable(m.imports() for m in self._members))
 
-    def locals(self) -> List[str]:
+    def locals(self) -> list[str]:
         return list(chain.from_iterable(m.locals() for m in self._members))
 
-    def body(self) -> List[str]:
+    def body(self) -> list[str]:
         return [m.body() for m in self._members]
 
     def has_non_default_args(self) -> bool:
@@ -944,8 +933,9 @@ class MemberSet:
 
 
 class GlobalElem:
-    def __init__(self, elem: Union[XsdElement, XsdType]):
-        assert elem.is_global()
+    def __init__(self, elem: XsdElement | XsdType):
+        if not elem.is_global():
+            raise ValueError("Element must be global")
         self.elem = elem
 
     @property
@@ -974,7 +964,7 @@ class GlobalElem:
                 raise NotImplementedError("Unexpected enum with multiple facets")
         return is_enum
 
-    def _simple_class(self) -> List[str]:
+    def _simple_class(self) -> list[str]:
         if self.type.local_name == "Color":
             return make_color()
         if self.is_enum:
@@ -1042,7 +1032,7 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
     print("Building model ...")
     shutil.rmtree(target_dir, ignore_errors=True)
     init_imports = []
-    simples: List[GlobalElem] = []
+    simples: list[GlobalElem] = []
     for elem in sorted(schema.types.values(), key=sort_types):
         if elem.local_name in OVERRIDES:
             continue
@@ -1068,7 +1058,7 @@ def convert_schema(url: str = _url, target_dir: str = _target) -> None:
         f.write(text)
 
     text = ""
-    for fname, classname in init_imports:
+    for _fname, classname in init_imports:
         text += local_import(classname) + "\n"
     text = sort_imports(text)
     text += f"\n\n__all__ = [{', '.join(sorted(repr(i[1]) for i in init_imports))}]"

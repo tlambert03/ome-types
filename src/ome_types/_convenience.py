@@ -30,11 +30,12 @@ def to_dict(
         XML string or path to XML file.
     parser : Union[Parser, str]
         Either a parser callable with signature:
-        `(path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False) -> Dict`,
-        or a string.  If a string, must be either 'lxml' or 'xmlschema'. by default "lxml"
+        `(path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False) ->
+        Dict`, or a string.  If a string, must be either 'lxml' or 'xmlschema'. by
+        default "lxml"
     validate : Optional[bool], optional
-        Whether to validate XML as valid OME XML, by default (`None`), the choices is left
-        to the parser (which is `False` for the lxml parser)
+        Whether to validate XML as valid OME XML, by default (`None`), the choices is
+        left to the parser (which is `False` for the lxml parser)
 
     Returns
     -------
@@ -89,12 +90,12 @@ def from_xml(
     xml : Union[Path, str, bytes]
         XML string or path to XML file.
     parser : Union[Parser, str]
-        Either a parser callable with signature:
-        `(path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False) -> Dict`,
-        or a string.  If a string, must be either 'lxml' or 'xmlschema'. by default "lxml"
+        Either a parser callable with signature: `(path_or_str: Union[Path, str, bytes],
+        validate: Optional[bool] = False) -> Dict`, or a string.  If a string, must be
+        either 'lxml' or 'xmlschema'. by default "lxml"
     validate : Optional[bool], optional
-        Whether to validate XML as valid OME XML, by default (`None`), the choices is left
-        to the parser (which is `False` for the lxml parser)
+        Whether to validate XML as valid OME XML, by default (`None`), the choices is
+        left to the parser (which is `False` for the lxml parser)
 
 
     Returns
@@ -121,12 +122,12 @@ def from_tiff(
     path : Union[Path, str]
         Path to OME TIFF.
     parser : Union[Parser, str]
-        Either a parser callable with signature:
-        `(path_or_str: Union[Path, str, bytes], validate: Optional[bool] = False) -> Dict`,
-        or a string.  If a string, must be either 'lxml' or 'xmlschema'. by default "lxml"
+        Either a parser callable with signature: `(path_or_str: Union[Path, str, bytes],
+        validate: Optional[bool] = False) -> Dict`, or a string.  If a string, must be
+        either 'lxml' or 'xmlschema'. by default "lxml"
     validate : Optional[bool], optional
-        Whether to validate XML as valid OME XML, by default (`None`), the choices is left
-        to the parser (which is `False` for the lxml parser)
+        Whether to validate XML as valid OME XML, by default (`None`), the choices is
+        left to the parser (which is `False` for the lxml parser)
 
 
     Returns
