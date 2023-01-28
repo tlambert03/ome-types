@@ -845,7 +845,9 @@ class Member:
                     default_val = f"{self.type_string}('{default_val}')"
                 elif hasattr(builtins, self.type_string):
                     default_val = repr(getattr(builtins, self.type_string)(default_val))
-                if self.is_decimal:
+                if self.type_string == "Color":
+                    default_val = "Color('white')"
+                elif self.is_decimal:
                     default_val = f"cast({self.type_string}, {default_val})"
             else:
                 default_val = "None"
