@@ -620,8 +620,7 @@ def iter_members(
         for attr in component.attributes.values():
             if isinstance(attr, XsdAttribute):
                 yield attr
-        for elem in component.iterchildren():
-            yield elem
+        yield from component.iterchildren()
     else:
         yield from iter_all_members(component)
 
@@ -996,7 +995,7 @@ class GlobalElem:
             members.extend([f"    {line}" for line in facet_converters[key](facet)])
         lines.extend(members if members else ["    pass"])
         if any("re.compile" in m for m in members):
-            lines = ["import re", ""] + lines
+            lines = ["import re", "", *lines]
         return lines
 
     def lines(self) -> str:
