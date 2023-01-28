@@ -97,7 +97,7 @@ class OMEConverter(XMLSchemaConverter):
         return _camel_to_snake.get(name, name)
 
     def element_decode(self, data, xsd_element, xsd_type=None, level=0):  # type: ignore
-        """Converts a decoded element data to a data structure."""
+        """Convert a decoded element data to a data structure."""
         result = super().element_decode(data, xsd_element, xsd_type, level)
         if isinstance(result, dict) and "$" in result:
             result["value"] = result.pop("$")

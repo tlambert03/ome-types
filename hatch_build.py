@@ -7,7 +7,7 @@ class CustomBuildHook(BuildHookInterface):
     PLUGIN_NAME = "ome_autogen"
 
     def initialize(self, version: str, build_data: dict) -> None:
-        """Called before the build process begins."""
+        """Init before the build process begins."""
         import sys
 
         sys.path.append("src")
