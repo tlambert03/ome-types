@@ -1,8 +1,26 @@
 # Changelog
 
-## [0.3.2](https://github.com/tlambert03/ome-types/tree/0.3.2) (2022-11-17)
+## [v0.3.3](https://github.com/tlambert03/ome-types/tree/v0.3.3) (2023-01-29)
 
-[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.1...0.3.2)
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.2...v0.3.3)
+
+**Fixed bugs:**
+
+- fix: prevent unset color from getting output in the XML [\#164](https://github.com/tlambert03/ome-types/pull/164) ([tlambert03](https://github.com/tlambert03))
+- fix: use lax validation by default [\#159](https://github.com/tlambert03/ome-types/pull/159) ([tlambert03](https://github.com/tlambert03))
+
+**Tests & CI:**
+
+- style: update pre-commit, use ruff instead of flake8 [\#160](https://github.com/tlambert03/ome-types/pull/160) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- refactor: init\_subclass instead of metaclass [\#165](https://github.com/tlambert03/ome-types/pull/165) ([tlambert03](https://github.com/tlambert03))
+- build: Use hatchling for build backend [\#161](https://github.com/tlambert03/ome-types/pull/161) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.3.2](https://github.com/tlambert03/ome-types/tree/v0.3.2) (2022-11-17)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.1...v0.3.2)
 
 **Tests & CI:**
 
