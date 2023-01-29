@@ -1,16 +1,6 @@
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    Dict,
-    Optional,
-    Sequence,
-    Set,
-    no_type_check,
-)
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Sequence, Set
 
 from pydantic import BaseModel, validator
-from pydantic.main import ModelMetaclass
 
 if TYPE_CHECKING:
     import pint
@@ -41,24 +31,7 @@ def quantity_property(field: str) -> property:
     return property(quantity)
 
 
-class OMEMetaclass(ModelMetaclass):
-    """Metaclass that adds some properties to classes with units.
-
-    It adds ``*_quantity`` property for fields that have both a value and a
-    unit, where ``*_quantity`` is a pint ``Quantity``
-    """
-
-    @no_type_check
-    def __new__(mcs, name, bases, namespace, **kwargs):
-        cls = super().__new__(mcs, name, bases, namespace, **kwargs)
-
-        _clsdir = set(cls.__fields__)
-        for field in [f for f in _clsdir if f + "_unit" in _clsdir]:
-            setattr(cls, field + "_quantity", quantity_property(field))
-        return cls
-
-
-class OMEType(BaseModel, metaclass=OMEMetaclass):
+class OMEType(BaseModel):
     """The base class that all OME Types inherit from.
 
     This provides some global conveniences around auto-setting ids. (i.e., making them
@@ -78,6 +51,17 @@ class OMEType(BaseModel, metaclass=OMEMetaclass):
         if "id" in __pydantic_self__.__fields__:
             data.setdefault("id", OMEType._AUTO_SEQUENCE)
         super().__init__(**data)
+
+    def __init_subclass__(cls) -> None:
+        """Add some properties to subclasses with units.
+
+        It adds ``*_quantity`` property for fields that have both a value and a
+        unit, where ``*_quantity`` is a pint ``Quantity``
+        """
+        _clsdir = set(cls.__fields__)
+        for field in _clsdir:
+            if f"{field}_unit" in _clsdir:
+                setattr(cls, f"{field}_quantity", quantity_property(field))
 
     # pydantic BaseModel configuration.
     # see: https://pydantic-docs.helpmanual.io/usage/model_config/
