@@ -1,6 +1,9 @@
+from typing import Callable
 import pytest
 
 from ome_types.model import OME, Channel, Image, Pixels
+from ome_types._lxml import xml2dict
+from ome_types._xmlschema import xmlschema2dict
 
 
 @pytest.mark.parametrize("channel_kwargs", [{}, {"color": "blue"}])

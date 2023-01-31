@@ -60,9 +60,9 @@ def to_dict(
 
     if isinstance(parser, str):
         if parser == "lxml":
-            from ._lxml import lxml2dict
+            from ._lxml import xml2dict
 
-            parser = cast(Parser, lxml2dict)
+            parser = cast(Parser, xml2dict)
         elif parser == "xmlschema":
             from ._xmlschema import xmlschema2dict
 
@@ -70,7 +70,10 @@ def to_dict(
         else:
             raise KeyError("parser string must be one of {'lxml', 'xmlschema'}")
 
-    d = parser(xml) if validate is None else parser(xml, validate=validate)
+    if validate is True:
+        validate_xml(xml)
+
+    d = parser(xml)
     for key in list(d.keys()):
         if key.startswith(("xml", "xsi")):
             d.pop(key)

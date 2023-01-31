@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, MutableSequence
+from typing import TYPE_CHECKING, Any, Callable, Container, MutableSequence, Union, cast
 
-import lxml.etree
 from typing_extensions import get_args
 
 from . import model
@@ -15,16 +14,61 @@ NEED_INT = [s.__name__ for s in get_args(ShapeGroupType)]
 NEED_INT.extend(["Channel", "Well"])
 
 
-def elem2dict(
-    node: lxml.etree._Element, parent_name: str | None = None, exclude_null: bool = True
-) -> dict[str, Any]:
-    """Convert an lxml.etree node tree into a dict."""
+def _is_xml_comment(element: Element) -> bool:
+    return False
+
+
+if TYPE_CHECKING:
+    import xml.etree.ElementTree
+
+    import lxml.etree
+
+    Element = Union[xml.etree.ElementTree.Element, lxml.etree._Element]
+    ElementTree = Union[xml.etree.ElementTree.ElementTree, lxml.etree._ElementTree]
+    Value = Union[float, str, int, bytearray, bool, dict[str, Any], list[Any]]
+    Parser = Callable[[bytes], Element]
+
+    XML: Parser
+    tostring: Callable[[Element], bytes]
+    parse: Callable[[str], ElementTree]
+
+else:
+    try:
+        # faster if it's available
+        from lxml.etree import XML, _Comment, parse, tostring
+
+        def _is_xml_comment(element: Element) -> bool:
+            return isinstance(element, _Comment)
+
+    except ImportError:
+        from xml.etree.ElementTree import XML, parse, tostring
+
+
+def elem2dict(node: Element, exclude_null: bool = True) -> dict[str, Any]:
+    """Convert an xml.etree or lxml.etree Element into a dict.
+
+    Parameters
+    ----------
+    node : Element
+        The Element to convert. Should be an `xml.etree.ElementTree.Element` or a 
+        `lxml.etree._Element`
+    exclude_null : bool, optional
+        If True, exclude keys with null values from the output.
+    
+
+    Returns
+    -------
+    dict[str, Any]
+        The converted Element.
+    """
     result: dict[str, Any] = {}
 
     # Re-used valued
     norm_node = norm_key(node.tag)
-    norm_list: set[str] | dict[Any, Any] = model._lists.get(norm_node, {})
+    # set of keys that are lists
+    norm_list: Container = model._lists.get(norm_node, {})
 
+    # Process attributes
     for key, val in node.attrib.items():
         is_list = key in norm_list
         key = camel_to_snake(norm_key(key))
@@ -34,19 +78,20 @@ def elem2dict(
             key = _get_plural(key, node.tag)
             if key not in result:
                 result[key] = []
-            result[key].extend(val.split())
+            cast("list", result[key]).extend(val.split())
         else:
             result[key] = val
 
-    for element in node.iterchildren():
-        if isinstance(element, lxml.etree._Comment):
+    # Process children
+    for element in node:
+        element = cast("Element", element)
+        if _is_xml_comment(element):
             continue
         key = norm_key(element.tag)
 
         # Process element as tree element if inner XML contains non-whitespace content
         if element.text and element.text.strip():
-
-            value = element.text
+            value: Any = element.text
             if element.attrib.items():
                 value = {"value": value}
                 for k, val in element.attrib.items():
@@ -56,20 +101,19 @@ def elem2dict(
             value = True
 
         else:
-            value = elem2dict(element, norm_node)
+            value = elem2dict(element, exclude_null=exclude_null)
             if key == "XMLAnnotation":
-                value["value"] = lxml.etree.tostring(element[0])
+                value["value"] = tostring(element[0])
 
         is_list = key in norm_list
         key = camel_to_snake(key)
         if is_list:
-            if key == "bin_data":
-                if value["length"] == "0" and "value" not in value:
-                    value["value"] = ""
+            if key == "bin_data" and value["length"] == "0" and "value" not in value:
+                value["value"] = ""
             key = _get_plural(key, node.tag)
             if key not in result:
                 result[key] = []
-            result[key].append(value)
+            cast("list", result[key]).append(value)
 
         elif key == "structured_annotations":
             annotations = []
@@ -107,10 +151,7 @@ def elem2dict(
             try:
                 rv = result[key]
             except KeyError:
-                if key == "m":
-                    result[key] = [value]
-                else:
-                    result[key] = value
+                result[key] = [value] if key.lower() == "m" else value
             else:
                 if not isinstance(rv, MutableSequence) or not rv:
                     result[key] = [rv, value]
@@ -124,7 +165,7 @@ def elem2dict(
     return result
 
 
-def validate_lxml(node: lxml.etree._Element) -> lxml.etree._Element:
+def validate_lxml(node: Element) -> Element:
     """Ensure that `node` is valid OMX XML.
 
     Raises
@@ -132,13 +173,18 @@ def validate_lxml(node: lxml.etree._Element) -> lxml.etree._Element:
     lxml.etree.XMLSchemaValidateError
         If `node` is not valid OME XML.
     """
+    # TODO: unify with xmlschema validate
+    try:
+        import lxml.etree
+    except ImportError as e:
+        raise ImportError("validating xml requires lxml") from e
+
     for key, val in node.attrib.items():
         if "schemaLocation" in key:
             ns, uri = val.split()
             if ns == URI_OME:
-                schema_doc = lxml.etree.parse(OME_2016_06_XSD)
-            else:
-                schema_doc = lxml.etree.parse(uri)
+                uri = OME_2016_06_XSD
+            schema_doc = parse(uri)
             break
     if not lxml.etree.XMLSchema(schema_doc).validate(node):
         raise lxml.etree.XMLSchemaValidateError(
@@ -147,7 +193,7 @@ def validate_lxml(node: lxml.etree._Element) -> lxml.etree._Element:
     return node
 
 
-def lxml2dict(
+def xml2dict(
     path_or_str: Path | str | bytes, validate: bool | None = False
 ) -> dict[str, Any]:
     """Convert XML string or path to dict using lxml.
@@ -161,14 +207,21 @@ def lxml2dict(
     -------
     Dict[str, Any]
         OME dict
-
-    Raises
-    ------
-    TypeError
-        _description_
     """
-    result = lxml.etree.XML(_ensure_xml_bytes(path_or_str))
+    root = XML(_ensure_xml_bytes(path_or_str))
     if validate:
-        validate_lxml(result)
+        validate_lxml(root)
 
-    return elem2dict(result)
+    return elem2dict(root)
+
+
+def lxml2dict(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    """Deprecated alias for `xml2dict`."""
+    import warnings
+
+    warnings.warn(
+        "lxml2dict is deprecated, use xml2dict instead",
+        FutureWarning,
+        stacklevel=2,
+    )
+    return xml2dict(*args, **kwargs)
