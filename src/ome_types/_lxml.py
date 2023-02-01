@@ -50,11 +50,11 @@ def elem2dict(node: Element, exclude_null: bool = True) -> dict[str, Any]:
     Parameters
     ----------
     node : Element
-        The Element to convert. Should be an `xml.etree.ElementTree.Element` or a 
+        The Element to convert. Should be an `xml.etree.ElementTree.Element` or a
         `lxml.etree._Element`
     exclude_null : bool, optional
         If True, exclude keys with null values from the output.
-    
+
 
     Returns
     -------
