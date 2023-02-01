@@ -1,11 +1,14 @@
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union, cast
 from warnings import warn
 
 from typing_extensions import Protocol
 
 from .model import OME
+
+if TYPE_CHECKING:
+    from ._xmlschema import XMLSourceType
 
 
 class Parser(Protocol):
@@ -219,7 +222,7 @@ def to_xml(ome: OME, **kwargs: Any) -> str:
     return to_xml(ome, **kwargs)
 
 
-def validate_xml(xml: str, schema: Any = None) -> None:
+def validate_xml(xml: "XMLSourceType", schema: Any = None) -> None:
     from ._xmlschema import validate
 
     validate(xml, schema=schema)

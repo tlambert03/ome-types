@@ -50,11 +50,11 @@ def elem2dict(node: Element, exclude_null: bool = True) -> dict[str, Any]:
     Parameters
     ----------
     node : Element
-        The Element to convert. Should be an `xml.etree.ElementTree.Element` or a 
+        The Element to convert. Should be an `xml.etree.ElementTree.Element` or a
         `lxml.etree._Element`
     exclude_null : bool, optional
         If True, exclude keys with null values from the output.
-    
+
 
     Returns
     -------
@@ -215,13 +215,15 @@ def xml2dict(
     return elem2dict(root)
 
 
-def lxml2dict(*args: Any, **kwargs: Any) -> dict[str, Any]:
-    """Deprecated alias for `xml2dict`."""
-    import warnings
+def __getattr__(name: str) -> Any:
+    """Import lxml if it is not already imported."""
+    if name == "lxml2dict":
+        import warnings
 
-    warnings.warn(
-        "lxml2dict is deprecated, use xml2dict instead",
-        FutureWarning,
-        stacklevel=2,
-    )
-    return xml2dict(*args, **kwargs)
+        warnings.warn(
+            "lxml2dict is deprecated, use xml2dict instead",
+            FutureWarning,
+            stacklevel=2,
+        )
+        return xml2dict
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

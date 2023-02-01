@@ -1,15 +1,18 @@
+from __future__ import annotations
+
 import os.path
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Dict, Optional, Tuple, Union
+from pathlib import Path
+from typing import IO, Any, Union
 from xml.etree import ElementTree
 
 import xmlschema
 from xmlschema import ElementData, XMLSchemaParseError
 from xmlschema.converters import XMLSchemaConverter
-from xmlschema.documents import XMLSchemaValueError
+from xmlschema.exceptions import XMLSchemaValueError
 
 from ome_types._base_type import OMEType
 
@@ -25,14 +28,16 @@ from .model import (
     simple_types,
 )
 
-__cache__: Dict[str, xmlschema.XMLSchema] = {}
-_XMLSCHEMA_VERSION: Tuple[int, ...] = tuple(
+__cache__: dict[str, xmlschema.XMLSchema] = {}
+_XMLSCHEMA_VERSION: tuple[int, ...] = tuple(
     int(v) if v.isnumeric() else v for v in xmlschema.__version__.split(".")
 )
 
+XMLSourceType = Union[str, bytes, Path, IO[str], IO[bytes]]
+
 
 @lru_cache(maxsize=8)
-def _build_schema(ns: str, uri: Optional[str] = None) -> xmlschema.XMLSchema:
+def _build_schema(ns: str, uri: str | None = None) -> xmlschema.XMLSchema:
     """Return Schema object for a url.
 
     For the special case of retrieving the 2016-06 OME Schema, use local file.
@@ -49,7 +54,7 @@ def _build_schema(ns: str, uri: Optional[str] = None) -> xmlschema.XMLSchema:
     return schema
 
 
-def get_schema(source: Union[xmlschema.XMLResource, str]) -> xmlschema.XMLSchema:
+def get_schema(source: xmlschema.XMLResource | XMLSourceType) -> xmlschema.XMLSchema:
     """Fetch an XMLSchema object given XML source.
 
     Parameters
@@ -75,14 +80,14 @@ def get_schema(source: Union[xmlschema.XMLResource, str]) -> xmlschema.XMLSchema
     raise XMLSchemaValueError(f"Could not find a schema for XML resource {source!r}.")
 
 
-def validate(xml: str, schema: Optional[xmlschema.XMLSchema] = None) -> None:
+def validate(xml: XMLSourceType, schema: xmlschema.XMLSchema | None = None) -> None:
     schema = schema or get_schema(xml)
     schema.validate(xml)
 
 
 class OMEConverter(XMLSchemaConverter):
     def __init__(
-        self, namespaces: Optional[Dict[str, Any]] = None, **kwargs: Dict[Any, Any]
+        self, namespaces: dict[str, Any] | None = None, **kwargs: dict[Any, Any]
     ):
         self._ome_ns = ""
         super().__init__(namespaces, attr_prefix="")
@@ -222,11 +227,11 @@ class OMEConverter(XMLSchemaConverter):
 
 def xmlschema2dict(
     xml: str,
-    schema: Optional[xmlschema.XMLSchema] = None,
+    schema: xmlschema.XMLSchema | None = None,
     converter: XMLSchemaConverter = OMEConverter,
     validate: bool = False,
     **kwargs: Any,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     if isinstance(xml, bytes):
         xml = xml.decode("utf-8")
 
