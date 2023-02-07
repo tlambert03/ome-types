@@ -365,7 +365,6 @@ CLASS_OVERRIDES = {
 
 
 def autoflake(text: str, **kwargs: Any) -> str:
-
     kwargs.setdefault("remove_all_unused_imports", True)
     kwargs.setdefault("remove_unused_variables", True)
     return fix_code(text, **kwargs)
@@ -919,7 +918,7 @@ class MemberSet:
         return any(m.is_nonref_id for m in self._members)
 
     @property
-    def non_defaults(self) -> "MemberSet":
+    def non_defaults(self) -> MemberSet:
         return MemberSet(m for m in self._members if not m.default_val_str)
 
     def __iter__(self) -> Iterator[Member]:
