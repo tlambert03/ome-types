@@ -235,8 +235,7 @@ def xmlschema2dict(
     if isinstance(xml, bytes):
         xml = xml.decode("utf-8")
 
-    if validate:
-        schema = schema or get_schema(xml)
+    schema = schema or get_schema(xml)
 
     if _XMLSCHEMA_VERSION >= (2,):
         kwargs["validation"] = "strict" if validate else "lax"
