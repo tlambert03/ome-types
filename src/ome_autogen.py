@@ -781,7 +781,7 @@ class Member:
 
     @property
     def type_string(self) -> str:
-        """single type, without Optional, etc..."""
+        """Single type, without Optional, etc..."""
         if self.key in OVERRIDES:
             return OVERRIDES[self.key].type_
         if isinstance(self.component, (XsdAnyElement, XsdAnyAttribute)):
@@ -812,7 +812,7 @@ class Member:
 
     @property
     def full_type_string(self) -> str:
-        """full type, like Optional[List[str]]."""
+        """Full type, like Optional[List[str]]."""
         if self.key in OVERRIDES and self.type_string:
             return f": {self.type_string}"
         type_string = self.type_string

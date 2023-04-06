@@ -184,7 +184,7 @@ def validate_lxml(node: Element) -> Element:
             ns, uri = val.split()
             if ns == URI_OME:
                 uri = OME_2016_06_XSD
-            schema_doc = parse(uri)
+            schema_doc = parse(uri)  # noqa: S314
             break
     if not lxml.etree.XMLSchema(schema_doc).validate(node):
         raise lxml.etree.XMLSchemaValidateError(
