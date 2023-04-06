@@ -51,7 +51,7 @@ dynamic = ["version"]
 dependencies = [
   "Pint >=0.15",
   "lxml >=4.8.0",
-  "pydantic[email] >=1.0",
+  "pydantic[email] >=1.0, <2.0",
   "xmlschema >=2.0.0",
 ]
 
