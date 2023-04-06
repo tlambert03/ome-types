@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.4](https://github.com/tlambert03/ome-types/tree/0.3.4) (2023-04-06)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.3...0.3.4)
+
+**Implemented enhancements:**
+
+- feat: make lxml optional \(but don't yet remove from requirements\) [\#166](https://github.com/tlambert03/ome-types/pull/166) ([tlambert03](https://github.com/tlambert03))
+
+**Fixed bugs:**
+
+- fix: always get schema in xmlschema2dict [\#169](https://github.com/tlambert03/ome-types/pull/169) ([tlambert03](https://github.com/tlambert03))
+
 ## [v0.3.3](https://github.com/tlambert03/ome-types/tree/v0.3.3) (2023-01-29)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.2...v0.3.3)
