@@ -260,7 +260,7 @@ def xmlschema2dict(
                 except ValueError:
                     _xml = StringIO(xml)
 
-                tree = ElementTree.parse(_xml)  # type: ignore
+                tree = ElementTree.parse(_xml)  # type: ignore  # noqa: S314
             aid = annotation["id"]
             elt = tree.find(f".//{NS_OME}XMLAnnotation[@ID='{aid}']/{NS_OME}Value")
             annotation["value"] = elt

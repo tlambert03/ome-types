@@ -99,10 +99,12 @@ class OMETree(QTreeWidget):
                 elif ome.lower().endswith((".tif", ".tiff")):
                     _ome = OME.from_tiff(ome)
                 else:
-                    warnings.warn(f"Unrecognized file type: {ome}")
+                    warnings.warn(f"Unrecognized file type: {ome}", stacklevel=2)
                     return
             except Exception as e:
-                warnings.warn(f"Could not parse OME metadata from {ome}: {e}")
+                warnings.warn(
+                    f"Could not parse OME metadata from {ome}: {e}", stacklevel=2
+                )
                 return
             self.headerItem().setText(0, os.path.basename(ome))
             self._current_path = ome
