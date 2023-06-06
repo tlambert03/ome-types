@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import builtins
+import collections
 import os
 import re
 import shutil
@@ -35,7 +36,7 @@ except ImportError:
 # Track all camel-to-snake and pluralization results so we can include them in the model
 camel_snake_registry: dict[str, str] = {}
 plural_registry: dict[tuple[str, str], str] = {}
-LISTS: DefaultDict[str, set[str]] = DefaultDict(set)
+LISTS: collections.defaultdict[str, set[str]] = DefaultDict(set)
 
 # FIXME: Work out a better way to implement these override hacks.
 
