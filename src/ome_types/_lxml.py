@@ -165,6 +165,27 @@ def elem2dict(node: Element, exclude_null: bool = True) -> dict[str, Any]:
     return result
 
 
+from rich import print, inspect as i  # noqa
+from lxml import etree  # noqa
+
+
+def _node2value(node: Element) -> tuple[str, Value]:
+    tag_name = etree.QName(node).localname
+
+    # Process attributes
+    for _key, val in node.attrib.items():
+        ...
+
+    # Process children
+    for child in node:
+        if _is_xml_comment(child):
+            continue
+        key, val = _node2value(child)
+
+    print(tag_name, val)
+    breakpoint()
+
+
 def validate_lxml(node: Element) -> Element:
     """Ensure that `node` is valid OMX XML.
 
@@ -212,7 +233,7 @@ def xml2dict(
     if validate:
         validate_lxml(root)
 
-    return elem2dict(root)
+    return _node2value(root)
 
 
 def __getattr__(name: str) -> Any:
