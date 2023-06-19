@@ -92,20 +92,18 @@ def visit_element(elem: etree._Element) -> None:
     _substitution_group = elem.attrib.get("substitutionGroup")
     # (if is abstract or has a substitutionGroup, it will never have a _ref)
 
-    # if it is a _ref, it will have
+    # it will also have
     #   - zero or 1 annotation
-    # if it has a _name, then it will have
-    #   - zero or 1 annotation
-    #   - zero or more 'key' elements
-    #   - zero or more 'keyref' elements (only in the root OME type)
-    #   - 0-1 'complexType' element OR 0-1 'simpleType' element
     elem.find(XSD_ANNOTATION)
+    # if it has a _name (but not a _ref), it may additionally have
+    #   - zero or more 'key' elements
+    elem.findall(XSD_KEY)
+    #   - zero or more 'keyref' elements (only in the root OME type)
+    elem.findall(XSD_KEYREF)
+    #   - 0-1 'complexType' element OR 0-1 'simpleType' element
     complex_type = elem.find(XSD_COMPLEX_TYPE)
     elem.find(XSD_SIMPLE_TYPE)
-    elem.findall(XSD_KEY)
-    elem.findall(XSD_KEYREF)
     if complex_type is not None:
-        complex_type.getchildren()
         breakpoint()
 
 
