@@ -11,7 +11,7 @@ class Reference(OMEType):
     `*Ref` elements and also the Settings Complex Type Each `*Ref` element defines
     an attribute named ID of simple type `*ID` and no other information Each
     simple type `*ID` is restricted to the base type LSID with an appropriate
-    pattern
+    pattern.
     """
 
     if TYPE_CHECKING:

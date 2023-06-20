@@ -5,16 +5,17 @@ from pydantic import Field
 from ome_types._base_type import OMEType
 
 from .annotation_ref import AnnotationRef
-from .numeric_annotation import NumericAnnotation
+from .binary_file import BinaryFile
+from .type_annotation import TypeAnnotation
 
 
-class DoubleAnnotation(NumericAnnotation, OMEType):
-    """A simple numerical annotation of type xsd:double
+class FileAnnotation(TypeAnnotation, OMEType):
+    """A file object annotation.
 
     Parameters
     ----------
+    binary_file : BinaryFile
     id : AnnotationID
-    value : float
     annotation_ref : AnnotationRef, optional
     annotator : ExperimenterID, optional
         The Annotator is the person who attached this annotation. e.g. If
@@ -28,6 +29,6 @@ class DoubleAnnotation(NumericAnnotation, OMEType):
         default interpretation for this type.
     """
 
-    value: float
+    binary_file: BinaryFile
     annotation_ref: List[AnnotationRef] = Field(default_factory=list)
     description: Optional[str] = None

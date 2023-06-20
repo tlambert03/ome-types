@@ -5,16 +5,16 @@ from pydantic import Field
 from ome_types._base_type import OMEType
 
 from .annotation_ref import AnnotationRef
-from .numeric_annotation import NumericAnnotation
+from .text_annotation import TextAnnotation
 
 
-class LongAnnotation(NumericAnnotation, OMEType):
-    """A simple numerical annotation of type xsd:long
+class CommentAnnotation(TextAnnotation, OMEType):
+    """A simple comment annotation.
 
     Parameters
     ----------
     id : AnnotationID
-    value : int
+    value : str
     annotation_ref : AnnotationRef, optional
     annotator : ExperimenterID, optional
         The Annotator is the person who attached this annotation. e.g. If
@@ -28,6 +28,6 @@ class LongAnnotation(NumericAnnotation, OMEType):
         default interpretation for this type.
     """
 
-    value: int
+    value: str
     annotation_ref: List[AnnotationRef] = Field(default_factory=list)
     description: Optional[str] = None

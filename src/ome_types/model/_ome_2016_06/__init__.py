@@ -95,7 +95,6 @@ from .well_sample import WellSample
 from .well_sample_ref import WellSampleRef
 from .xml_annotation import XMLAnnotation
 
-
 __all__ = [
     "AffineTransform",
     "Annotation",

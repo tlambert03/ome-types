@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import Field
@@ -5,17 +6,16 @@ from pydantic import Field
 from ome_types._base_type import OMEType
 
 from .annotation_ref import AnnotationRef
-from .binary_file import BinaryFile
-from .type_annotation import TypeAnnotation
+from .basic_annotation import BasicAnnotation
 
 
-class FileAnnotation(TypeAnnotation, OMEType):
-    """A file object annotation
+class TimestampAnnotation(BasicAnnotation, OMEType):
+    """A date/time annotation of type xsd:dateTime.
 
     Parameters
     ----------
-    binary_file : BinaryFile
     id : AnnotationID
+    value : datetime
     annotation_ref : AnnotationRef, optional
     annotator : ExperimenterID, optional
         The Annotator is the person who attached this annotation. e.g. If
@@ -29,6 +29,6 @@ class FileAnnotation(TypeAnnotation, OMEType):
         default interpretation for this type.
     """
 
-    binary_file: BinaryFile
+    value: datetime
     annotation_ref: List[AnnotationRef] = Field(default_factory=list)
     description: Optional[str] = None

@@ -5,16 +5,16 @@ from pydantic import Field
 from ome_types._base_type import OMEType
 
 from .annotation_ref import AnnotationRef
-from .basic_annotation import BasicAnnotation
+from .numeric_annotation import NumericAnnotation
 
 
-class TermAnnotation(BasicAnnotation, OMEType):
-    """A ontology term annotation
+class DoubleAnnotation(NumericAnnotation, OMEType):
+    """A simple numerical annotation of type xsd:double.
 
     Parameters
     ----------
     id : AnnotationID
-    value : str
+    value : float
     annotation_ref : AnnotationRef, optional
     annotator : ExperimenterID, optional
         The Annotator is the person who attached this annotation. e.g. If
@@ -28,6 +28,6 @@ class TermAnnotation(BasicAnnotation, OMEType):
         default interpretation for this type.
     """
 
-    value: str
+    value: float
     annotation_ref: List[AnnotationRef] = Field(default_factory=list)
     description: Optional[str] = None

@@ -8,8 +8,8 @@ from .annotation_ref import AnnotationRef
 from .text_annotation import TextAnnotation
 
 
-class CommentAnnotation(TextAnnotation, OMEType):
-    """A simple comment annotation
+class TagAnnotation(TextAnnotation, OMEType):
+    """A tag annotation (represents a tag or a tagset).
 
     Parameters
     ----------

@@ -5,16 +5,16 @@ from pydantic import Field
 from ome_types._base_type import OMEType
 
 from .annotation_ref import AnnotationRef
-from .text_annotation import TextAnnotation
+from .basic_annotation import BasicAnnotation
 
 
-class TagAnnotation(TextAnnotation, OMEType):
-    """A tag annotation (represents a tag or a tagset)
+class BooleanAnnotation(BasicAnnotation, OMEType):
+    """A simple boolean annotation of type xsd:boolean.
 
     Parameters
     ----------
     id : AnnotationID
-    value : str
+    value : bool
     annotation_ref : AnnotationRef, optional
     annotator : ExperimenterID, optional
         The Annotator is the person who attached this annotation. e.g. If
@@ -28,6 +28,6 @@ class TagAnnotation(TextAnnotation, OMEType):
         default interpretation for this type.
     """
 
-    value: str
+    value: bool
     annotation_ref: List[AnnotationRef] = Field(default_factory=list)
     description: Optional[str] = None

@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import List, Optional
 
 from pydantic import Field
@@ -9,13 +8,13 @@ from .annotation_ref import AnnotationRef
 from .basic_annotation import BasicAnnotation
 
 
-class TimestampAnnotation(BasicAnnotation, OMEType):
-    """A date/time annotation of type xsd:dateTime
+class TermAnnotation(BasicAnnotation, OMEType):
+    """A ontology term annotation.
 
     Parameters
     ----------
     id : AnnotationID
-    value : datetime
+    value : str
     annotation_ref : AnnotationRef, optional
     annotator : ExperimenterID, optional
         The Annotator is the person who attached this annotation. e.g. If
@@ -29,6 +28,6 @@ class TimestampAnnotation(BasicAnnotation, OMEType):
         default interpretation for this type.
     """
 
-    value: datetime
+    value: str
     annotation_ref: List[AnnotationRef] = Field(default_factory=list)
     description: Optional[str] = None
