@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from enum import Enum
 
@@ -345,7 +347,7 @@ class AnnotationID(LSID):
         yield cls.validate
 
     @classmethod
-    def validate(cls, v) -> "AnnotationID":  # type: ignore
+    def validate(cls, v) -> AnnotationID:  # type: ignore
         if not cls.regex.match(v):
             search = cls.regex.search(v)
             if search:
