@@ -1,3 +1,5 @@
+from typing import Any
+
 from ._ome_2016_06 import (
     OME,
     ROI,
@@ -96,6 +98,7 @@ from ._ome_2016_06 import (
     WellSample,
     WellSampleRef,
     XMLAnnotation,
+    simple_types,
 )
 
 __all__ = [
@@ -196,11 +199,19 @@ __all__ = [
     "WellSample",
     "WellSampleRef",
     "XMLAnnotation",
+    "simple_types",
 ]
 
 
 from . import _ome_2016_06
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
+    import warnings
+
+    warnings.warn(
+        f"Accessing {name!r} from {__name__!r} is deprecated. "
+        f"Use '{__name__}._ome_2016_06.{name}' instead.",
+        stacklevel=2,
+    )
     return getattr(_ome_2016_06, name)

@@ -1,7 +1,5 @@
 from enum import Enum
-from typing import Optional
-
-from typing_extensions import Literal
+from typing import Literal, Optional
 
 from ome_types._base_type import OMEType
 

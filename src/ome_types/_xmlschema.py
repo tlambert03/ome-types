@@ -18,9 +18,8 @@ from ome_types._base_type import OMEType
 
 from . import util
 from ._constants import NS_OME, NS_XSI, OME_2016_06_XSD, SCHEMA_LOC_OME, URI_OME
-from .model import (
-    OME,
-    XMLAnnotation,
+from .model import OME, XMLAnnotation
+from .model._ome_2016_06 import (
     _camel_to_snake,
     _plural_to_singular,
     _singular_to_plural,

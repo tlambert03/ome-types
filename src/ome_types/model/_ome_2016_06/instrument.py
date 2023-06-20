@@ -54,9 +54,9 @@ class Instrument(OMEType):
     objectives: List[Objective] = Field(default_factory=list)
 
     @root_validator(pre=True)
-    def _root(cls, value: Dict[str, Any]):
+    def _root(cls, value: Dict[str, Any]):  # type: ignore
         light_sources = {
-            i.snake_name() for i in LightSourceGroupType.__args__ # type: ignore
+            i.snake_name() for i in LightSourceGroupType.__args__  # type: ignore
         }
         lights = []
         for key in list(value):

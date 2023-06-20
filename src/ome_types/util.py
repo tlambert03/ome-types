@@ -9,8 +9,8 @@ from . import model
 from ._base_type import OMEType
 
 if TYPE_CHECKING:
-    from .model.simple_types import LSID
     from .model import Reference
+    from .model._ome_2016_06.simple_types import LSID
 
 
 def cast_number(qnum: str) -> str | int | float:
@@ -78,20 +78,22 @@ def collect_ids(value: Any) -> dict[LSID, OMEType]:
 CAMEL_REGEX = re.compile(r"(?<!^)(?=[A-Z])")
 
 
-@lru_cache()
+@lru_cache
 def camel_to_snake(name: str) -> str:
     """Return a snake_case version of a camelCase string."""
-    return model._camel_to_snake.get(name, CAMEL_REGEX.sub("_", name).lower())
+    from .model._ome_2016_06 import _camel_to_snake
+
+    return _camel_to_snake.get(name, CAMEL_REGEX.sub("_", name).lower())
 
 
-@lru_cache()
+@lru_cache
 def norm_key(key: str) -> str:
     """Return a normalized key."""
     return key.split("}")[-1]
 
 
 def _get_plural(key: str, tag: str) -> str:
-    return model._singular_to_plural.get((norm_key(tag), key), key)
+    return model._ome_2016_06._singular_to_plural.get((norm_key(tag), key), key)
 
 
 def _ensure_xml_bytes(path_or_str: Path | str | bytes) -> bytes:

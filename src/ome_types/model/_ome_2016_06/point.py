@@ -1,4 +1,4 @@
-from typing_extensions import Literal
+from typing import Literal
 
 from ome_types._base_type import OMEType
 

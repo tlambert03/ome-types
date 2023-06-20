@@ -63,14 +63,14 @@ docs = [
   "sphinx==5.3.0",
   "sphinx-rtd-theme==1.1.1",
 ]
-test = ["pytest", "pytest-cov", "pytest-benchmark", "tox"]
+test = ["pytest", "pytest-cov", "pytest-benchmark"]
 
 
 # https://github.com/charliermarsh/ruff
 [tool.ruff]
 line-length = 88
 src = ["src", "tests"]
-target-version = "py37"
+target-version = "py38"
 select = [
   "E",    # style errors
   "F",    # flakes
@@ -111,8 +111,6 @@ ignore = [
   ".github_changelog_generator",
   ".readthedocs.yml",
   "docs/**/*",
-  "setup.py",
-  "tox.ini",
 ]
 
 
@@ -123,7 +121,7 @@ float_to_top = true
 skip_glob = ["*examples/*", "*vendored*"]
 
 [tool.black]
-target-version = ['py37', 'py38']
+target-version = ['py38']
 
 # https://docs.pytest.org/en/6.2.x/customize.html
 [tool.pytest.ini_options]

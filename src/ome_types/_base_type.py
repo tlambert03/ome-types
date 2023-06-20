@@ -1,3 +1,4 @@
+import contextlib
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Sequence, Set
 
 from pydantic import BaseModel, validator
@@ -96,10 +97,7 @@ class OMEType(BaseModel):
             if f.name.endswith("_"):
                 continue
             # https://github.com/python/mypy/issues/6910
-            if f.default_factory:
-                default = f.default_factory()
-            else:
-                default = f.default
+            default = f.default_factory() if f.default_factory else f.default
 
             current = getattr(self, f.name)
             if current != default:
@@ -148,12 +146,9 @@ class OMEType(BaseModel):
         else:
             value = str(value)
             v_id = value.rsplit(":", 1)[-1]
-        try:
+        with contextlib.suppress(ValueError):
             v_id = int(v_id)
             cls._max_id = max(cls._max_id, v_id)  # type: ignore [misc]
-        except ValueError:
-            pass
-
         return id_field.type_(value)
 
     def __getstate__(self: Any) -> Dict[str, Any]:
@@ -164,6 +159,6 @@ class OMEType(BaseModel):
 
     @classmethod
     def snake_name(cls) -> str:
-        from .model import _camel_to_snake
+        from .model._ome_2016_06 import _camel_to_snake
 
         return _camel_to_snake[cls.__name__]

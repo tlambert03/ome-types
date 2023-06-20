@@ -29,7 +29,7 @@ class Color(color.Color):
         super().__init__(val)
 
     @classmethod
-    def _int2tuple(cls, val: int):
+    def _int2tuple(cls, val: int) -> tuple[int, int, int, float]:
         return (val >> 24 & 255, val >> 16 & 255, val >> 8 & 255, (val & 255) / 255)
 
     def as_int32(self) -> int:
@@ -341,11 +341,11 @@ class AnnotationID(LSID):
     )
 
     @classmethod
-    def __get_validators__(cls):
+    def __get_validators__(cls):  # type: ignore
         yield cls.validate
 
     @classmethod
-    def validate(cls, v) -> "AnnotationID":
+    def validate(cls, v) -> "AnnotationID":  # type: ignore
         if not cls.regex.match(v):
             search = cls.regex.search(v)
             if search:
