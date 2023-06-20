@@ -1,8 +1,6 @@
 import os
 import subprocess
-from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
 
 from xsdata.cli import resolve_source
 from xsdata.codegen.transformer import SchemaTransformer
@@ -16,15 +14,14 @@ from xsdata.models.config import (
     StructureStyle,
 )
 
-SCHEMA_FILE = Path(__file__).parent / "ome_types" / "ome-2016-06.xsd"
-SRC_PATH = Path(__file__).parent
+from ome_autogen._generator import OmeGenerator
+from ome_autogen._util import _cd
+
+SRC_PATH = Path(__file__).parent.parent
+SCHEMA_FILE = SRC_PATH / "ome_types" / "ome-2016-06.xsd"
 # PACKAGE = f'ome_types.model.{XSD.stem.replace("-", "_")}'
 OUTPUT_PACKAGE = "ome_types.model"
 OUTPUT_DIR = SRC_PATH / str(OUTPUT_PACKAGE).replace(".", os.path.sep)
-OUTPUT_FORMAT = "pydantic"
-
-# refactoring
-RENAMES = [("Ome", "OME")]
 
 # linting
 LINE_LENGTH = 88
@@ -42,19 +39,9 @@ if DEBUG := False:
     logger.setLevel("DEBUG")
 
 
-@contextmanager
-def _cd(new_path: str | Path) -> Iterator[None]:
-    prev = Path.cwd()
-    os.chdir(Path(new_path).expanduser().absolute())
-    try:
-        yield
-    finally:
-        os.chdir(prev)
-
-
 output = GeneratorOutput(
     package=OUTPUT_PACKAGE,
-    format=OutputFormat(value=OUTPUT_FORMAT, slots=False),
+    format=OutputFormat(value=OmeGenerator.KEY, slots=False),
     structure_style=StructureStyle.CLUSTERS,
     docstring_style=DocstringStyle.NUMPY,
     compound_fields=CompoundFields(enabled=False),
@@ -64,9 +51,11 @@ config = GeneratorConfig(output=output)
 uris = sorted(resolve_source(str(SCHEMA_FILE), recursive=False))
 transformer = SchemaTransformer(print=False, config=config)
 transformer.process_sources(uris)
+
 # xsdata doesn't support output path
 with _cd(SRC_PATH):
     transformer.process_classes()
+
 
 # Fix bug in xsdata output
 # https://github.com/tefra/xsdata/pull/806
