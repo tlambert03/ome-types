@@ -7,7 +7,7 @@ from typing_extensions import get_args
 
 from . import model
 from ._constants import OME_2016_06_XSD, URI_OME
-from .model.shape_group import ShapeGroupType
+from .model import ShapeGroupType
 from .util import _ensure_xml_bytes, _get_plural, camel_to_snake, cast_number, norm_key
 
 NEED_INT = [s.__name__ for s in get_args(ShapeGroupType)]

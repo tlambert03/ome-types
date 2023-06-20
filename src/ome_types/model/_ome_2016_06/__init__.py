@@ -80,7 +80,7 @@ from .roi_ref import ROIRef
 from .screen import Screen
 from .settings import Settings
 from .shape import Shape
-from .shape_group import ShapeGroup
+from .shape_group import ShapeGroup, ShapeGroupType
 from .stage_label import StageLabel
 from .structured_annotations import StructuredAnnotations
 from .tag_annotation import TagAnnotation
@@ -179,6 +179,7 @@ __all__ = [
     "Settings",
     "Shape",
     "ShapeGroup",
+    "ShapeGroupType",
     "StageLabel",
     "StructuredAnnotations",
     "TagAnnotation",
