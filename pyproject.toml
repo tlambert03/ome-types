@@ -15,13 +15,7 @@ include = ["src", "tests", "CHANGELOG.md"]
 
 [tool.hatch.build.hooks.custom]
 # requirements to run the autogen script in hatch_build.py
-dependencies = [
-  "black",
-  "isort>=5.0",
-  "xmlschema==1.4.1",
-  "autoflake",
-  "numpydoc",
-]
+dependencies = ["black", "ruff==0.0.273", "xsdata-pydantic[cli]", "mypy"]
 
 # https://peps.python.org/pep-0621/
 [project]
@@ -162,10 +156,7 @@ exclude = '''
 minversion = "6.0"
 addopts = "--benchmark-disable"
 testpaths = ["tests"]
-filterwarnings = [
-  "error",
-  "ignore:Casting invalid AnnotationID:UserWarning",
-]
+filterwarnings = ["error", "ignore:Casting invalid AnnotationID:UserWarning"]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
