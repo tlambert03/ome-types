@@ -1,10 +1,11 @@
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
 from ._units import ureg
 
 try:
-    from ._version import version as __version__
-except ImportError:
+    __version__ = version(__name__)
+except PackageNotFoundError:
     __version__ = "unknown"
 
 try:

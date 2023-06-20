@@ -55,7 +55,9 @@ class Instrument(OMEType):
 
     @root_validator(pre=True)
     def _root(cls, value: Dict[str, Any]):
-        light_sources = {i.snake_name() for i in LightSourceGroupType.__args__}  # type: ignore
+        light_sources = {
+            i.snake_name() for i in LightSourceGroupType.__args__ # type: ignore
+        }
         lights = []
         for key in list(value):
             kind = {"kind": key}

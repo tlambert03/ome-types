@@ -21,9 +21,9 @@ class Element(ElementTree.Element):
         if isinstance(v, ElementTree.Element):
             return v
         try:
-            return ElementTree.fromstring(v)
+            return ElementTree.fromstring(v)  # noqa: S314
         except ElementTree.ParseError as e:
-            raise ValueError(f"Invalid XML string: {e}")
+            raise ValueError(f"Invalid XML string: {e}") from e
 
 
 class XMLAnnotation(TextAnnotation, OMEType):

@@ -352,7 +352,9 @@ class AnnotationID(LSID):
                 import warnings
 
                 new_v = search.group()
-                warnings.warn(f"Casting invalid AnnotationID {v!r} to {new_v!r}")
+                warnings.warn(
+                    f"Casting invalid AnnotationID {v!r} to {new_v!r}", stacklevel=2
+                )
                 v = new_v
         return v
 

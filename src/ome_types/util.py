@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, Any
 
 from . import model
 from ._base_type import OMEType
-from .model.reference import Reference
 
 if TYPE_CHECKING:
     from .model.simple_types import LSID
+    from .model import Reference
 
 
 def cast_number(qnum: str) -> str | int | float:
@@ -36,6 +36,8 @@ def collect_references(value: Any) -> list[Reference]:
     that we don't need to inspect further.
 
     """
+    from .model import Reference
+
     references: list[Reference] = []
     if isinstance(value, Reference):
         references.append(value)
@@ -55,6 +57,8 @@ def collect_ids(value: Any) -> dict[LSID, OMEType]:
     Recursively walks all dataclass fields and iterates over lists. The base
     case is when value is neither a dataclass nor a list.
     """
+    from .model import Reference
+
     ids: dict[LSID, OMEType] = {}
     if isinstance(value, list):
         for v in value:
