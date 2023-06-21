@@ -1,7 +1,6 @@
 import subprocess
 from pathlib import Path
 
-from xsdata.cli import resolve_source
 from xsdata.codegen.transformer import SchemaTransformer
 from xsdata.models.config import (
     CompoundFields,
@@ -13,10 +12,11 @@ from xsdata.models.config import (
 )
 
 from ome_autogen._generator import OmeGenerator
-from ome_autogen._util import _cd
+from ome_autogen._util import cd, resolve_source
 
 SRC_PATH = Path(__file__).parent.parent
 SCHEMA_FILE = SRC_PATH / "ome_types" / "ome-2016-06.xsd"
+PACKAGE = f"ome_types2.model.{SCHEMA_FILE.stem.replace('-', '_')}"
 RUFF_IGNORE: list[str] = [
     "D101",  # Missing docstring in public class
     "D106",  # Missing docstring in public nested class
@@ -30,7 +30,7 @@ RUFF_IGNORE: list[str] = [
 def convert_schema(
     output_dir: Path | str = SRC_PATH,
     schema_file: Path | str = SCHEMA_FILE,
-    output_package: str = "ome_types.model",
+    output_package: str = PACKAGE,
     debug: bool = False,
     line_length: int = 88,
     ruff_ignore: list[str] = RUFF_IGNORE,
@@ -56,7 +56,7 @@ def convert_schema(
     transformer.process_sources(uris)
 
     # xsdata doesn't support output path
-    with _cd(output_dir):
+    with cd(output_dir):
         transformer.process_classes()
 
     package_dir = Path(output_dir) / output_package.replace(".", "/")

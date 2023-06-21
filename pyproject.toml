@@ -15,7 +15,7 @@ include = ["src", "tests", "CHANGELOG.md"]
 
 [tool.hatch.build.hooks.custom]
 # requirements to run the autogen script in hatch_build.py
-dependencies = ["black", "ruff==0.0.273", "xsdata-pydantic[cli]", "mypy"]
+dependencies = ["black", "ruff", "xsdata-pydantic[cli]", "mypy"]
 
 # https://peps.python.org/pep-0621/
 [project]
@@ -81,7 +81,7 @@ write_to = "src/ome_types/_version.py"
 [tool.ruff]
 line-length = 88
 src = ["src", "tests"]
-target-version = "py37"
+target-version = "py38"
 extend-select = [
   "E",    # style errors
   "F",    # flakes
