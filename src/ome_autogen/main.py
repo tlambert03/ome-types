@@ -1,18 +1,22 @@
 import subprocess
+from enum import Enum
 from pathlib import Path
+from typing import Any, Callable
 
 from xsdata.codegen.transformer import SchemaTransformer
 from xsdata.models.config import (
     CompoundFields,
     DocstringStyle,
     GeneratorConfig,
+    GeneratorConventions,
     GeneratorOutput,
+    NameConvention,
     OutputFormat,
     StructureStyle,
 )
 
 from ome_autogen._generator import OmeGenerator
-from ome_autogen._util import cd, resolve_source
+from ome_autogen._util import camel_to_snake, cd, get_plural_names, resolve_source
 
 SRC_PATH = Path(__file__).parent.parent
 SCHEMA_FILE = SRC_PATH / "ome_types" / "ome-2016-06.xsd"
@@ -25,6 +29,18 @@ RUFF_IGNORE: list[str] = [
     "E501",  # Line too long
     "S105",  # Possible hardcoded password
 ]
+
+
+class OmeNameCase(Enum):
+    OME_SNAKE = "omeSnakeCase"
+
+    def __call__(self, string: str, **kwargs: Any) -> str:
+        return self.callback(string, **kwargs)
+
+    @property
+    def callback(self) -> Callable:
+        """Return the actual callable of the scheme."""
+        return camel_to_snake
 
 
 def convert_schema(
@@ -49,11 +65,25 @@ def convert_schema(
         docstring_style=DocstringStyle.NUMPY,
         compound_fields=CompoundFields(enabled=False),
     )
-    config = GeneratorConfig(output=output)
+    config = GeneratorConfig(
+        output=output,
+        conventions=GeneratorConventions(
+            field_name=NameConvention(OmeNameCase.OME_SNAKE, "value")
+        ),
+    )
 
     uris = sorted(resolve_source(str(schema_file), recursive=False))
     transformer = SchemaTransformer(print=False, config=config)
     transformer.process_sources(uris)
+
+    plurals = get_plural_names(schema=schema_file)
+
+    # pluralize field names:
+    for clazz in transformer.classes:
+        for attr in clazz.attrs:
+            if attr.is_list:
+                # XXX: should we be adding s?
+                attr.name = plurals.get(attr.name, f"{attr.name}s")
 
     # xsdata doesn't support output path
     with cd(output_dir):
