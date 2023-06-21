@@ -22,10 +22,7 @@ class OMETree(QTreeWidget):
     """A Widget that can show OME XML."""
 
     def __init__(
-        self,
-        ome_dict: Optional[dict] = None,
-        viewer: Optional["napari.viewer.Viewer"] = None,
-        parent=None,
+        self, ome_dict: dict = None, viewer: "napari.viewer.Viewer" = None, parent=None
     ) -> None:
         super().__init__(parent=parent)
         self._viewer = viewer
@@ -115,7 +112,7 @@ class OMETree(QTreeWidget):
             raise TypeError("must be OME object or string")
         self._fill_item(_ome.dict(exclude_unset=True))
 
-    def _fill_item(self, obj, item: Optional[QTreeWidgetItem] = None):
+    def _fill_item(self, obj, item: QTreeWidgetItem = None):
         if item is None:
             self.clear()
             item = self.invisibleRootItem()
