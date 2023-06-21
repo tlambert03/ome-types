@@ -67,7 +67,8 @@ def true_stem(p):
     return p.name.partition(".")[0]
 
 
-all_xml = list((Path(__file__).parent / "data").glob("*.ome.xml"))
+TESTS = Path(__file__).parent.parent
+all_xml = list((TESTS / "data").glob("*.ome.xml"))
 xml_read = [mark_xfail(f) if true_stem(f) in SHOULD_FAIL_READ else f for f in all_xml]
 xml_roundtrip = []
 for f in all_xml:
@@ -102,7 +103,7 @@ def test_from_xml(xml, parser: str, validate: bool, benchmark):
 @pytest.mark.parametrize("validate", validate)
 def test_from_tiff(benchmark, validate, parser):
     """Test that OME metadata extractions from Tiff headers works."""
-    _path = Path(__file__).parent / "data" / "ome.tiff"
+    _path = TESTS / "data" / "ome.tiff"
     ome = benchmark(from_tiff, _path, parser=parser, validate=validate)
     assert len(ome.images) == 1
     assert ome.images[0].id == "Image:0"
@@ -160,7 +161,7 @@ def test_roundtrip(xml, parser, validate, benchmark):
 def test_to_xml_with_kwargs(validate, parser):
     """Ensure kwargs are passed to ElementTree"""
     ome = from_xml(
-        Path(__file__).parent / "data" / "example.ome.xml",
+        TESTS / "data" / "example.ome.xml",
         parser=parser,
         validate=validate,
     )
@@ -217,7 +218,7 @@ def test_required_missing():
 @pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
 def test_refs(validate, parser):
-    xml = Path(__file__).parent / "data" / "two-screens-two-plates-four-wells.ome.xml"
+    xml = TESTS / "data" / "two-screens-two-plates-four-wells.ome.xml"
     ome = from_xml(xml, parser=parser, validate=validate)
     assert ome.screens[0].plate_ref[0].ref is ome.plates[0]
 
@@ -225,6 +226,6 @@ def test_refs(validate, parser):
 @pytest.mark.parametrize("validate", validate)
 @pytest.mark.parametrize("parser", parser)
 def test_with_ome_ns(validate, parser):
-    xml = Path(__file__).parent / "data" / "ome_ns.ome.xml"
+    xml = TESTS / "data" / "ome_ns.ome.xml"
     ome = from_xml(xml, parser=parser, validate=validate)
     assert ome.experimenters

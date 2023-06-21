@@ -4,7 +4,8 @@ import pytest
 
 from ome_types import from_xml
 
-DATA = Path(__file__).parent / "data"
+TESTS = Path(__file__).parent.parent
+DATA = TESTS / "data"
 
 
 def test_bad_xml_annotation() -> None:
