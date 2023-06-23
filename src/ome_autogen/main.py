@@ -83,7 +83,7 @@ def convert_schema(
         for attr in clazz.attrs:
             if attr.is_list:
                 # XXX: should we be adding s?
-                attr.name = plurals.get(attr.name, f"{attr.name}s")
+                attr.name = plurals.get(attr.name, f"{attr.name}")
 
     # xsdata doesn't support output path
     with cd(output_dir):

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Config xmlns="http://pypi.org/project/xsdata" version="23.6">
+  <Extensions>
+    <Extension type="class" class=".*" import="generated._base.MyMixin" prepend="false" applyIfDerived="false"/>
+  </Extensions>
+  <Output maxLineLength="79">
+    <Format repr="false" eq="true" order="false" unsafeHash="false" frozen="false" slots="false" kwOnly="false">dataclasses</Format>
+  </Output>
+</Config>
