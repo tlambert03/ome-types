@@ -18,7 +18,7 @@ V1_PLURAL_ERRORS = {
     "m",
 }
 
-NEW_MODEL = ome_types2.model.OME.__pydantic_model__.schema()
+NEW_MODEL = ome_types2.model.OME.schema()
 OLD_MODEL = ome_types.model.OME.schema()
 
 
@@ -67,7 +67,7 @@ def test_field_names(name):
     if name not in ome_types2.model.ome_2016_06.__all__:
         raise AssertionError(f"{name} not in ome_2016_06")
     v1 = getattr(ome_types.model, name)
-    v2 = getattr(ome_types2.model.ome_2016_06, name).__pydantic_model__
+    v2 = getattr(ome_types2.model.ome_2016_06, name)
 
     # Known/acceptable differences
     v1.__fields__.pop("kind", None)

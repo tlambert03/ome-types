@@ -4,19 +4,27 @@ from pathlib import Path
 from typing import Any, Callable
 
 from xsdata.codegen.transformer import SchemaTransformer
+from xsdata.codegen.writer import CodeWriter
+from xsdata.formats.dataclass.compat import class_types
+from xsdata.logger import logger
 from xsdata.models.config import (
     CompoundFields,
     DocstringStyle,
+    ExtensionType,
     GeneratorConfig,
     GeneratorConventions,
+    GeneratorExtension,
+    GeneratorExtensions,
     GeneratorOutput,
     NameConvention,
     OutputFormat,
     StructureStyle,
 )
+from xsdata_pydantic.hooks import class_type, cli  # noqa: F401
 
-from ome_autogen._generator import OmeGenerator
 from ome_autogen._util import camel_to_snake, cd, get_plural_names, resolve_source
+
+from ._generator import OmeGenerator
 
 SRC_PATH = Path(__file__).parent.parent
 SCHEMA_FILE = SRC_PATH / "ome_types" / "ome-2016-06.xsd"
@@ -30,8 +38,27 @@ RUFF_IGNORE: list[str] = [
     "S105",  # Possible hardcoded password
 ]
 
+OME_BASE_EXTENSION = GeneratorExtension(
+    type=ExtensionType.CLASS,
+    class_name=".*",
+    import_string="ome_types2.model._base_type.OMEType",
+)
+
+
+# These are critical to be able to use the format="OME"
+OME_FORMAT = "OME"
+CodeWriter.register_generator(OME_FORMAT, OmeGenerator)
+from xsdata_pydantic.compat import Pydantic
+
+class_types.register(OME_FORMAT, Pydantic())
+
 
 class OmeNameCase(Enum):
+    """Mimic the xsdata NameConvention enum, to modify snake case function.
+
+    We want adjacent capital letters to remain caps.
+    """
+
     OME_SNAKE = "omeSnakeCase"
 
     def __call__(self, string: str, **kwargs: Any) -> str:
@@ -54,22 +81,20 @@ def convert_schema(
 ) -> None:
     """Convert the OME schema to a python model."""
     if debug:
-        from xsdata.logger import logger
-
         logger.setLevel("DEBUG")
 
-    output = GeneratorOutput(
-        package=output_package,
-        format=OutputFormat(value=OmeGenerator.KEY, slots=False),
-        structure_style=StructureStyle.CLUSTERS,
-        docstring_style=DocstringStyle.NUMPY,
-        compound_fields=CompoundFields(enabled=False),
-    )
     config = GeneratorConfig(
-        output=output,
-        conventions=GeneratorConventions(
-            field_name=NameConvention(OmeNameCase.OME_SNAKE, "value")
+        output=GeneratorOutput(
+            package=output_package,
+            format=OutputFormat(value="pydantic_base_model", slots=False),
+            structure_style=StructureStyle.CLUSTERS,
+            docstring_style=DocstringStyle.NUMPY,
+            compound_fields=CompoundFields(enabled=False),
         ),
+        # conventions=GeneratorConventions(
+        #     field_name=NameConvention(OmeNameCase.OME_SNAKE, "value")
+        # ),
+        # extensions=GeneratorExtensions(extension=[OME_BASE_EXTENSION]),
     )
 
     uris = sorted(resolve_source(str(schema_file), recursive=False))
@@ -90,13 +115,6 @@ def convert_schema(
         transformer.process_classes()
 
     package_dir = Path(output_dir) / output_package.replace(".", "/")
-
-    # Fix bug in xsdata output
-    # https://github.com/tefra/xsdata/pull/806
-    light_source = next(package_dir.rglob("light_source.py"))
-    src = light_source.read_text()
-    src = src.replace("UnitsPower.M_W,", "UnitsPower.M_W_1,")
-    light_source.write_text(src)
 
     if not do_linting:
         print(f"\033[92m\033[1m✓ OME python model created at {output_package}\033[0m")

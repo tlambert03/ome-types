@@ -7,8 +7,10 @@ from struct import Struct
 from typing import TYPE_CHECKING, Any, cast
 from xml.etree import ElementTree as ET
 
-from xsdata.formats.dataclass.parsers import XmlParser
 from xsdata.formats.dataclass.parsers.config import ParserConfig
+
+# from xsdata.formats.dataclass.parsers import XmlParser
+from xsdata_pydantic.base_model.bindings import XmlParser
 
 if TYPE_CHECKING:
     from typing import TypedDict
@@ -34,7 +36,7 @@ def _get_ome(xml: str | bytes) -> type[OME]:
         root = ET.fromstring(xml)  # noqa: S314
 
     if root.tag == OME_2016_06:
-        from ome_types2.model.ome_2016_06 import OME
+        from ome_types2.model import OME
 
         return OME
     raise NotImplementedError(f"Unknown root tag: {root.tag}")
