@@ -1,3 +1,7 @@
+import contextlib
+from datetime import datetime
+from enum import Enum
+from textwrap import indent
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Sequence, Set
 
 from pydantic import BaseModel, validator
@@ -66,28 +70,13 @@ class OMEType(BaseModel):
     # pydantic BaseModel configuration.
     # see: https://pydantic-docs.helpmanual.io/usage/model_config/
     class Config:
-        # whether to allow arbitrary user types for fields (they are validated
-        # simply by checking if the value is an instance of the type). If
-        # False, RuntimeError will be raised on model declaration
         arbitrary_types_allowed = False
-        # whether to perform validation on assignment to attributes
         validate_assignment = True
-        # whether to treat any underscore non-class var attrs as private
-        # https://pydantic-docs.helpmanual.io/usage/models/#private-model-attributes
         underscore_attrs_are_private = True
-        # whether to populate models with the value property of enums, rather
-        # than the raw enum. This may be useful if you want to serialise
-        # model.dict() later.  False by default
-        # see conversation in https://github.com/tlambert03/ome-types/pull/74
         use_enum_values = False
-        # whether to validate field defaults (default: False)
         validate_all = True
 
-    def __repr__(self: Any) -> str:
-        from datetime import datetime
-        from enum import Enum
-        from textwrap import indent
-
+    def __repr__(self) -> str:
         name = self.__class__.__qualname__
         lines = []
         for f in sorted(
@@ -96,11 +85,7 @@ class OMEType(BaseModel):
             if f.name.endswith("_"):
                 continue
             # https://github.com/python/mypy/issues/6910
-            if f.default_factory:
-                default = f.default_factory()
-            else:
-                default = f.default
-
+            default = f.default_factory() if f.default_factory else f.default
             current = getattr(self, f.name)
             if current != default:
                 if isinstance(current, Sequence) and not isinstance(current, str):
@@ -118,8 +103,7 @@ class OMEType(BaseModel):
             body = "\n" + indent("\n".join(lines), "   ") + "\n"
         else:
             body = ""
-        out = f"{name}({body})"
-        return out
+        return f"{name}({body})"
 
     @validator("id", pre=True, always=True, check_fields=False)
     def validate_id(cls, value: Any) -> str:
@@ -128,8 +112,6 @@ class OMEType(BaseModel):
         If no value is provided, this validator provides and integer ID, and stores the
         maximum previously-seen value on the class.
         """
-        from typing import ClassVar
-
         # get the required LSID field from the annotation
         id_field = cls.__fields__.get("id")
         if not id_field:
@@ -148,12 +130,9 @@ class OMEType(BaseModel):
         else:
             value = str(value)
             v_id = value.rsplit(":", 1)[-1]
-        try:
+        with contextlib.suppress(ValueError):
             v_id = int(v_id)
-            cls._max_id = max(cls._max_id, v_id)  # type: ignore [misc]
-        except ValueError:
-            pass
-
+            cls._max_id = max(cls._max_id, v_id)
         return id_field.type_(value)
 
     def __getstate__(self: Any) -> Dict[str, Any]:
@@ -161,11 +140,6 @@ class OMEType(BaseModel):
         state = super().__getstate__()
         state["__private_attribute_values__"].pop("_ref", None)
         return state
-
-    def __reduce_ex__(self: Any, protocol: int) -> Any:
-        """Support pickle of our weakref references."""
-        breakpoint()
-        # return super().__reduce_ex__(protocol)
 
     @classmethod
     def snake_name(cls) -> str:

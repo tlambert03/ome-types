@@ -18,19 +18,6 @@ def cd(new_path: str | Path) -> Iterator[None]:
         os.chdir(prev)
 
 
-def resolve_source(source: str, recursive: bool) -> Iterator[str]:
-    if "://" in source and not source.startswith("file://"):
-        yield source
-    else:
-        path = Path(source).resolve()
-        match = "**/*" if recursive else "*"
-        if path.is_dir():
-            for ext in ["wsdl", "xsd", "dtd", "xml", "json"]:
-                yield from (x.as_uri() for x in path.glob(f"{match}.{ext}"))
-        else:  # is file
-            yield path.as_uri()
-
-
 def get_plural_names(schema: Path | str) -> dict[str, str]:
     tree = ET.parse(schema)  # noqa: S314
     parents: list[ET.Element] = []

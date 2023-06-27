@@ -8,9 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 from xml.etree import ElementTree as ET
 
 from xsdata.formats.dataclass.parsers.config import ParserConfig
-
-# from xsdata.formats.dataclass.parsers import XmlParser
-from xsdata_pydantic.base_model.bindings import XmlParser
+from xsdata_pydantic_basemodel.bindings import XmlParser
 
 if TYPE_CHECKING:
     from typing import TypedDict

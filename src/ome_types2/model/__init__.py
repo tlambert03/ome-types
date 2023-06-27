@@ -1,3 +1,3 @@
-from .ome_2016_06 import Ome as OME
+from .ome_2016_06 import OME
 
 __all__ = ["OME"]

@@ -15,7 +15,13 @@ include = ["src", "tests", "CHANGELOG.md"]
 
 [tool.hatch.build.hooks.custom]
 # requirements to run the autogen script in hatch_build.py
-dependencies = ["black", "ruff", "xsdata[cli]>=23.6", "xsdata-pydantic", "mypy"]
+dependencies = [
+  "black",
+  "ruff",
+  "xsdata[cli]>=23.6",
+  "xsdata-pydantic-basemodel @ git+https://github.com/tlambert03/xsdata-pydantic-basemodel",
+  "mypy",
+]
 
 # https://peps.python.org/pep-0621/
 [project]
@@ -96,17 +102,20 @@ select = [
   "RUF",  # ruff-specific rules
 ]
 ignore = [
-  "D100", # Missing docstring in public module
-  "D104", # Missing docstring in public package
-  "D106", # Missing docstring in public nested class
-  "D107", # Missing docstring in __init__
-  "D203", # 1 blank line required before class docstring
-  "D212", # Multi-line docstring summary should start at the first line
-  "D213", # Multi-line docstring summary should start at the second line
-  "D400", # First line should end with a period
-  "D413", # Missing blank line after last section
-  "D416", # Section name should end with a colon
-  "C901", # Function is too complex
+  "D100",   # Missing docstring in public module
+  "D104",   # Missing docstring in public package
+  "D106",   # Missing docstring in public nested class
+  "D107",   # Missing docstring in __init__
+  "D203",   # 1 blank line required before class docstring
+  "D205",   # 1 blank line required between summary line and description
+  "D212",   # Multi-line docstring summary should start at the first line
+  "D213",   # Multi-line docstring summary should start at the second line
+  "D400",   # First line should end with a period
+  "D404",   # First word of the docstring should not be This
+  "D413",   # Missing blank line after last section
+  "D416",   # Section name should end with a colon
+  "C901",   # Function is too complex
+  "RUF009", # Do not perform function calls in default arguments
 ]
 
 [tool.ruff.per-file-ignores]
