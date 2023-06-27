@@ -1,13 +1,13 @@
+import os
 import subprocess
 from pathlib import Path
 
 from xsdata.codegen.transformer import SchemaTransformer
-from xsdata.logger import logger
 
 from ome_autogen import _util
+from ome_autogen._config import OUTPUT_PACKAGE, get_config
 
-from ._config import OUTPUT_PACKAGE, get_config
-
+DO_LINT = os.environ.get("OME_AUTOGEN_LINT", "1") == "1"
 SRC_PATH = Path(__file__).parent.parent
 SCHEMA_FILE = SRC_PATH / "ome_types" / "ome-2016-06.xsd"
 RUFF_IGNORE: list[str] = [
@@ -18,7 +18,6 @@ RUFF_IGNORE: list[str] = [
     "E501",  # Line too long
     "S105",  # Possible hardcoded password
 ]
-logger.setLevel("DEBUG")
 
 
 def convert_schema(
@@ -26,11 +25,13 @@ def convert_schema(
     schema_file: Path | str = SCHEMA_FILE,
     line_length: int = 88,
     ruff_ignore: list[str] = RUFF_IGNORE,
-    do_linting: bool = True,
+    do_formatting: bool = DO_LINT,
+    do_mypy: bool = False,
 ) -> None:
     """Convert the OME schema to a python model."""
     config = get_config()
     transformer = SchemaTransformer(print=False, config=config)
+    _print_gray(f"Processing {getattr(schema_file ,'name', schema_file)}...")
     transformer.process_sources([Path(schema_file).resolve().as_uri()])
 
     plurals = _util.get_plural_names(schema=schema_file)
@@ -42,24 +43,37 @@ def convert_schema(
                 # XXX: should we be adding s?
                 attr.name = plurals.get(attr.name, f"{attr.name}")
 
+    _print_gray("Writing Files...")
     # xsdata doesn't support output path
     with _util.cd(output_dir):
         transformer.process_classes()
 
-    if not do_linting:
-        print(f"\033[92m\033[1m✓ OME python model created at {OUTPUT_PACKAGE}\033[0m")
+    if not do_formatting and not do_mypy:
+        _print_green(f"✓ OME python model created at {OUTPUT_PACKAGE}")
         return
 
-    package_dir = Path(output_dir) / OUTPUT_PACKAGE.replace(".", "/")
-    black = ["black", str(package_dir), "-q", f"--line-length={line_length}"]
-    subprocess.check_call(black)  # noqa S
+    if do_formatting:
+        _print_gray("Running black and ruff ...")
 
-    ruff = ["ruff", "-q", "--fix", str(package_dir)]
-    ruff.extend(f"--ignore={ignore}" for ignore in ruff_ignore)
-    subprocess.check_call(ruff)  # noqa S
+        package_dir = Path(output_dir) / OUTPUT_PACKAGE.replace(".", "/")
+        black = ["black", str(package_dir), "-q", f"--line-length={line_length}"]
+        subprocess.check_call(black)  # noqa S
 
-    mypy = ["mypy", str(package_dir), "--strict"]
-    subprocess.check_output(mypy)  # noqa S
+        ruff = ["ruff", "-q", "--fix", str(package_dir)]
+        ruff.extend(f"--ignore={ignore}" for ignore in ruff_ignore)
+        subprocess.check_call(ruff)  # noqa S
+
+    if do_mypy:
+        mypy = ["mypy", str(package_dir), "--strict"]
+        subprocess.check_output(mypy)  # noqa S
 
     # print a bold green checkmark
-    print(f"\033[92m\033[1m✓ OME python model created at {OUTPUT_PACKAGE}\033[0m")
+    _print_green(f"✓ OME python model created at {OUTPUT_PACKAGE}")
+
+
+def _print_gray(text: str) -> None:
+    print(f"\033[90m\033[1m{text}\033[0m")
+
+
+def _print_green(text: str) -> None:
+    print(f"\033[92m\033[1m{text}\033[0m")
