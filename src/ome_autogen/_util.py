@@ -3,9 +3,13 @@ from __future__ import annotations
 import os
 import re
 from contextlib import contextmanager
+from functools import lru_cache
 from pathlib import Path
 from typing import Iterator
 from xml.etree import ElementTree as ET
+
+SRC_PATH = Path(__file__).parent.parent
+SCHEMA_FILE = SRC_PATH / "ome_types" / "ome-2016-06.xsd"
 
 
 @contextmanager
@@ -18,7 +22,8 @@ def cd(new_path: str | Path) -> Iterator[None]:
         os.chdir(prev)
 
 
-def get_plural_names(schema: Path | str) -> dict[str, str]:
+@lru_cache(maxsize=None)
+def get_plural_names(schema: Path | str = SCHEMA_FILE) -> dict[str, str]:
     tree = ET.parse(schema)  # noqa: S314
     parents: list[ET.Element] = []
     names: dict[str, str] = {}

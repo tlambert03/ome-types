@@ -13,8 +13,8 @@ from xsdata_pydantic_basemodel.bindings import XmlParser
 if TYPE_CHECKING:
     from typing import TypedDict
 
-    from xsdata.formats.dataclass.context import XmlContext
     from xsdata.formats.dataclass.parsers.mixins import XmlHandler
+    from xsdata_pydantic_basemodel.bindings import XmlContext
 
     from ome_types2.model.ome_2016_06 import OME
 

@@ -7,7 +7,7 @@ from xsdata.codegen.transformer import SchemaTransformer
 from ome_autogen import _util
 from ome_autogen._config import OUTPUT_PACKAGE, get_config
 
-DO_LINT = os.environ.get("OME_AUTOGEN_LINT", "1") == "1"
+DO_MYPY = os.environ.get("OME_AUTOGEN_MYPY", "0") == "1"
 SRC_PATH = Path(__file__).parent.parent
 SCHEMA_FILE = SRC_PATH / "ome_types" / "ome-2016-06.xsd"
 RUFF_IGNORE: list[str] = [
@@ -25,23 +25,14 @@ def convert_schema(
     schema_file: Path | str = SCHEMA_FILE,
     line_length: int = 88,
     ruff_ignore: list[str] = RUFF_IGNORE,
-    do_formatting: bool = DO_LINT,
-    do_mypy: bool = False,
+    do_formatting: bool = True,
+    do_mypy: bool = DO_MYPY,
 ) -> None:
     """Convert the OME schema to a python model."""
     config = get_config()
     transformer = SchemaTransformer(print=False, config=config)
     _print_gray(f"Processing {getattr(schema_file ,'name', schema_file)}...")
     transformer.process_sources([Path(schema_file).resolve().as_uri()])
-
-    plurals = _util.get_plural_names(schema=schema_file)
-
-    # pluralize field names:
-    for clazz in transformer.classes:
-        for attr in clazz.attrs:
-            if attr.is_list:
-                # XXX: should we be adding s?
-                attr.name = plurals.get(attr.name, f"{attr.name}")
 
     _print_gray("Writing Files...")
     # xsdata doesn't support output path
@@ -64,6 +55,8 @@ def convert_schema(
         subprocess.check_call(ruff)  # noqa S
 
     if do_mypy:
+        _print_gray("Running mypy ...")
+
         mypy = ["mypy", str(package_dir), "--strict"]
         subprocess.check_output(mypy)  # noqa S
 

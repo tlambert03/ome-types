@@ -8,4 +8,4 @@ except PackageNotFoundError:
 from ome_types2._conversion import from_tiff, from_xml, to_dict
 from ome_types2.model import OME
 
-__all__ = ["__version__", "OME", "from_xml", "from_tiff", to_dict]
+__all__ = ["__version__", "OME", "from_xml", "from_tiff", "to_dict"]

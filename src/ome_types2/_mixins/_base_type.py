@@ -1,4 +1,5 @@
 import contextlib
+import weakref
 from datetime import datetime
 from enum import Enum
 from textwrap import indent

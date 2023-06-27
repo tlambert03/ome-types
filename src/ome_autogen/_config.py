@@ -6,7 +6,14 @@ from ome_autogen._util import camel_to_snake
 
 from ._generator import OmeGenerator
 
-OME_BASE_TYPE = "ome_types2.model._mixins.OMEType"
+MIXIN_MODULE = "ome_types2._mixins"
+MIXINS: list[tuple[str, str, bool]] = [
+    (".*", f"{MIXIN_MODULE}._base_type.OMEType", False),  # base type on every class
+    ("OME", f"{MIXIN_MODULE}._ome.OMEMixin", True),
+    ("Instrument", f"{MIXIN_MODULE}._instrument.InstrumentMixin", False),
+    ("Reference", f"{MIXIN_MODULE}._reference.ReferenceMixin", True),
+    ("BinData", f"{MIXIN_MODULE}._bin_data.BinDataMixin", True),
+]
 
 OUTPUT_PACKAGE = "ome_types2.model.ome_2016_06"
 OME_FORMAT = "OME"
@@ -27,14 +34,18 @@ def get_config(
     #  critical to be able to use the format="OME"
     CodeWriter.register_generator(OME_FORMAT, OmeGenerator)
 
-    # add our own base type to every class
-    ome_extension = cfg.GeneratorExtension(
-        type=cfg.ExtensionType.CLASS,
-        class_name=".*",
-        import_string=OME_BASE_TYPE,
-    )
-    keep_case = cfg.NameConvention(cfg.NameCase.ORIGINAL, "type")
+    mixins = []
+    for class_name, import_string, prepend in MIXINS:
+        mixins.append(
+            cfg.GeneratorExtension(
+                type=cfg.ExtensionType.CLASS,
+                class_name=class_name,
+                import_string=import_string,
+                prepend=prepend,
+            )
+        )
 
+    keep_case = cfg.NameConvention(cfg.NameCase.ORIGINAL, "type")
     return cfg.GeneratorConfig(
         output=cfg.GeneratorOutput(
             package=package,
@@ -45,7 +56,8 @@ def get_config(
             docstring_style=cfg.DocstringStyle.NUMPY,
             compound_fields=cfg.CompoundFields(enabled=compound_fields),
         ),
-        extensions=cfg.GeneratorExtensions([ome_extension]),
+        # Add our mixins
+        extensions=cfg.GeneratorExtensions(mixins),
         # Don't convert things like XMLAnnotation to XmlAnnotation
         conventions=cfg.GeneratorConventions(class_name=keep_case),
     )
@@ -58,8 +70,9 @@ def get_config(
 # Pixels ['BinDataBlocks', 'TiffDataBlocks', 'MetadataOnly']
 # Instrument ['GenericExcitationSource', 'LightEmittingDiode', 'Filament', 'Arc', 'Laser']
 # BinaryFile ['External', 'BinData']
-# StructuredAnnotations ['XMLAnnotation', 'FileAnnotation', 'ListAnnotation', 
+# StructuredAnnotations ['XMLAnnotation', 'FileAnnotation', 'ListAnnotation',
 #                        'LongAnnotation', 'DoubleAnnotation', 'CommentAnnotation',
 #                        'BooleanAnnotation', 'TimestampAnnotation', 'TagAnnotation',
 #                        'TermAnnotation', 'MapAnnotation']
-# Union ['Label', 'Polygon', 'Polyline', 'Line', 'Ellipse', 'Point', 'Mask', 'Rectangle']
+# ROI -> Union ['Label', 'Polygon', 'Polyline', 'Line', 'Ellipse', 'Point',
+#               'Mask', 'Rectangle']
