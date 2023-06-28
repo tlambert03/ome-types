@@ -1,9 +1,7 @@
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, Optional, Protocol, Union, cast
 from warnings import warn
-
-from typing_extensions import Protocol
 
 from .model import OME
 

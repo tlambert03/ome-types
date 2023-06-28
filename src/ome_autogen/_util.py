@@ -38,7 +38,7 @@ CAMEL_SNAKE_OVERRIDES = {"ROIs": "rois"}
 camel_snake_registry: dict[str, str] = {}
 
 
-def camel_to_snake(name: str, **kwargs) -> str:
+def camel_to_snake(name: str) -> str:
     name = name.lstrip("@")  # remove leading @ from "@any_element"
     result = CAMEL_SNAKE_OVERRIDES.get(name)
     if not result:

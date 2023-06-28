@@ -1,9 +1,8 @@
 import contextlib
-import weakref
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Sequence, Set
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, Type, cast
 
 from pydantic import BaseModel, validator
 
@@ -18,22 +17,14 @@ class Sentinel:
         self.name = name
 
     def __repr__(self) -> str:
-        return f"{__name__}.{self.name}.{id(self)}"
+        return f"{__name__}.{self.name}.{id(self):x}"
 
 
-def quantity_property(field: str) -> property:
-    """Create property that returns a ``pint.Quantity`` combining value and unit."""
-
-    def quantity(self: Any) -> Optional["pint.Quantity"]:
-        from ome_types._units import ureg
-
-        value = getattr(self, field)
-        if value is None:
-            return None
-        unit = getattr(self, f"{field}_unit").value.replace(" ", "_")
-        return ureg.Quantity(value, unit)
-
-    return property(quantity)
+# Default value to support automatic numbering for id field values.
+_AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
+_COUNTERS: dict[Type["OMEType"], int] = {}
+_UNIT_FIELD = "{}_unit"
+_QUANTITY_FIELD = "{}_quantity"
 
 
 class OMEType(BaseModel):
@@ -47,27 +38,6 @@ class OMEType(BaseModel):
     support.
     """
 
-    # Default value to support automatic numbering for id field values.
-    _AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
-    # allow use with weakref
-    __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
-
-    def __init__(__pydantic_self__, **data: Any) -> None:
-        if "id" in __pydantic_self__.__fields__:
-            data.setdefault("id", OMEType._AUTO_SEQUENCE)
-        super().__init__(**data)
-
-    def __init_subclass__(cls) -> None:
-        """Add some properties to subclasses with units.
-
-        It adds ``*_quantity`` property for fields that have both a value and a
-        unit, where ``*_quantity`` is a pint ``Quantity``
-        """
-        _clsdir = set(cls.__fields__)
-        for field in _clsdir:
-            if f"{field}_unit" in _clsdir:
-                setattr(cls, f"{field}_quantity", quantity_property(field))
-
     # pydantic BaseModel configuration.
     # see: https://pydantic-docs.helpmanual.io/usage/model_config/
     class Config:
@@ -76,6 +46,23 @@ class OMEType(BaseModel):
         underscore_attrs_are_private = True
         use_enum_values = False
         validate_all = True
+
+    # allow use with weakref
+    __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
+
+    def __init__(__pydantic_self__, **data: Any) -> None:
+        if "id" in __pydantic_self__.__fields__:
+            data.setdefault("id", _AUTO_SEQUENCE)
+        super().__init__(**data)
+
+    def __init_subclass__(cls) -> None:
+        """Add `*_quantity` property for fields that have both a value and a unit.
+
+        where `*_quantity` is a pint `Quantity`.
+        """
+        for field in cls.__fields__:
+            if _UNIT_FIELD.format(field) in cls.__fields__:
+                setattr(cls, _QUANTITY_FIELD.format(field), _quantity_property(field))
 
     def __repr__(self) -> str:
         name = self.__class__.__qualname__
@@ -107,43 +94,49 @@ class OMEType(BaseModel):
         return f"{name}({body})"
 
     @validator("id", pre=True, always=True, check_fields=False)
-    def validate_id(cls, value: Any) -> str:
+    @classmethod
+    def validate_id(cls, value: Any) -> Any:
         """Pydantic validator for ID fields in OME models.
 
         If no value is provided, this validator provides and integer ID, and stores the
         maximum previously-seen value on the class.
         """
         # get the required LSID field from the annotation
-        id_field = cls.__fields__.get("id")
-        if not id_field:
-            return value
-
-        # Store the highest seen value on the class._max_id attribute.
-        if not hasattr(cls, "_max_id"):
-            cls._max_id = 0  # type: ignore [misc]
-            cls.__annotations__["_max_id"] = ClassVar[int]
-        if value is OMEType._AUTO_SEQUENCE:
-            value = cls._max_id + 1
-        if isinstance(value, int):
-            v_id = value
-            id_string = id_field.type_.__name__[:-2]
-            value = f"{id_string}:{value}"
-        else:
-            value = str(value)
+        current_count = _COUNTERS.setdefault(cls, 0)
+        if isinstance(value, str):
+            # parse the id and update the counter
             v_id = value.rsplit(":", 1)[-1]
-        with contextlib.suppress(ValueError):
-            v_id = int(v_id)
-            cls._max_id = max(cls._max_id, v_id)
-        return id_field.type_(value)
+            with contextlib.suppress(ValueError):
+                _COUNTERS[cls] = max(current_count, int(v_id))
+            return value
+        if isinstance(value, int):
+            _COUNTERS[cls] = max(current_count, value)
+            return f"{cls.__name__}:{value}"
 
-    def __getstate__(self: Any) -> Dict[str, Any]:
-        """Support pickle of our weakref references."""
-        state = super().__getstate__()
-        state["__private_attribute_values__"].pop("_ref", None)
-        return state
+        if value is _AUTO_SEQUENCE:
+            # just increment the counter
+            _COUNTERS[cls] += 1
+            return f"{cls.__name__}:{_COUNTERS[cls]}"
 
-    @classmethod
-    def snake_name(cls) -> str:
-        from .model import _camel_to_snake
+        raise ValueError(f"Invalid ID value: {value!r}")
 
-        return _camel_to_snake[cls.__name__]
+    # @classmethod
+    # def snake_name(cls) -> str:
+    #     from .model import _camel_to_snake
+
+    #     return _camel_to_snake[cls.__name__]
+
+
+def _quantity_property(field_name: str) -> property:
+    """Create property that returns a ``pint.Quantity`` combining value and unit."""
+    from ome_types2._units import ureg
+
+    def quantity(self: Any) -> Optional["pint.Quantity"]:
+        value = getattr(self, field_name)
+        if value is None:
+            return None
+
+        unit = cast("Enum", getattr(self, _UNIT_FIELD.format(field_name)))
+        return ureg.Quantity(value, unit.value.replace(" ", "_"))
+
+    return property(quantity)

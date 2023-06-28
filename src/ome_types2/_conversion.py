@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING, Any, cast
 from xml.etree import ElementTree as ET
 
 from xsdata.formats.dataclass.parsers.config import ParserConfig
-from xsdata_pydantic_basemodel.bindings import XmlParser
+from xsdata.formats.dataclass.serializers.config import SerializerConfig
+from xsdata_pydantic_basemodel.bindings import XmlParser, XmlSerializer
 
 if TYPE_CHECKING:
     from typing import TypedDict
@@ -24,7 +25,8 @@ if TYPE_CHECKING:
         handler: type[XmlHandler]
 
 
-OME_2016_06 = r"{http://www.openmicroscopy.org/Schemas/OME/2016-06}OME"
+OME_2016_06_URI = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
+OME_2016_06_NS = f"{{{OME_2016_06_URI}}}OME"
 
 
 def _get_ome(xml: str | bytes) -> type[OME]:
@@ -33,7 +35,7 @@ def _get_ome(xml: str | bytes) -> type[OME]:
     else:
         root = ET.fromstring(xml)  # noqa: S314
 
-    if root.tag == OME_2016_06:
+    if root.tag == OME_2016_06_NS:
         from ome_types2.model import OME
 
         return OME
@@ -68,6 +70,24 @@ def from_xml(
     if isinstance(xml, bytes):
         return parser.from_bytes(xml, OME_type)
     return parser.parse(xml, OME_type)
+
+
+def to_xml(
+    ome: OME,
+    ignore_defaults: bool = True,
+    indent: int = 2,
+    include_schema_location: bool = True,
+) -> str:
+    config = SerializerConfig(
+        pretty_print=indent > 0,
+        pretty_print_indent=" " * indent,
+        ignore_default_attributes=ignore_defaults,
+    )
+    if include_schema_location:
+        config.schema_location = f"{OME_2016_06_URI} {OME_2016_06_URI}/ome.xsd"
+
+    serializer = XmlSerializer(config=config)
+    return serializer.render(ome, ns_map={None: OME_2016_06_URI})
 
 
 def from_tiff(

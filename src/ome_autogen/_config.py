@@ -68,7 +68,8 @@ def get_config(
 #      'Experimenters', 'ExperimenterGroups', 'Instruments', 'Images',
 #      'StructuredAnnotations', 'ROIs', 'BinaryOnly']
 # Pixels ['BinDataBlocks', 'TiffDataBlocks', 'MetadataOnly']
-# Instrument ['GenericExcitationSource', 'LightEmittingDiode', 'Filament', 'Arc', 'Laser']
+# Instrument ['GenericExcitationSource', 'LightEmittingDiode', 'Filament', 'Arc',
+#             'Laser']
 # BinaryFile ['External', 'BinData']
 # StructuredAnnotations ['XMLAnnotation', 'FileAnnotation', 'ListAnnotation',
 #                        'LongAnnotation', 'DoubleAnnotation', 'CommentAnnotation',

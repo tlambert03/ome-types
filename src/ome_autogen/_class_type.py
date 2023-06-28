@@ -12,6 +12,3 @@ class OME(Pydantic):
             return True
 
         return False
-
-
-
