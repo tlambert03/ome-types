@@ -18,4 +18,4 @@ class CustomBuildHook(BuildHookInterface):
 
         import ome_autogen.main
 
-        ome_autogen.main.build_model()
+        ome_autogen.main.build_model(do_mypy=False)

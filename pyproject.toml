@@ -46,23 +46,14 @@ ome-types = "ome_types._napari_plugin"
 # extras
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
-autogen = [
+dev = [
   "black",
   "ruff",
   "xsdata[cli]>=23.6",
   "xsdata-pydantic-basemodel @ git+https://github.com/tlambert03/xsdata-pydantic-basemodel",
   "mypy",
 ]
-docs = [
-  "autoflake",
-  "black",
-  "ipython",
-  "isort>=5.0",
-  "numpydoc",
-  "pygments",
-  "sphinx==5.3.0",
-  "sphinx-rtd-theme==1.1.1",
-]
+docs = ["numpydoc", "pygments", "sphinx==5.3.0", "sphinx-rtd-theme==1.1.1", "ipython"]
 test = ["pytest", "pytest-cov", "pytest-benchmark"]
 
 
@@ -73,20 +64,22 @@ version = { source = "vcs" }
 # required for github.com/tlambert03/xsdata-pydantic-basemodel
 metadata = { allow-direct-references = true }
 
-[tool.hatch.build]
+[tool.hatch.build.targets.wheel]
+only-include = ["src/ome_types"]
+sources = ["src"]
 artifacts = ["src/ome_types/model/ome_2016_06"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src", "tests", "CHANGELOG.md"]
+include = ["src", "CHANGELOG.md", "hatch_build.py"]
+exclude = ["src/ome_types/model/ome_2016_06"]
 
-[tool.hatch.build.hooks.custom]
+[tool.hatch.build.targets.wheel.hooks.custom]
 # requirements to run the autogen script in hatch_build.py
 dependencies = [
   "black",
   "ruff",
   "xsdata[cli]>=23.6",
   "xsdata-pydantic-basemodel @ git+https://github.com/tlambert03/xsdata-pydantic-basemodel",
-  "mypy",
 ]
 
 

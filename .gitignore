@@ -107,7 +107,7 @@ venv.bak/
 
 .DS_Store
 _test_data
-src/ome_types/model/ome_*
+src/ome_types/model/ome_2016_06/
 src/ome_types/_version.py
 docs/source/_autosummary
 .benchmarks/
