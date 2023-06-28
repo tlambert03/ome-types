@@ -4,10 +4,10 @@ from enum import Enum
 from textwrap import indent
 from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, Type, cast
 
+import pydantic
 from pydantic import BaseModel, ValidationError, validator
 
 from ome_types.units import ureg
-import pydantic
 
 if TYPE_CHECKING:
     import pint

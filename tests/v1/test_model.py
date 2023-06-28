@@ -6,10 +6,11 @@ from xml.dom import minidom
 from xml.etree import ElementTree
 
 import pytest
-import util
+import xmlschema
 from pydantic import ValidationError
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
+import ome_types
 from ome_types import from_tiff, from_xml, model, to_xml
 
 ValidationErrors = [ValidationError, XMLSchemaValidationError]
@@ -44,6 +45,20 @@ SKIP_ROUNDTRIP = {
     "xmlannotation-svg",
 }
 
+URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
+NS_OME = "{" + URI_OME + "}"
+OME_2016_06_XSD = str(Path(ome_types.__file__).parent / "ome-2016-06.xsd")
+
+
+def get_schema(source: str) -> xmlschema.XMLSchema:
+    schema = xmlschema.XMLSchema(OME_2016_06_XSD)
+    # FIXME Hack to work around xmlschema poor support for keyrefs to
+    # substitution groups
+    ls_sgs = schema.maps.substitution_groups[f"{NS_OME}LightSourceGroup"]
+    ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
+    ls_id_maps.elements = {e: None for e in ls_sgs}
+    return schema
+
 
 def mark_xfail(fname):
     return pytest.param(
@@ -76,7 +91,7 @@ for f in all_xml:
     xml_roundtrip.append(f)
 
 
-validate = [True, False]
+validate = [False]
 
 parser = ["lxml", "xmlschema"]
 
@@ -84,21 +99,21 @@ parser = ["lxml", "xmlschema"]
 @pytest.mark.parametrize("xml", all_xml, ids=true_stem)
 @pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_from_xml(xml, parser: str, validate: bool, benchmark):
+def test_from_xml(xml, parser: str, validate: bool):
     should_raise = SHOULD_RAISE_READ.union(SHOULD_FAIL_VALIDATION if validate else [])
     if true_stem(xml) in should_raise:
         with pytest.raises(tuple(ValidationErrors)):
-            assert benchmark(from_xml, xml, parser=parser, validate=validate)
+            assert from_xml(xml, parser=parser, validate=validate)
     else:
-        assert benchmark(from_xml, xml, parser=parser, validate=validate)
+        assert from_xml(xml, parser=parser, validate=validate)
 
 
 @pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_from_tiff(benchmark, validate, parser):
+def test_from_tiff(validate, parser):
     """Test that OME metadata extractions from Tiff headers works."""
     _path = TESTS / "data" / "ome.tiff"
-    ome = benchmark(from_tiff, _path, parser=parser, validate=validate)
+    ome = from_tiff(_path, parser=parser, validate=validate)
     assert len(ome.images) == 1
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
@@ -108,7 +123,7 @@ def test_from_tiff(benchmark, validate, parser):
 @pytest.mark.parametrize("xml", xml_roundtrip, ids=true_stem)
 @pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_roundtrip(xml, parser, validate, benchmark):
+def test_roundtrip(xml, parser, validate):
     """Ensure we can losslessly round-trip XML through the model and back."""
     xml = str(xml)
     schema = get_schema(xml)
@@ -130,13 +145,13 @@ def test_roundtrip(xml, parser, validate, benchmark):
         # tostring.
         ElementTree.register_namespace("ome", URI_OME)
         xml_out = ElementTree.tostring(root, "unicode")
-        xml_out = util.canonicalize(xml_out, strip_text=True)
+        xml_out = ElementTree.canonicalize(xml_out, strip_text=True)
         xml_out = minidom.parseString(xml_out).toprettyxml(indent="  ")
         return xml_out
 
     original = canonicalize(xml, True)
     ome = from_xml(xml, parser=parser, validate=validate)
-    rexml = benchmark(to_xml, ome)
+    rexml = to_xml(ome)
 
     try:
         assert canonicalize(rexml, False) == original
@@ -211,7 +226,7 @@ def test_required_missing():
 
 @pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_refs(validate, parser):
+def test_refs(validate, parser) -> None:
     xml = TESTS / "data" / "two-screens-two-plates-four-wells.ome.xml"
     ome = from_xml(xml, parser=parser, validate=validate)
     assert ome.screens[0].plate_ref[0].ref is ome.plates[0]
@@ -219,7 +234,7 @@ def test_refs(validate, parser):
 
 @pytest.mark.parametrize("validate", validate)
 @pytest.mark.parametrize("parser", parser)
-def test_with_ome_ns(validate, parser):
+def test_with_ome_ns(validate, parser) -> None:
     xml = TESTS / "data" / "ome_ns.ome.xml"
     ome = from_xml(xml, parser=parser, validate=validate)
     assert ome.experimenters

@@ -2,8 +2,7 @@ import pytest
 from pint import DimensionalityError
 from pydantic import ValidationError
 
-from ome_types.model import simple_types
-from ome_types.model import Channel, Laser, Plane
+from ome_types.model import Channel, Laser, Plane, simple_types
 from ome_types.units import ureg
 
 
