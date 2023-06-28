@@ -6,7 +6,7 @@ from ome_autogen._util import camel_to_snake
 
 from ._generator import OmeGenerator
 
-MIXIN_MODULE = "ome_types2._mixins"
+MIXIN_MODULE = "ome_types._mixins"
 MIXINS: list[tuple[str, str, bool]] = [
     (".*", f"{MIXIN_MODULE}._base_type.OMEType", False),  # base type on every class
     ("OME", f"{MIXIN_MODULE}._ome.OMEMixin", True),
@@ -15,7 +15,7 @@ MIXINS: list[tuple[str, str, bool]] = [
     ("BinData", f"{MIXIN_MODULE}._bin_data.BinDataMixin", True),
 ]
 
-OUTPUT_PACKAGE = "ome_types2.model.ome_2016_06"
+OUTPUT_PACKAGE = "ome_types.model.ome_2016_06"
 OME_FORMAT = "OME"
 
 
