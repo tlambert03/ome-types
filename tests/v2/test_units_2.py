@@ -2,9 +2,9 @@ import pytest
 from pint import DimensionalityError
 from pydantic import ValidationError
 
-from ome_types2._units import ureg
 from ome_types2.model import simple_types
 from ome_types2.model.ome_2016_06 import Channel, Laser, Plane
+from ome_types2.units import ureg
 
 
 def test_quantity_math():

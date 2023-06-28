@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, Type, 
 
 from pydantic import BaseModel, validator
 
+from ome_types2.units import ureg
+
 if TYPE_CHECKING:
     import pint
 
@@ -129,7 +131,6 @@ class OMEType(BaseModel):
 
 def _quantity_property(field_name: str) -> property:
     """Create property that returns a ``pint.Quantity`` combining value and unit."""
-    from ome_types2._units import ureg
 
     def quantity(self: Any) -> Optional["pint.Quantity"]:
         value = getattr(self, field_name)
