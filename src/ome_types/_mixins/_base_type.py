@@ -132,7 +132,6 @@ class OMEType(BaseModel):
         if value is _AUTO_SEQUENCE:
             # just increment the counter
             _COUNTERS[cls] += 1
-            breakpoint()
             return f"{cls.__name__}:{_COUNTERS[cls]}"
 
         raise ValueError(f"Invalid ID value: {value!r}")

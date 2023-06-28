@@ -20,7 +20,7 @@ RUFF_IGNORE: list[str] = [
 ]
 
 
-def convert_schema(
+def build_model(
     output_dir: Path | str = SRC_PATH,
     schema_file: Path | str = SCHEMA_FILE,
     line_length: int = 88,

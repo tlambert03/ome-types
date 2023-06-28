@@ -1,3 +1,3 @@
-from .main import convert_schema
+from .main import build_model
 
-convert_schema()
+build_model()
