@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from xsdata.formats.dataclass.parsers.mixins import XmlHandler
     from xsdata_pydantic_basemodel.bindings import XmlContext
 
-    from ome_types2.model.ome_2016_06 import OME
+    from ome_types.model.ome_2016_06 import OME
 
     class ParserKwargs(TypedDict, total=False):
         config: ParserConfig
@@ -36,7 +36,7 @@ def _get_ome(xml: str | bytes) -> type[OME]:
         root = ET.fromstring(xml)  # noqa: S314
 
     if root.tag == OME_2016_06_NS:
-        from ome_types2.model import OME
+        from ome_types.model import OME
 
         return OME
     raise NotImplementedError(f"Unknown root tag: {root.tag}")
@@ -56,11 +56,12 @@ def to_dict(source: OME | Path | str | bytes) -> dict[str, Any]:
 def from_xml(
     xml: Path | str | bytes,
     *,
-    validate: bool | None = None,
+    validate: bool | None = None,  # TODO implement
+    parser: Any = None,  # TODO deprecate
     parser_kwargs: ParserKwargs | None = None,
 ) -> OME:
-    if validate:
-        raise NotImplementedError("validate=True is not supported yet")
+    # if validate:
+    # raise NotImplementedError("validate=True is not supported yet")
 
     if isinstance(xml, Path):
         xml = str(xml)

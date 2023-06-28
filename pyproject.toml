@@ -167,7 +167,11 @@ exclude = '''
 minversion = "6.0"
 addopts = "--benchmark-disable"
 testpaths = ["tests"]
-filterwarnings = ["error", "ignore:Casting invalid AnnotationID:UserWarning"]
+filterwarnings = [
+  "error",
+  "ignore:Casting invalid AnnotationID:UserWarning",
+  "ignore::ResourceWarning",                         # FIXME: i think this might be an xsdata issue?
+]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]

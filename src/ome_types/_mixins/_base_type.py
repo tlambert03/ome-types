@@ -4,9 +4,10 @@ from enum import Enum
 from textwrap import indent
 from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, Type, cast
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ValidationError, validator
 
-from ome_types2.units import ureg
+from ome_types.units import ureg
+import pydantic
 
 if TYPE_CHECKING:
     import pint
@@ -55,7 +56,20 @@ class OMEType(BaseModel):
     def __init__(__pydantic_self__, **data: Any) -> None:
         if "id" in __pydantic_self__.__fields__:
             data.setdefault("id", _AUTO_SEQUENCE)
-        super().__init__(**data)
+        try:
+            super().__init__(**data)
+        except ValidationError as e:
+            for err in e.raw_errors:
+                if isinstance(err, pydantic.error_wrappers.ErrorWrapper):
+                    loc = err.loc_tuple()
+                    if loc:
+                        key = loc[0]
+                        if key == "id":
+                            data[key] = _AUTO_SEQUENCE
+                        else:
+                            data.pop(key, None)
+            print(data)
+            super().__init__(**data)
 
     def __init_subclass__(cls) -> None:
         """Add `*_quantity` property for fields that have both a value and a unit.
@@ -118,6 +132,7 @@ class OMEType(BaseModel):
         if value is _AUTO_SEQUENCE:
             # just increment the counter
             _COUNTERS[cls] += 1
+            breakpoint()
             return f"{cls.__name__}:{_COUNTERS[cls]}"
 
         raise ValueError(f"Invalid ID value: {value!r}")

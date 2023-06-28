@@ -4,8 +4,8 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from ome_types2 import OME, from_tiff, from_xml, to_xml
-from ome_types2.model import ome_2016_06 as model
+from ome_types import OME, from_tiff, from_xml, to_xml
+from ome_types.model import ome_2016_06 as model
 
 DATA = Path(__file__).parent.parent / "data"
 ALL_XML = set(DATA.glob("*.ome.xml"))

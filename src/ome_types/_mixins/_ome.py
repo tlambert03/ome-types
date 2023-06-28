@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 from ._base_type import OMEType
 
 if TYPE_CHECKING:
-    from ome_types2.model.ome_2016_06 import OME, Reference
+    from ome_types.model import OME, Reference
 
 
 class OMEMixin:
@@ -29,18 +29,18 @@ class OMEMixin:
 
     @classmethod
     def from_xml(cls, xml: Path | str) -> OME:
-        from ome_types2._conversion import from_xml
+        from ome_types._conversion import from_xml
 
         return from_xml(xml)
 
     @classmethod
     def from_tiff(cls, path: Path | str) -> OME:
-        from ome_types2._conversion import from_tiff
+        from ome_types._conversion import from_tiff
 
         return from_tiff(path)
 
     # def to_xml(self) -> str:
-    #     from ome_types2._conversion import to_xml
+    #     from ome_types._conversion import to_xml
 
     #     return to_xml(self)
 
@@ -51,7 +51,7 @@ def collect_ids(value: Any) -> dict[str, OMEType]:
     Recursively walks all dataclass fields and iterates over lists. The base
     case is when value is neither a dataclass nor a list.
     """
-    from ome_types2.model.ome_2016_06 import Reference
+    from ome_types.model import Reference
 
     ids: dict[str, OMEType] = {}
     if isinstance(value, list):
@@ -77,7 +77,7 @@ def collect_references(value: Any) -> list[Reference]:
     that we don't need to inspect further.
 
     """
-    from ome_types2.model.ome_2016_06 import Reference
+    from ome_types.model import Reference
 
     references: list[Reference] = []
     if isinstance(value, Reference):

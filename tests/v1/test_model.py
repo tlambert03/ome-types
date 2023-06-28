@@ -11,7 +11,6 @@ from pydantic import ValidationError
 from xmlschema.validators.exceptions import XMLSchemaValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types._xmlschema import NS_OME, URI_OME, get_schema, to_xml_element
 
 ValidationErrors = [ValidationError, XMLSchemaValidationError]
 try:
@@ -22,10 +21,6 @@ except ImportError:
     pass
 
 
-SHOULD_FAIL_READ = {
-    # Some timestamps have negative years which datetime doesn't support.
-    "timestampannotation",
-}
 SHOULD_FAIL_VALIDATION = {"invalid_xml_annotation"}
 SHOULD_RAISE_READ = {"bad"}
 SHOULD_FAIL_ROUNDTRIP = {
@@ -69,11 +64,10 @@ def true_stem(p):
 
 TESTS = Path(__file__).parent.parent
 all_xml = list((TESTS / "data").glob("*.ome.xml"))
-xml_read = [mark_xfail(f) if true_stem(f) in SHOULD_FAIL_READ else f for f in all_xml]
 xml_roundtrip = []
 for f in all_xml:
     stem = true_stem(f)
-    if stem in SHOULD_FAIL_READ | SHOULD_RAISE_READ:
+    if stem in SHOULD_RAISE_READ:
         continue
     elif stem in SHOULD_FAIL_ROUNDTRIP:
         f = mark_xfail(f)
@@ -87,7 +81,7 @@ validate = [True, False]
 parser = ["lxml", "xmlschema"]
 
 
-@pytest.mark.parametrize("xml", xml_read, ids=true_stem)
+@pytest.mark.parametrize("xml", all_xml, ids=true_stem)
 @pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
 def test_from_xml(xml, parser: str, validate: bool, benchmark):
@@ -173,7 +167,7 @@ def test_to_xml_with_kwargs(validate, parser):
         assert mocked_et_tostring.call_args.xml_declaration
 
 
-@pytest.mark.parametrize("xml", xml_read, ids=true_stem)
+@pytest.mark.parametrize("xml", all_xml, ids=true_stem)
 @pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
 def test_serialization(xml, validate, parser):
