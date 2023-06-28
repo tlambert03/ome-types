@@ -5,7 +5,7 @@ import re
 from contextlib import contextmanager
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterator
+from typing import Any, Iterator
 from xml.etree import ElementTree as ET
 
 SRC_PATH = Path(__file__).parent.parent
@@ -38,7 +38,7 @@ CAMEL_SNAKE_OVERRIDES = {"ROIs": "rois"}
 camel_snake_registry: dict[str, str] = {}
 
 
-def camel_to_snake(name: str) -> str:
+def camel_to_snake(name: str, **kwargs: Any) -> str:
     name = name.lstrip("@")  # remove leading @ from "@any_element"
     result = CAMEL_SNAKE_OVERRIDES.get(name)
     if not result:
