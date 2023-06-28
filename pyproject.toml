@@ -33,6 +33,7 @@ dependencies = [
   "lxml >=4.8.0",
   "pydantic[email] >=1.0, <2.0",
   "xsdata",
+  "xsdata-pydantic-basemodel @ git+https://github.com/tlambert03/xsdata-pydantic-basemodel",
 ]
 
 [project.urls]
@@ -54,7 +55,7 @@ dev = [
   "mypy",
 ]
 docs = ["numpydoc", "pygments", "sphinx==5.3.0", "sphinx-rtd-theme==1.1.1", "ipython"]
-test = ["pytest", "pytest-cov", "pytest-benchmark"]
+test = ["pytest", "pytest-cov", "pytest-benchmark", "xmlschema"]
 
 
 # https://hatch.pypa.io/latest/config/metadata/
