@@ -53,6 +53,11 @@ def to_dict(source: OME | Path | str | bytes) -> dict[str, Any]:
     )
 
 
+def _class_factory(cls: type, kwargs: Any):
+    kwargs.setdefault("validation", "strict")
+    return cls(**kwargs)
+
+
 def from_xml(
     xml: Path | str | bytes,
     *,
@@ -67,10 +72,11 @@ def from_xml(
         xml = str(xml)
 
     OME_type = _get_ome(xml)
-    parser = XmlParser(**(parser_kwargs or {}))
+    parser_kwargs = {"config": ParserConfig(class_factory=_class_factory)}
+    _parser = XmlParser(**(parser_kwargs or {}))
     if isinstance(xml, bytes):
-        return parser.from_bytes(xml, OME_type)
-    return parser.parse(xml, OME_type)
+        return _parser.from_bytes(xml, OME_type)
+    return _parser.parse(xml, OME_type)
 
 
 def to_xml(

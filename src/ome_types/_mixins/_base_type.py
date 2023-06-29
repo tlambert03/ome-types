@@ -1,11 +1,13 @@
 import contextlib
+import re
+import warnings
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
 from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, Type, cast
 
 import pydantic
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, PrivateAttr, ValidationError, validator
 
 from ome_types.units import ureg
 
@@ -49,9 +51,11 @@ class OMEType(BaseModel):
         underscore_attrs_are_private = True
         use_enum_values = False
         validate_all = True
+        validation_mode: str = "strict"
 
     # allow use with weakref
     __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
+    _validation_mode: str = PrivateAttr("strict")
 
     def __init__(__pydantic_self__, **data: Any) -> None:
         if "id" in __pydantic_self__.__fields__:
@@ -68,7 +72,6 @@ class OMEType(BaseModel):
                             data[key] = _AUTO_SEQUENCE
                         else:
                             data.pop(key, None)
-            print(data)
             super().__init__(**data)
 
     def __init_subclass__(cls) -> None:
@@ -111,30 +114,38 @@ class OMEType(BaseModel):
 
     @validator("id", pre=True, always=True, check_fields=False)
     @classmethod
-    def validate_id(cls, value: Any) -> Any:
+    def _validate_id(cls, value: Any, values=None, config=None) -> Any:
         """Pydantic validator for ID fields in OME models.
 
         If no value is provided, this validator provides and integer ID, and stores the
         maximum previously-seen value on the class.
         """
-        # get the required LSID field from the annotation
-        current_count = _COUNTERS.setdefault(cls, 0)
+        # FIXME: clean this up
+        id_field = cls.__fields__["id"]
+        id_regex = cast(str, id_field.field_info.regex)
+        id_name = id_regex.split(":")[-3]
+        current_count = _COUNTERS.setdefault(cls, -1)
         if isinstance(value, str):
             # parse the id and update the counter
-            v_id = value.rsplit(":", 1)[-1]
+            *name, v_id = value.rsplit(":", 1)
+            if not re.match(id_regex, value):
+                warnings.warn(f"Casting invalid {id_name}ID", stacklevel=2)
+                return v_id if v_id.isnumeric() else _AUTO_SEQUENCE
+
             with contextlib.suppress(ValueError):
                 _COUNTERS[cls] = max(current_count, int(v_id))
             return value
+
         if isinstance(value, int):
             _COUNTERS[cls] = max(current_count, value)
-            return f"{cls.__name__}:{value}"
-
-        if value is _AUTO_SEQUENCE:
+        elif value is _AUTO_SEQUENCE:
             # just increment the counter
             _COUNTERS[cls] += 1
-            return f"{cls.__name__}:{_COUNTERS[cls]}"
+            value = _COUNTERS[cls]
+        else:
+            raise ValueError(f"Invalid ID value: {value!r}, {type(value)}")
 
-        raise ValueError(f"Invalid ID value: {value!r}")
+        return f"{id_name}:{value}"
 
     # @classmethod
     # def snake_name(cls) -> str:
