@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import weakref
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from ._base_type import OMEType
 
@@ -39,10 +39,10 @@ class OMEMixin:
 
         return from_tiff(path)
 
-    # def to_xml(self) -> str:
-    #     from ome_types._conversion import to_xml
+    def to_xml(self) -> str:
+        from ome_types._conversion import to_xml
 
-    #     return to_xml(self)
+        return to_xml(cast("OME", self))
 
 
 def collect_ids(value: Any) -> dict[str, OMEType]:
