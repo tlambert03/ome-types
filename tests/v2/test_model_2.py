@@ -12,25 +12,6 @@ ALL_XML = set(DATA.glob("*.ome.xml"))
 INVALID = {DATA / "invalid_xml_annotation.ome.xml", DATA / "bad.ome.xml"}
 
 
-def _true_stem(p: Path) -> str:
-    return p.name.partition(".")[0]
-
-
-@pytest.fixture(params=sorted(ALL_XML), ids=_true_stem)
-def any_xml(request: pytest.FixtureRequest) -> Path:
-    return request.param
-
-
-@pytest.fixture(params=sorted(ALL_XML - INVALID), ids=_true_stem)
-def valid_xml(request: pytest.FixtureRequest) -> Path:
-    return request.param
-
-
-@pytest.fixture(params=INVALID, ids=_true_stem)
-def invalid_xml(request: pytest.FixtureRequest) -> Path:
-    return request.param
-
-
 @pytest.mark.filterwarnings("ignore::ResourceWarning")  # FIXME
 def test_from_xml(any_xml: Path) -> None:
     if any_xml in INVALID:

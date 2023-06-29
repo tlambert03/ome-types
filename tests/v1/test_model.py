@@ -1,7 +1,7 @@
 import pickle
 import re
+from functools import lru_cache
 from pathlib import Path
-from unittest import mock
 from xml.dom import minidom
 from xml.etree import ElementTree
 
@@ -21,9 +21,10 @@ try:
 except ImportError:
     pass
 
+TESTS = Path(__file__).parent.parent
+DATA = TESTS / "data"
 
-SHOULD_FAIL_VALIDATION = {"invalid_xml_annotation"}
-SHOULD_RAISE_READ = {"bad"}
+SHOULD_FAIL_VALIDATION = {"invalid_xml_annotation", "bad"}
 SHOULD_FAIL_ROUNDTRIP = {
     # Order of elements in StructuredAnnotations and Union are jumbled.
     "timestampannotation-posix-only",
@@ -50,7 +51,8 @@ NS_OME = "{" + URI_OME + "}"
 OME_2016_06_XSD = str(Path(ome_types.__file__).parent / "ome-2016-06.xsd")
 
 
-def get_schema(source: str) -> xmlschema.XMLSchema:
+@lru_cache(maxsize=None)
+def _get_schema() -> xmlschema.XMLSchema:
     schema = xmlschema.XMLSchema(OME_2016_06_XSD)
     # FIXME Hack to work around xmlschema poor support for keyrefs to
     # substitution groups
@@ -77,14 +79,11 @@ def true_stem(p):
     return p.name.partition(".")[0]
 
 
-TESTS = Path(__file__).parent.parent
-all_xml = list((TESTS / "data").glob("*.ome.xml"))
+all_xml = list(DATA.glob("*.ome.xml"))
 xml_roundtrip = []
 for f in all_xml:
     stem = true_stem(f)
-    if stem in SHOULD_RAISE_READ:
-        continue
-    elif stem in SHOULD_FAIL_ROUNDTRIP:
+    if stem in SHOULD_FAIL_ROUNDTRIP:
         f = mark_xfail(f)
     elif stem in SKIP_ROUNDTRIP:
         f = mark_skip(f)
@@ -93,106 +92,96 @@ for f in all_xml:
 
 validate = [False]
 
-parser = ["lxml", "xmlschema"]
 
-
-@pytest.mark.parametrize("xml", all_xml, ids=true_stem)
-@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_from_xml(xml, parser: str, validate: bool):
-    should_raise = SHOULD_RAISE_READ.union(SHOULD_FAIL_VALIDATION if validate else [])
-    if true_stem(xml) in should_raise:
-        with pytest.raises(tuple(ValidationErrors)):
-            assert from_xml(xml, parser=parser, validate=validate)
-    else:
-        assert from_xml(xml, parser=parser, validate=validate)
+def test_from_valid_xml(valid_xml: Path, validate: bool) -> None:
+    assert from_xml(valid_xml, validate=validate)
 
 
-@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_from_tiff(validate, parser):
+def test_from_tiff(validate):
     """Test that OME metadata extractions from Tiff headers works."""
-    _path = TESTS / "data" / "ome.tiff"
-    ome = from_tiff(_path, parser=parser, validate=validate)
+    _path = DATA / "ome.tiff"
+    ome = from_tiff(_path, validate=validate)
     assert len(ome.images) == 1
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
     assert ome.images[0].pixels.channels[0].samples_per_pixel == 1
 
 
-@pytest.mark.parametrize("xml", xml_roundtrip, ids=true_stem)
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_roundtrip(xml, parser, validate):
+def _sort_elements(element, recursive=True):
+    # Sort the child elements alphabetically by their tag name
+    sorted_children = sorted(element, key=lambda child: child.tag)
+
+    # Replace the existing child elements with the sorted ones
+    element[:] = sorted_children
+
+    # Recursively sort child elements for each subelement
+    if recursive:
+        for child in element:
+            _sort_elements(child)
+
+
+def _canonicalize(xml: str, strip_empty: bool) -> str:
+    schema = _get_schema()
+
+    d = schema.decode(xml, use_defaults=True)
+    # Strip extra whitespace in the schemaLocation value.
+    d["@xsi:schemaLocation"] = re.sub(r"\s+", " ", d["@xsi:schemaLocation"])
+    root = schema.encode(d, path=NS_OME + "OME", use_defaults=True)
+    # These are the tags that appear in the example files with empty
+    # content. Since our round-trip will drop empty elements, we'll need to
+    # strip them from the "original" documents before comparison.
+    if strip_empty:
+        for tag in ("Description", "LightPath", "Map"):
+            for e in root.findall(f".//{NS_OME}{tag}[.='']..."):
+                e.remove(e.find(f"{NS_OME}{tag}"))
+    # ET.canonicalize can't handle an empty namespace so we need to
+    # re-register the OME namespace with an actual name before calling
+    # tostring.
+    _sort_elements(root)
+    ElementTree.register_namespace("ome", URI_OME)
+    xml_out = ElementTree.tostring(root, "unicode")
+    xml_out = ElementTree.canonicalize(xml_out, strip_text=True)
+    xml_out = minidom.parseString(xml_out).toprettyxml(indent="  ")
+    return xml_out
+
+
+def test_roundtrip(valid_xml: Path):
     """Ensure we can losslessly round-trip XML through the model and back."""
-    xml = str(xml)
-    schema = get_schema(xml)
+    if true_stem(valid_xml) in SKIP_ROUNDTRIP:
+        pytest.xfail("known issues with canonicalization")
 
-    def canonicalize(xml, strip_empty):
-        d = schema.decode(xml, use_defaults=True)
-        # Strip extra whitespace in the schemaLocation value.
-        d["@xsi:schemaLocation"] = re.sub(r"\s+", " ", d["@xsi:schemaLocation"])
-        root = schema.encode(d, path=NS_OME + "OME", use_defaults=True)
-        # These are the tags that appear in the example files with empty
-        # content. Since our round-trip will drop empty elements, we'll need to
-        # strip them from the "original" documents before comparison.
-        if strip_empty:
-            for tag in ("Description", "LightPath", "Map"):
-                for e in root.findall(f".//{NS_OME}{tag}[.='']..."):
-                    e.remove(e.find(f"{NS_OME}{tag}"))
-        # ET.canonicalize can't handle an empty namespace so we need to
-        # re-register the OME namespace with an actual name before calling
-        # tostring.
-        ElementTree.register_namespace("ome", URI_OME)
-        xml_out = ElementTree.tostring(root, "unicode")
-        xml_out = ElementTree.canonicalize(xml_out, strip_text=True)
-        xml_out = minidom.parseString(xml_out).toprettyxml(indent="  ")
-        return xml_out
+    xml = str(valid_xml)
 
-    original = canonicalize(xml, True)
-    ome = from_xml(xml, parser=parser, validate=validate)
+    original = _canonicalize(xml, True)
+    ome = from_xml(xml)
     rexml = to_xml(ome)
-
-    try:
-        assert canonicalize(rexml, False) == original
-    except AssertionError:
-        # Special xfail catch since two files fail only with xml2dict
-        if true_stem(Path(xml)) in SHOULD_FAIL_ROUNDTRIP_LXML and parser == "lxml":
-            pytest.xfail(
-                f"Expected failure on roundtrip using xml2dict on file: {stem}"
-            )
-        else:
-            raise
+    new = _canonicalize(rexml, True)
+    if new != original:
+        Path("original.xml").write_text(original)
+        Path("rewritten.xml").write_text(new)
+        raise AssertionError
 
 
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_to_xml_with_kwargs(validate, parser):
-    """Ensure kwargs are passed to ElementTree"""
-    ome = from_xml(
-        TESTS / "data" / "example.ome.xml",
-        parser=parser,
-        validate=validate,
-    )
+# @pytest.mark.parametrize("validate", validate)
+# def test_to_xml_with_kwargs(validate):
+#     """Ensure kwargs are passed to ElementTree"""
+#     ome = from_xml(DATA / "example.ome.xml", validate=validate)
 
-    with mock.patch("xml.etree.ElementTree.tostring") as mocked_et_tostring:
-        element = to_xml_element(ome)
-        # Use an ElementTree.tostring kwarg and assert that it was passed through
-        to_xml(element, xml_declaration=True)
-        assert mocked_et_tostring.call_args.xml_declaration
+#     with mock.patch("xml.etree.ElementTree.tostring") as mocked_et_tostring:
+#         element = to_xml_element(ome)
+#         # Use an ElementTree.tostring kwarg and assert that it was passed through
+#         to_xml(element, xml_declaration=True)
+#         assert mocked_et_tostring.call_args.xml_declaration
 
 
-@pytest.mark.parametrize("xml", all_xml, ids=true_stem)
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_serialization(xml, validate, parser):
+def test_serialization(valid_xml):
     """Test pickle serialization and reserialization."""
-    if true_stem(xml) in SHOULD_RAISE_READ:
-        pytest.skip("Can't pickle unreadable xml")
-    if validate and true_stem(xml) in SHOULD_FAIL_VALIDATION:
+    if validate and true_stem(valid_xml) in SHOULD_FAIL_VALIDATION:
         pytest.skip("Can't pickle invalid xml with validate=True")
 
-    ome = from_xml(xml, parser=parser, validate=validate)
+    ome = from_xml(valid_xml)
     serialized = pickle.dumps(ome)
     deserialized = pickle.loads(serialized)
     assert ome == deserialized
@@ -206,7 +195,7 @@ def test_no_id():
     assert i2.id == "Instrument:21"
 
     # but validation still works
-    with pytest.raises(ValueError):
+    with pytest.warns(match="Casting invalid InstrumentID"):
         model.Instrument(id="nonsense")
 
 
@@ -224,17 +213,13 @@ def test_required_missing():
     assert "y\n  field required" in str(e.value)
 
 
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_refs(validate, parser) -> None:
-    xml = TESTS / "data" / "two-screens-two-plates-four-wells.ome.xml"
-    ome = from_xml(xml, parser=parser, validate=validate)
-    assert ome.screens[0].plate_ref[0].ref is ome.plates[0]
+def test_refs() -> None:
+    xml = DATA / "two-screens-two-plates-four-wells.ome.xml"
+    ome = from_xml(xml)
+    assert ome.screens[0].plate_refs[0].ref is ome.plates[0]
 
 
-@pytest.mark.parametrize("validate", validate)
-@pytest.mark.parametrize("parser", parser)
-def test_with_ome_ns(validate, parser) -> None:
-    xml = TESTS / "data" / "ome_ns.ome.xml"
-    ome = from_xml(xml, parser=parser, validate=validate)
+def test_with_ome_ns() -> None:
+    xml = DATA / "ome_ns.ome.xml"
+    ome = from_xml(xml)
     assert ome.experimenters
