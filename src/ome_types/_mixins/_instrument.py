@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, TypeAlias, Union, cast
+from typing import TYPE_CHECKING, Union, cast
 
 if TYPE_CHECKING:
     from ome_types.model.ome_2016_06 import (
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
         LightEmittingDiode,
     )
 
-    LightSource: TypeAlias = Union[
+    LightSource = Union[
         GenericExcitationSource, LightEmittingDiode, Filament, Arc, Laser
     ]
 
