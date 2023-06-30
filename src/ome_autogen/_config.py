@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from xsdata.codegen.writer import CodeWriter
 from xsdata.models import config as cfg
 from xsdata.utils import text

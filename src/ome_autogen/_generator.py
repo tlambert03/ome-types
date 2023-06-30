@@ -1,13 +1,17 @@
-from typing import List
+from __future__ import annotations
 
-from xsdata.codegen.models import Attr, Class
+from typing import TYPE_CHECKING
+
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
-from xsdata.models.config import GeneratorConfig
 from xsdata.models.enums import DataType
 from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 from . import _util
+
+if TYPE_CHECKING:
+    from xsdata.codegen.models import Attr, Class
+    from xsdata.models.config import GeneratorConfig
 
 AUTO_SEQUENCE = "__auto_sequence__"
 
@@ -33,7 +37,7 @@ class OmeFilters(PydanticBaseFilters):
         # This could go once PydanticBaseFilters is better about deduping
         return Filters.class_bases(self, obj, class_name)
 
-    def field_type(self, attr: Attr, parents: List[str]) -> str:
+    def field_type(self, attr: Attr, parents: list[str]) -> str:
         # HACK
         # It would be nicer to put this in the self.field_name method...but that
         # method only receives the attr name, not the attr object, and so we
