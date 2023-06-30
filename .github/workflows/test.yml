@@ -45,3 +45,50 @@ jobs:
         run: pytest --cov --cov-report=xml
 
       - uses: codecov/codecov-action@v2
+
+  test-aicsimageio:
+    name: test aicsimageio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: AllenCellModeling/aicsimageio
+          submodules: true
+      - uses: actions/checkout@v3
+        with:
+          path: ome-types
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install aicsimageio
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .[test]
+          python -m pip install bioformats_jar
+
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          path: aicsimageio/tests/resources
+          key: ${{ hashFiles('scripts/TEST_RESOURCES_HASH.txt') }}
+
+      - name: Download Test Resources
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: python scripts/download_test_resources.py --debug
+
+      - name: Install ome-types
+        run: |
+          pip install .
+          pip list
+        working-directory: ome-types
+
+      - name: Run Tests
+        run: |
+          pytest aicsimageio/tests/readers/test_ome_tiff_reader.py \
+            aicsimageio/tests/readers/extra_readers/test_bioformats_reader.py \
+            aicsimageio/tests/readers/extra_readers/test_ome_zarr_reader.py \
+            -v -k "not REMOTE"
