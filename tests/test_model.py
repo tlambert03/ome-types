@@ -41,7 +41,6 @@ SKIP_ROUNDTRIP = {
     # though these files do appear to round-trip correctly when checked by eye,
     # we'll play it safe and skip them until the test is fixed.
     "spim",
-    "xmlannotation-body-space",
     "xmlannotation-multi-value",
     "xmlannotation-svg",
 }
