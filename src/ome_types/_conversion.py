@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import is_dataclass
 from pathlib import Path
 from struct import Struct
@@ -39,7 +40,7 @@ def _get_ome(xml: str | bytes) -> type[OME]:
         from ome_types.model import OME
 
         return OME
-    raise NotImplementedError(f"Unknown root tag: {root.tag}")
+    raise ValueError(f"Unsupported OME schema tag {root.tag}")
 
 
 def to_dict(source: OME | Path | str | bytes) -> dict[str, Any]:
@@ -76,7 +77,9 @@ def from_xml(
     _parser = XmlParser(**(parser_kwargs or {}))
     if isinstance(xml, bytes):
         return _parser.from_bytes(xml, OME_type)
-    return _parser.parse(xml, OME_type)
+    if os.path.isfile(xml):
+        return _parser.parse(xml, OME_type)
+    return _parser.from_string(xml, OME_type)
 
 
 def to_xml(
