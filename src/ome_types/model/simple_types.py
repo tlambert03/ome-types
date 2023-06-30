@@ -1,5 +1,6 @@
 from enum import Enum
 
+from ome_types.model._color import Color
 from ome_types.model.ome_2016_06 import (
     Binning,
     Marker,
@@ -72,7 +73,6 @@ __all__ = [
 ]
 
 
-Color = int  # TODO
 Hex40 = bytes
 NonNegativeFloat = float
 NonNegativeInt = int

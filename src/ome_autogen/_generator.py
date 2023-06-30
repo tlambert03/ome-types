@@ -4,9 +4,12 @@ from xsdata.codegen.models import Attr, Class
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
 from xsdata.models.config import GeneratorConfig
+from xsdata.models.enums import DataType
 from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 from . import _util
+
+AUTO_SEQUENCE = "__auto_sequence__"
 
 
 class OmeGenerator(DataclassGenerator):
@@ -39,4 +42,34 @@ class OmeFilters(PydanticBaseFilters):
         # in the class.jinja2 template, so we directly modify the attr object here.
         if attr.is_list:
             attr.name = self.plurals.get(attr.name, f"{attr.name}s")
+        if self._is_color_attr(attr):
+            return "Color"
         return super().field_type(attr, parents)
+
+    @classmethod
+    def build_import_patterns(cls) -> dict[str, dict]:
+        patterns = super().build_import_patterns()
+        patterns.update(
+            {
+                "ome_types.model._color": {
+                    "Color": [": Color ="],
+                }
+            }
+        )
+        return {key: patterns[key] for key in sorted(patterns)}
+
+    def field_default_value(self, attr: Attr, ns_map: dict | None = None) -> str:
+        if attr.tag == "Attribute" and attr.name == "ID":
+            return repr(AUTO_SEQUENCE)
+        if self._is_color_attr(attr):
+            return "Color"
+        return super().field_default_value(attr, ns_map)
+
+    def format_arguments(self, kwargs: dict, indent: int = 0) -> str:
+        if kwargs.get("default") == "Color":
+            # keep default_factory at the front
+            kwargs = {"default_factory": kwargs.pop("default"), **kwargs}
+        return super().format_arguments(kwargs, indent)
+
+    def _is_color_attr(self, attr: Attr) -> bool:
+        return attr.name == "Color" and attr.types[0].datatype == DataType.INT

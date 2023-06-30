@@ -16,7 +16,6 @@ def test_color_unset(channel_kwargs: dict) -> None:
                     size_z=1,
                     dimension_order="XYZTC",
                     type="uint16",
-                    metadata_only=True,
                     channels=[Channel(**channel_kwargs)],
                 )
             )

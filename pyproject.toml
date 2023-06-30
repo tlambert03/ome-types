@@ -111,6 +111,7 @@ select = [
 ]
 ignore = [
   "D100",   # Missing docstring in public module
+  "D101",   # Missing docstring in public class
   "D104",   # Missing docstring in public package
   "D106",   # Missing docstring in public nested class
   "D107",   # Missing docstring in __init__
