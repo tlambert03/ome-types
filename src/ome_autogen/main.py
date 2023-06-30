@@ -43,7 +43,7 @@ def build_model(
         transformer.process_classes()
 
     if not do_formatting and not do_mypy:
-        _print_green(f"✓ OME python model created at {OUTPUT_PACKAGE}")
+        _print_green(f"\u2713 OME python model created at {OUTPUT_PACKAGE}")
         return
 
     if do_formatting:
@@ -64,7 +64,7 @@ def build_model(
         subprocess.check_output(mypy)  # noqa S
 
     # print a bold green checkmark
-    _print_green(f"✓ OME python model created at {OUTPUT_PACKAGE}")
+    _print_green(f"\u2713 OME python model created at {OUTPUT_PACKAGE}")
 
 
 def _print_gray(text: str) -> None:
