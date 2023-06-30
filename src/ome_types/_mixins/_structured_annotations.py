@@ -1,4 +1,4 @@
-from typing import Iterator, Sequence, overload
+from typing import Iterator, Sequence, Union, overload
 
 from ome_types.model.ome_2016_06 import Annotation
 
@@ -19,7 +19,9 @@ class StructuredAnnotationsMixin(OMEType, Sequence[Annotation]):
     def __getitem__(self, index: slice) -> Sequence[Annotation]:
         ...
 
-    def __getitem__(self, key: int | slice) -> Annotation | Sequence[Annotation]:
+    def __getitem__(
+        self, key: Union[int, slice]
+    ) -> Union[Annotation, Sequence[Annotation]]:
         return list(self._iter_annotations())[key]
 
     def __len__(self) -> int:
