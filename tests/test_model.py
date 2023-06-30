@@ -98,9 +98,14 @@ def test_from_valid_xml(valid_xml: Path, validate: bool) -> None:
     assert from_xml(valid_xml, validate=validate)
 
 
-def test_from_invalid_xml(invalid_xml: Path) -> None:
-    with pytest.raises(ValidationError):
-        from_xml(invalid_xml)
+@pytest.mark.parametrize("validate", validate)
+def test_from_invalid_xml(invalid_xml: Path, validate) -> None:
+    if validate:
+        with pytest.raises(ValidationError):
+            from_xml(invalid_xml, validate=validate)
+    else:
+        with pytest.warns():
+            from_xml(invalid_xml, validate=validate)
 
 
 @pytest.mark.parametrize("validate", validate)
