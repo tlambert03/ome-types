@@ -61,7 +61,11 @@ def build_model(
         _print_gray("Running mypy ...")
 
         mypy = ["mypy", str(package_dir), "--strict"]
-        subprocess.check_output(mypy)  # noqa S
+
+        try:
+            subprocess.check_output(mypy, stderr=subprocess.STDOUT)  # noqa S
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"mypy errors:\n\n{e.output.decode()}") from e
 
     # print a bold green checkmark
     _print_green(f"\u2713 OME python model created at {OUTPUT_PACKAGE}")

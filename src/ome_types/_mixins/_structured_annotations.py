@@ -25,5 +25,5 @@ class StructuredAnnotationsMixin(OMEType, Sequence[Annotation]):
     def __len__(self) -> int:
         return len(list(self._iter_annotations()))
 
-    def __iter__(self) -> Iterator[Annotation]:
+    def __iter__(self) -> Iterator[Annotation]:  # type: ignore[override]
         return self._iter_annotations()

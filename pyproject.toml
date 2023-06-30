@@ -171,5 +171,11 @@ no_implicit_reexport = true
 ignore_missing_imports = true
 disallow_untyped_defs = true
 
+[[tool.mypy.overrides]]
+module = ['ome_types.model.ome_2016_06.structured_annotations']
+# Definition of "__iter__" in base class "BaseModel"
+# is incompatible with definition in base class "Sequence"
+disable_error_code = "misc"
+
 [tool.coverage.run]
 source = ["src/ome_types"]

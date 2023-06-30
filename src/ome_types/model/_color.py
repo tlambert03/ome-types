@@ -1,20 +1,21 @@
-from typing import Any
+from typing import Any, Tuple, Union
 
 from pydantic import color
 from xsdata.formats.converter import Converter, converter
 
 __all__ = ["Color"]
 
+ColorTuple = Union[Tuple[int, int, int], Tuple[int, int, int, float]]
+ColorType = Union[ColorTuple, str, int]
+
 
 class Color(color.Color):
-    def __init__(self, val: color.ColorType = -1) -> None:
+    def __init__(self, val: ColorType = -1) -> None:
         try:
-            val_int = int(val)  # type: ignore
+            val = self._int2tuple(int(val))  # type: ignore
         except ValueError:
             pass
-        else:
-            val = self._int2tuple(val_int)
-        super().__init__(val)
+        super().__init__(val)  # type: ignore [arg-type]
 
     @classmethod
     def _int2tuple(cls, val: int) -> tuple[int, int, int, float]:
