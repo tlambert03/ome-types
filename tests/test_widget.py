@@ -4,7 +4,7 @@ import pytest
 
 nplg = pytest.importorskip("ome_types._napari_plugin")
 
-TESTS = Path(__file__).parent.parent
+TESTS = Path(__file__).parent
 DATA = TESTS / "data"
 
 

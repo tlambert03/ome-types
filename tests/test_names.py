@@ -7,6 +7,7 @@ from pydantic.typing import display_as_type
 
 import ome_types
 
+TESTS = Path(__file__).parent
 KNOWN_CHANGES: dict[str, list[tuple[str, str | None]]] = {
     "OME.datasets": [
         ("annotation_ref", "annotation_refs"),
@@ -116,7 +117,7 @@ def _get_fields(cls: type[BaseModel]) -> dict[str, Any]:
 
 
 def test_names() -> None:
-    with (Path(__file__).parent.parent / "data" / "old_model.json").open() as f:
+    with (TESTS / "data" / "old_model.json").open() as f:
         old_names = json.load(f)
     new_names = _get_fields(ome_types.model.OME)
     _assert_names_match(old_names, new_names, ("OME",))

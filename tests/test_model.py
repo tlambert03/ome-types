@@ -21,7 +21,7 @@ try:
 except ImportError:
     pass
 
-TESTS = Path(__file__).parent.parent
+TESTS = Path(__file__).parent
 DATA = TESTS / "data"
 
 SHOULD_FAIL_VALIDATION = {"invalid_xml_annotation", "bad"}
@@ -98,8 +98,13 @@ def test_from_valid_xml(valid_xml: Path, validate: bool) -> None:
     assert from_xml(valid_xml, validate=validate)
 
 
+def test_from_invalid_xml(invalid_xml: Path) -> None:
+    with pytest.raises(ValidationError):
+        from_xml(invalid_xml)
+
+
 @pytest.mark.parametrize("validate", validate)
-def test_from_tiff(validate):
+def test_from_tiff(validate: bool) -> None:
     """Test that OME metadata extractions from Tiff headers works."""
     _path = DATA / "ome.tiff"
     ome = from_tiff(_path, validate=validate)
@@ -164,6 +169,18 @@ def test_roundtrip(valid_xml: Path):
         raise AssertionError
 
 
+def test_roundtrip_inverse(valid_xml, tmp_path: Path):
+    """both variants have been touched by the model, here..."""
+    ome1 = from_xml(valid_xml)
+
+    xml = to_xml(ome1)
+    out = tmp_path / "test.xml"
+    out.write_bytes(xml.encode())
+    ome2 = from_xml(out)
+
+    assert ome1 == ome2
+
+
 # @pytest.mark.parametrize("validate", validate)
 # def test_to_xml_with_kwargs(validate):
 #     """Ensure kwargs are passed to ElementTree"""
@@ -176,22 +193,19 @@ def test_roundtrip(valid_xml: Path):
 #         assert mocked_et_tostring.call_args.xml_declaration
 
 
-def test_serialization(valid_xml):
+def test_serialization(valid_xml: Path) -> None:
     """Test pickle serialization and reserialization."""
-    if validate and true_stem(valid_xml) in SHOULD_FAIL_VALIDATION:
-        pytest.skip("Can't pickle invalid xml with validate=True")
-
     ome = from_xml(valid_xml)
     serialized = pickle.dumps(ome)
     deserialized = pickle.loads(serialized)
     assert ome == deserialized
 
 
-def test_no_id():
+def test_no_id() -> None:
     """Test that ids are optional, and auto-increment."""
-    i = model.Instrument(id=20)
+    i = model.Instrument(id=20)  # type: ignore
     assert i.id == "Instrument:20"
-    i2 = model.Instrument()
+    i2 = model.Instrument()  # type: ignore
     assert i2.id == "Instrument:21"
 
     # but validation still works
@@ -199,18 +213,13 @@ def test_no_id():
         model.Instrument(id="nonsense")
 
 
-def test_required_missing():
+def test_required_missing() -> None:
     """Test subclasses with non-default arguments still work."""
-    with pytest.raises(ValidationError) as e:
-        _ = model.BooleanAnnotation()
-    assert "1 validation error for BooleanAnnotation" in str(e.value)
-    assert "value\n  field required" in str(e.value)
+    with pytest.raises(ValidationError, match="value\n  field required"):
+        model.BooleanAnnotation()  # type: ignore
 
-    with pytest.raises(ValidationError) as e:
-        _ = model.Label()
-    assert "2 validation errors for Label" in str(e.value)
-    assert "x\n  field required" in str(e.value)
-    assert "y\n  field required" in str(e.value)
+    with pytest.raises(ValidationError, match="x\n  field required"):
+        model.Label()  # type: ignore
 
 
 def test_refs() -> None:
@@ -220,6 +229,4 @@ def test_refs() -> None:
 
 
 def test_with_ome_ns() -> None:
-    xml = DATA / "ome_ns.ome.xml"
-    ome = from_xml(xml)
-    assert ome.experimenters
+    assert from_xml(DATA / "ome_ns.ome.xml").experimenters
