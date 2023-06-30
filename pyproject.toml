@@ -31,7 +31,7 @@ dynamic = ["version"]
 dependencies = [
   "Pint >=0.15",
   "lxml >=4.8.0",
-  "pydantic[email] >=1.0, <2.0",
+  "pydantic[email] <2.0",
   "xsdata",
   "xsdata-pydantic-basemodel @ git+https://github.com/tlambert03/xsdata-pydantic-basemodel",
 ]
@@ -47,13 +47,7 @@ ome-types = "ome_types._napari_plugin"
 # extras
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
-dev = [
-  "black",
-  "ruff",
-  "xsdata[cli]>=23.6",
-  "xsdata-pydantic-basemodel @ git+https://github.com/tlambert03/xsdata-pydantic-basemodel",
-  "mypy",
-]
+dev = ["black", "ruff", "xsdata[cli]>=23.6", "mypy"]
 docs = [
   "numpydoc",
   "pygments",
@@ -63,8 +57,17 @@ docs = [
 ]
 test = ["pytest", "pytest-cov", "pytest-benchmark", "xmlschema"]
 
-
 # https://hatch.pypa.io/latest/config/metadata/
+[tool.hatch.build.targets.wheel.hooks.custom]
+# requirements to run the autogen script in hatch_build.py
+dependencies = [
+  "black",
+  "ruff",
+  "pydantic<2.0",
+  "xsdata[cli]>=23.6",
+  "xsdata-pydantic-basemodel @ git+https://github.com/tlambert03/xsdata-pydantic-basemodel",
+]
+
 
 [tool.hatch]
 version = { source = "vcs" }
@@ -79,15 +82,6 @@ artifacts = ["src/ome_types/model/ome_2016_06"]
 [tool.hatch.build.targets.sdist]
 include = ["src", "CHANGELOG.md", "hatch_build.py"]
 exclude = ["src/ome_types/model/ome_2016_06"]
-
-[tool.hatch.build.targets.wheel.hooks.custom]
-# requirements to run the autogen script in hatch_build.py
-dependencies = [
-  "black",
-  "ruff",
-  "xsdata[cli]>=23.6",
-  "xsdata-pydantic-basemodel @ git+https://github.com/tlambert03/xsdata-pydantic-basemodel",
-]
 
 
 # https://github.com/charliermarsh/ruff
