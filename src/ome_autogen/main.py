@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 from xsdata.codegen.transformer import SchemaTransformer
@@ -7,7 +8,7 @@ from xsdata.codegen.transformer import SchemaTransformer
 from ome_autogen import _util
 from ome_autogen._config import OUTPUT_PACKAGE, get_config
 
-DO_MYPY = os.environ.get("OME_AUTOGEN_MYPY", "0") == "1"
+DO_MYPY = os.environ.get("OME_AUTOGEN_MYPY", "0") == "1" or "--mypy" in sys.argv
 SRC_PATH = Path(__file__).parent.parent
 SCHEMA_FILE = SRC_PATH / "ome_types" / "ome-2016-06.xsd"
 RUFF_IGNORE: list[str] = [

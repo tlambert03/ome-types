@@ -1,14 +1,12 @@
-from typing import Iterable, Sequence, TypeVar, overload
+from typing import Iterator, Sequence, overload
 
 from ome_types.model.ome_2016_06 import Annotation
 
 from ._base_type import OMEType
 
-_T_co = TypeVar("_T_co", covariant=True)  # Any type covariant containers.
 
-
-class StructuredAnnotationsMixin(OMEType, Sequence[Annotation]):  # type: ignore
-    def _iter_annotations(self) -> Iterable[Annotation]:
+class StructuredAnnotationsMixin(OMEType, Sequence[Annotation]):
+    def _iter_annotations(self) -> Iterator[Annotation]:
         for x in self.__fields__.values():
             if issubclass(x.type_, Annotation):
                 yield from getattr(self, x.name)
@@ -26,3 +24,6 @@ class StructuredAnnotationsMixin(OMEType, Sequence[Annotation]):  # type: ignore
 
     def __len__(self) -> int:
         return len(list(self._iter_annotations()))
+
+    def __iter__(self) -> Iterator[Annotation]:
+        return self._iter_annotations()

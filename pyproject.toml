@@ -54,7 +54,13 @@ dev = [
   "xsdata-pydantic-basemodel @ git+https://github.com/tlambert03/xsdata-pydantic-basemodel",
   "mypy",
 ]
-docs = ["numpydoc", "pygments", "sphinx==5.3.0", "sphinx-rtd-theme==1.1.1", "ipython"]
+docs = [
+  "numpydoc",
+  "pygments",
+  "sphinx==5.3.0",
+  "sphinx-rtd-theme==1.1.1",
+  "ipython",
+]
 test = ["pytest", "pytest-cov", "pytest-benchmark", "xmlschema"]
 
 
@@ -93,13 +99,14 @@ select = [
   "E",    # style errors
   "F",    # flakes
   "D",    # pydocstyle
-  "I001", # isort
+  "I",    # isort
   "UP",   # pyupgrade
-  # "N",  # pep8-naming
   "S",    # bandit
-  "C",    # flake8-comprehensions
+  "C4",   # flake8-comprehensions
   "B",    # flake8-bugbear
   "A001", # flake8-builtins
+  "TID",  # tidy
+  "TCH",  # typechecking
   "RUF",  # ruff-specific rules
 ]
 ignore = [

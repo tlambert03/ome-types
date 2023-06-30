@@ -114,7 +114,7 @@ class OMEType(BaseModel):
 
     @validator("id", pre=True, always=True, check_fields=False)
     @classmethod
-    def _validate_id(cls, value: Any, values=None, config=None) -> Any:
+    def _validate_id(cls, value: Any) -> Any:
         """Pydantic validator for ID fields in OME models.
 
         If no value is provided, this validator provides and integer ID, and stores the

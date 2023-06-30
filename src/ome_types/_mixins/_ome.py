@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import weakref
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from ._base_type import OMEType
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from ome_types.model import OME, Reference
 
 

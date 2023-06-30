@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import io
 from dataclasses import is_dataclass
 from pathlib import Path
 from struct import Struct
@@ -12,6 +11,7 @@ from xsdata.formats.dataclass.serializers.config import SerializerConfig
 from xsdata_pydantic_basemodel.bindings import XmlParser, XmlSerializer
 
 if TYPE_CHECKING:
+    import io
     from typing import TypedDict
 
     from xsdata.formats.dataclass.parsers.mixins import XmlHandler
@@ -53,7 +53,7 @@ def to_dict(source: OME | Path | str | bytes) -> dict[str, Any]:
     )
 
 
-def _class_factory(cls: type, kwargs: Any):
+def _class_factory(cls: type, kwargs: Any) -> Any:
     kwargs.setdefault("validation", "strict")
     return cls(**kwargs)
 
