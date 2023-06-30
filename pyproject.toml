@@ -136,13 +136,12 @@ exclude = ['src/_ome_autogen.py']
 
 [tool.check-manifest]
 ignore = [
-  "src/ome_types/model/*",
   "coverage.yml",
   ".pre-commit-config.yaml",
   ".github_changelog_generator",
   ".readthedocs.yml",
   "docs/**/*",
-  "setup.py",
+  "tests/**/*",
 ]
 
 
