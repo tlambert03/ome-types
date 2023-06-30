@@ -43,7 +43,7 @@ def build_model(
         transformer.process_classes()
 
     if not do_formatting and not do_mypy:
-        _print_green(f"\u2713 OME python model created at {OUTPUT_PACKAGE}")
+        _print_green(f"OME python model created at {OUTPUT_PACKAGE}")
         return
 
     if do_formatting:
@@ -68,12 +68,18 @@ def build_model(
             raise RuntimeError(f"mypy errors:\n\n{e.output.decode()}") from e
 
     # print a bold green checkmark
-    _print_green(f"\u2713 OME python model created at {OUTPUT_PACKAGE}")
+    _print_green(f"OME python model created at {OUTPUT_PACKAGE}")
 
 
 def _print_gray(text: str) -> None:
-    print(f"\033[90m\033[1m{text}\033[0m")
+    if os.name != "nt":
+        # UnicodeEncodeError: 'charmap' codec can't encode character '\u2713'
+        text = f"\033[90m\033[1m{text}\033[0m"
+    print(text)
 
 
 def _print_green(text: str) -> None:
-    print(f"\033[92m\033[1m{text}\033[0m")
+    if os.name != "nt":
+        # UnicodeEncodeError: 'charmap' codec can't encode character '\u2713'
+        text = f"\033[92m\033[1m{text}\033[0m"
+    print(text)
