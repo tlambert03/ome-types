@@ -4,7 +4,17 @@ import warnings
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, Type, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Dict,
+    Optional,
+    Sequence,
+    Set,
+    Type,
+    cast,
+)
 
 from pydantic import BaseModel, PrivateAttr, validator
 
@@ -26,7 +36,7 @@ class Sentinel:
 
 # Default value to support automatic numbering for id field values.
 _AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
-_COUNTERS: dict[Type["OMEType"], int] = {}
+_COUNTERS: Dict[Type["OMEType"], int] = {}
 _UNIT_FIELD = "{}_unit"
 _QUANTITY_FIELD = "{}_quantity"
 DEPRECATED_NAMES = {
