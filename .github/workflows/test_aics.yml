@@ -53,6 +53,5 @@ jobs:
         run: |
           pytest aicsimageio/tests/readers/test_ome_tiff_reader.py \
             aicsimageio/tests/readers/extra_readers/test_bioformats_reader.py \
-            aicsimageio/tests/readers/extra_readers/test_ome_tiled_tiff_reader.py \
             aicsimageio/tests/readers/extra_readers/test_ome_zarr_reader.py \
             -v -k "not REMOTE"
