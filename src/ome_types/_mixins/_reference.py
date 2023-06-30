@@ -5,7 +5,7 @@ from ._base_type import OMEType
 
 
 class ReferenceMixin(OMEType):
-    _ref: Optional[weakref.ReferenceType["OMEType"]] = None
+    _ref: Optional["weakref.ReferenceType[OMEType]"] = None
 
     @property
     def ref(self) -> "OMEType | None":
