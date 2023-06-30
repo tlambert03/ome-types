@@ -1,3 +1,5 @@
+from enum import Enum
+
 from ome_types.model.ome_2016_06 import (
     Binning,
     Marker,
@@ -78,7 +80,6 @@ NonNegativeLong = int
 PercentFraction = float
 PositiveFloat = float
 PositiveInt = int
-UnitsAngle = str
 UniversallyUniqueIdentifier = str
 
 # IDs
@@ -111,3 +112,11 @@ ScreenID = str
 ShapeID = str
 WellID = str
 WellSampleID = str
+
+
+class UnitsAngle(Enum):
+    """The units used to represent an angle."""
+
+    DEGREE = "deg"
+    GRADIAN = "gon"
+    RADIAN = "rad"

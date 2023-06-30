@@ -134,7 +134,9 @@ class OMEType(BaseModel):
             *name, v_id = value.rsplit(":", 1)
             if not re.match(id_regex, value):
                 warnings.warn(f"Casting invalid {id_name}ID", stacklevel=2)
-                return v_id if v_id.isnumeric() else _AUTO_SEQUENCE
+                return cls._validate_id(
+                    int(v_id) if v_id.isnumeric() else _AUTO_SEQUENCE
+                )
 
             with contextlib.suppress(ValueError):
                 _COUNTERS[cls] = max(current_count, int(v_id))

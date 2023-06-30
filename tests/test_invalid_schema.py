@@ -4,7 +4,7 @@ import pytest
 
 from ome_types import from_xml
 
-TESTS = Path(__file__).parent.parent
+TESTS = Path(__file__).parent
 DATA = TESTS / "data"
 
 

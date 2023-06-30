@@ -64,11 +64,9 @@ def test_reference_frame():
     assert position_x.check("[length]")
 
 
-def test_all_units():
+def test_all_units() -> None:
     """Test that all Unit* enums are in the registry."""
-    for t in dir(simple_types):
-        if not t.startswith("Unit"):
+    for name, obj in vars(simple_types).items():
+        if not name.startswith("Unit"):
             continue
-        e = getattr(simple_types, t)
-        for v in e.__members__.values():
-            assert v.value.replace(" ", "_") in ureg
+        assert all(m.value.replace(" ", "_") in ureg for m in obj)
