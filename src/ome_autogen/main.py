@@ -34,17 +34,13 @@ def build_model(
     """Convert the OME schema to a python model."""
     config = get_config()
     transformer = SchemaTransformer(print=False, config=config)
+
     _print_gray(f"Processing {getattr(schema_file ,'name', schema_file)}...")
     transformer.process_sources([Path(schema_file).resolve().as_uri()])
 
-    _print_gray("Writing Files...")
-    # xsdata doesn't support output path
-    with _util.cd(output_dir):
+    with _util.cd(output_dir):  # xsdata doesn't support output path
+        _print_gray("Writing Files...")
         transformer.process_classes()
-
-    if not do_formatting and not do_mypy:
-        _print_green(f"OME python model created at {OUTPUT_PACKAGE}")
-        return
 
     if do_formatting:
         _print_gray("Running black and ruff ...")
@@ -67,7 +63,6 @@ def build_model(
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"mypy errors:\n\n{e.output.decode()}") from e
 
-    # print a bold green checkmark
     _print_green(f"OME python model created at {OUTPUT_PACKAGE}")
 
 
