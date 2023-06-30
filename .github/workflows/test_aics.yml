@@ -32,6 +32,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install .[test]
+          python -m pip install bioformats_jar
 
       - uses: actions/cache@v3
         id: cache
