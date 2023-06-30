@@ -8,7 +8,7 @@ from ._base_type import OMEType
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ome_types.model import OME, Reference
+    from ome_types.model.ome_2016_06 import OME, Reference
 
 
 class OMEMixin:

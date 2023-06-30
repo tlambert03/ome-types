@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, TypeAlias, Union, cast
 
 if TYPE_CHECKING:
-    from ome_types.model import (
+    from ome_types.model.ome_2016_06 import (
         Arc,
         Filament,
         GenericExcitationSource,

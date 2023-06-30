@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from xsdata.formats.dataclass.parsers.mixins import XmlHandler
     from xsdata_pydantic_basemodel.bindings import XmlContext
 
-    from ome_types.model.ome_2016_06 import OME
+    from ome_types.model import OME
 
     class ParserKwargs(TypedDict, total=False):
         config: ParserConfig
