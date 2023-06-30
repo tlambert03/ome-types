@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -U pip
-          python -m pip install -e .[test]
+          python -m pip install -e .[test,dev]
       - name: Test
         run: pytest --cov --cov-report=xml
 
