@@ -29,6 +29,23 @@ _AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
 _COUNTERS: dict[Type["OMEType"], int] = {}
 _UNIT_FIELD = "{}_unit"
 _QUANTITY_FIELD = "{}_quantity"
+DEPRECATED_NAMES = {
+    "annotation_ref": "annotation_refs",
+    "image_ref": "image_refs",
+    "experimenter_ref": "experimenter_refs",
+    "leader": "leaders",
+    "roi_ref": "roi_refs",
+    "light_source_settings": "light_source_settings_combinations",
+    "folder_ref": "folder_refs",
+    "bin_data": "bin_data_blocks",
+    "emission_filter_ref": "emission_filters",
+    "excitation_filter_ref": "excitation_filters",
+    "microbeam_manipulation_ref": "microbeam_manipulation_refs",
+    "m": "ms",
+    "well_sample_ref": "well_sample_refs",
+    "dataset_ref": "dataset_refs",
+    "plate_ref": "plate_refs",
+}
 
 
 class OMEType(BaseModel):
@@ -60,19 +77,6 @@ class OMEType(BaseModel):
         if "id" in __pydantic_self__.__fields__:
             data.setdefault("id", _AUTO_SEQUENCE)
         super().__init__(**data)
-        # try:
-        #     super().__init__(**data)
-        # except ValidationError as e:
-        #     for err in e.raw_errors:
-        #         if isinstance(err, pydantic.error_wrappers.ErrorWrapper):
-        #             loc = err.loc_tuple()
-        #             if loc:
-        #                 key = loc[0]
-        #                 if key == "id":
-        #                     data[key] = _AUTO_SEQUENCE
-        #                 else:
-        #                     data.pop(key, None)
-        #     super().__init__(**data)
 
     def __init_subclass__(cls) -> None:
         """Add `*_quantity` property for fields that have both a value and a unit.
@@ -147,11 +151,17 @@ class OMEType(BaseModel):
 
         return f"{id_name}:{value}"
 
-    # @classmethod
-    # def snake_name(cls) -> str:
-    #     from .model import _camel_to_snake
-
-    #     return _camel_to_snake[cls.__name__]
+    def __getattr__(self, key: str) -> Any:
+        cls_name = self.__class__.__name__
+        if key in DEPRECATED_NAMES and hasattr(self, DEPRECATED_NAMES[key]):
+            new_key = DEPRECATED_NAMES[key]
+            warnings.warn(
+                f"Attribute '{cls_name}.{key}' is deprecated, use {new_key!r} instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return getattr(self, new_key)
+        raise AttributeError(f"{cls_name} object has no attribute {key!r}")
 
 
 def _quantity_property(field_name: str) -> property:

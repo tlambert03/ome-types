@@ -1,10 +1,11 @@
-from typing import TYPE_CHECKING, Protocol, TypeAlias, TypeVar, Union
+from typing import TYPE_CHECKING, TypeAlias, Union, cast
 
 if TYPE_CHECKING:
     from ome_types.model import (
         Arc,
         Filament,
         GenericExcitationSource,
+        Instrument,
         Laser,
         LightEmittingDiode,
     )
@@ -13,23 +14,15 @@ if TYPE_CHECKING:
         GenericExcitationSource, LightEmittingDiode, Filament, Arc, Laser
     ]
 
-    class HasLightSources(Protocol):
-        generic_excitation_source: list[GenericExcitationSource]
-        light_emitting_diode: list[LightEmittingDiode]
-        filament: list[Filament]
-        arc: list[Arc]
-        laser: list[Laser]
-
-    T = TypeVar("T", bound=HasLightSources)
-
 
 class InstrumentMixin:
     @property
-    def light_source_group(self: "T") -> "list[LightSource]":
+    def light_source_group(self) -> "list[LightSource]":
+        slf = cast("Instrument", self)
         return [
-            *self.arc,
-            *self.filament,
-            *self.generic_excitation_source,
-            *self.laser,
-            *self.light_emitting_diode,
+            *slf.arcs,
+            *slf.filaments,
+            *slf.generic_excitation_sources,
+            *slf.lasers,
+            *slf.light_emitting_diodes,
         ]
