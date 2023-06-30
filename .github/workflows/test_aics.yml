@@ -15,39 +15,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          repository: AllenCellModeling/aicsimageio
+          submodules: true
+      - uses: actions/checkout@v3
+        with:
+          path: ome-types
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: "3.11"
 
-      - name: Install ome-types
+      - name: Install aicsimageio
         run: |
           python -m pip install --upgrade pip
-          pip install .[test]
-
-      - name: Clone aicsimageio
-        run: |
-          git clone --recurse-submodules -b main https://github.com/AllenCellModeling/aicsimageio.git
+          python -m pip install .[test]
 
       - uses: actions/cache@v3
         id: cache
         with:
-          path: aicsimageio/aicsimageio/tests/resources
-          key: ${{ hashFiles('aicsimageio/scripts/TEST_RESOURCES_HASH.txt') }}
-
-      - name: Install Test Data
+          path: aicsimageio/tests/resources
+          key: ${{ hashFiles('scripts/TEST_RESOURCES_HASH.txt') }}
+      - name: Download Test Resources
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install quilt3
-          python .github/scripts/download_aics_test_data.py
+          python scripts/download_test_resources.py --debug
 
-      - name: Install aicsimageio
-        run: |
-          cd aicsimageio
-          pip install .[test]
-          pip list
+      - name: Install ome-types
+        run: pip install .
+        working-directory: ome-types
 
       - name: Run Tests
-        run: |
-          cd aicsimageio
-          pytest aicsimageio/tests/readers/test_ome_tiff_reader.py -v -k "not REMOTE"
+        run: pytest tests/readers/test_ome_tiff_reader.py -v -k "not REMOTE"
