@@ -1,14 +1,9 @@
-name: build branch
+name: update built branch
 
 on:
   push:
     branches:
       - "main"
-  schedule:
-    # <minute [0,59]> <hour [0,23]> <day of the month [1,31]> <month of the year [1,12]> <day of the week [0,6]>
-    # https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html#tag_20_25_07
-    # Run every Monday at 18:00:00 UTC (Monday at 10:00:00 PST)
-    - cron: '0 18 * * 1'
 
 jobs:
   build:
@@ -17,24 +12,27 @@ jobs:
       - name: Checkout built branch
         uses: actions/checkout@v3
         with:
-          ref: 'built'
+          ref: "built"
+          fetch-depth: 0
+
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: "3.x"
+
       - name: Clone main
         run: git clone https://github.com/tlambert03/ome-types
       - name: Build
         run: |
-          python -m pip install --upgrade pip
-          pip install build
+          python -m pip install --upgrade pip build
           python -m build ome-types --wheel
           rm -rf ome_types
           unzip ome-types/dist/ome_types-*
+
       - name: Commit
         if: github.event_name == 'push'
         run: |
           git config user.name "Talley Lambert"
           git config user.email "talley.lambert@gmail.com"
           git add ome_types
-          git commit -m 'Commit from GitHub Actions (build.yml)'
+          git commit -m 'Commit from GitHub Actions (built_branch.yml)'
           git push --set-upstream origin built
