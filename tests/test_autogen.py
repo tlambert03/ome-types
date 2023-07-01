@@ -23,7 +23,7 @@ def imports_autogen(monkeypatch: MonkeyPatch) -> None:
         monkeypatch.syspath_prepend(str(SRC))
 
 
-@pytest.mark.usefixtures("_requires_autogen")
+@pytest.mark.usefixtures("imports_autogen")
 def test_autogen(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     """Test that autogen works without raising an exception.
 
@@ -42,7 +42,7 @@ def test_autogen(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     assert mod.Channel(color="blue")
 
 
-@pytest.mark.usefixtures("_requires_autogen")
+@pytest.mark.usefixtures("imports_autogen")
 def test_autosequence_name() -> None:
     """These should match, but shouldn't be imported from each other."""
     from ome_autogen import _generator
