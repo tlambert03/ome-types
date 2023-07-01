@@ -5,6 +5,8 @@ from pathlib import Path
 from _pytest.monkeypatch import MonkeyPatch
 
 import ome_autogen.main
+from ome_autogen import _generator
+from ome_types._mixins import _base_type
 
 
 def test_autogen(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
@@ -21,3 +23,8 @@ def test_autogen(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     mod = importlib.import_module("ome_types.model.ome_2016_06")
     assert mod.__file__ and mod.__file__.startswith(str(tmp_path))
     assert mod.Channel(color="blue")
+
+
+def test_autosequence_name() -> None:
+    """These should match, but shouldn't be imported from each other."""
+    assert _generator.AUTO_SEQUENCE == _base_type.AUTO_SEQUENCE

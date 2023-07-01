@@ -8,11 +8,15 @@ from xsdata.models.enums import DataType
 from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 from ome_autogen import _util
-from ome_types._mixins._base_type import AUTO_SEQUENCE
 
 if TYPE_CHECKING:
     from xsdata.codegen.models import Attr, Class
     from xsdata.models.config import GeneratorConfig
+
+
+# from ome_types._mixins._base_type import AUTO_SEQUENCE
+# avoiding import to avoid build-time dependency on the ome-types package
+AUTO_SEQUENCE = "__auto_sequence__"
 
 
 class OmeGenerator(DataclassGenerator):
