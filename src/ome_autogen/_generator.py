@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 from typing import TYPE_CHECKING
 
 from xsdata.formats.dataclass.filters import Filters
@@ -11,6 +12,7 @@ from ome_autogen import _util
 
 if TYPE_CHECKING:
     from xsdata.codegen.models import Attr, Class
+    from xsdata.codegen.resolver import DependenciesResolver
     from xsdata.models.config import GeneratorConfig
 
 
@@ -19,10 +21,64 @@ if TYPE_CHECKING:
 AUTO_SEQUENCE = "__auto_sequence__"
 
 
+ENUM_GETATTR_WARNING = """
+def __getattr__(name: str) -> Any:
+    _map = {map}
+    if name in _map:
+        import warnings
+
+        cls = globals()[_map[name]]
+
+        warnings.warn(
+            f"Accessing {{name!r}} at the top level of {{__name__!r}} is deprecated. "
+            f"Please access it through {{cls.__name__}}.{{name}} instead.",
+            stacklevel=2,
+        )
+
+        return getattr(cls, name)
+    raise AttributeError(f"module {{__name__!r}} has no attribute {{name!r}}")
+"""
+
+
+def make_gettattr(parents: dict[str, list[str]]) -> str:
+    children = {c: p for p, cs in parents.items() for c in cs}
+    return ENUM_GETATTR_WARNING.format(map=repr(children))
+
+
+def make_aliases(parents: dict[str, list[str]]) -> str:
+    out = []
+    for p, cs in parents.items():
+        for c in cs:
+            out.append(f"{c} = {p}.{c}")
+
+    return "\n".join(out)
+
+
 class OmeGenerator(DataclassGenerator):
     @classmethod
     def init_filters(cls, config: GeneratorConfig) -> Filters:
         return OmeFilters(config)
+
+    def render_module(
+        self, resolver: DependenciesResolver, classes: list[Class]
+    ) -> str:
+        mod = super().render_module(resolver, classes)
+
+        # Here, we look for nested enums, and make them accessible at the top level
+        # of the module as well, with a deprecation warning.
+        parents: dict[str, list[str]] = {}
+        for node in ast.parse(mod).body:
+            if isinstance(node, ast.ClassDef):
+                for subnode in node.body:
+                    if isinstance(subnode, ast.ClassDef) and subnode.name != "Meta":
+                        parent = parents.setdefault(node.name, [])
+                        parent.append(subnode.name)
+        if parents:
+            # extra = make_gettattr(parents)
+            extra = make_aliases(parents)
+            mod = "from typing import Any\n" + mod + "\n\n" + extra
+
+        return mod
 
 
 class OmeFilters(PydanticBaseFilters):

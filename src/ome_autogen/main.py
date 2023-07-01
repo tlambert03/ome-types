@@ -4,11 +4,13 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from shutil import rmtree
 
 from ome_autogen import _util
-from ome_autogen._config import OUTPUT_PACKAGE, get_config
+from ome_autogen._config import get_config
 from ome_autogen._transformer import OMETransformer
 
+OUTPUT_PACKAGE = "ome_types.model.ome_2016_06"
 DO_MYPY = os.environ.get("OME_AUTOGEN_MYPY", "0") == "1" or "--mypy" in sys.argv
 SRC_PATH = Path(__file__).parent.parent
 SCHEMA_FILE = SRC_PATH / "ome_types" / "ome-2016-06.xsd"
@@ -25,18 +27,21 @@ RUFF_IGNORE: list[str] = [
 def build_model(
     output_dir: Path | str = SRC_PATH,
     schema_file: Path | str = SCHEMA_FILE,
+    target_package: str = OUTPUT_PACKAGE,
     line_length: int = 88,
     ruff_ignore: list[str] = RUFF_IGNORE,
     do_formatting: bool = True,
     do_mypy: bool = DO_MYPY,
 ) -> None:
     """Convert the OME schema to a python model."""
-    config = get_config()
+    config = get_config(target_package)
     transformer = OMETransformer(print=False, config=config)
 
     _print_gray(f"Processing {getattr(schema_file ,'name', schema_file)}...")
     transformer.process_sources([Path(schema_file).resolve().as_uri()])
 
+    package_dir = Path(output_dir) / OUTPUT_PACKAGE.replace(".", "/")
+    rmtree(package_dir, ignore_errors=True)
     with _util.cd(output_dir):  # xsdata doesn't support output path
         _print_gray("Writing Files...")
         transformer.process_classes()
@@ -44,7 +49,6 @@ def build_model(
     if do_formatting:
         _print_gray("Running black and ruff ...")
 
-        package_dir = Path(output_dir) / OUTPUT_PACKAGE.replace(".", "/")
         black = ["black", str(package_dir), "-q", f"--line-length={line_length}"]
         subprocess.check_call(black)  # noqa S
 

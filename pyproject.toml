@@ -154,6 +154,8 @@ filterwarnings = [
   "ignore:Casting invalid AnnotationID:UserWarning",
   # FIXME: i think this might be an xsdata issue?
   "ignore::ResourceWarning",
+  "ignore:::pkg_resources",  # paquo tests
+  "ignore:::paquo",          # paquo tests
 ]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html

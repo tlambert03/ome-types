@@ -14,9 +14,9 @@ from ome_types.model.ome_2016_06 import (
     UnitsTemperature,
     UnitsTime,
 )
-from ome_types.model.ome_2016_06 import (
-    Shape_FontFamily as FontFamily,
-)
+from ome_types.model.ome_2016_06.shape import Shape
+
+FontFamily = Shape.FontFamily  # just cause it used to be there...
 
 __all__ = [
     "PixelType",

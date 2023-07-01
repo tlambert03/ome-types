@@ -22,15 +22,16 @@ MIXINS: list[tuple[str, str, bool]] = [
     ),
 ]
 
-OUTPUT_PACKAGE = "ome_types.model.ome_2016_06"
+
 OME_FORMAT = "OME"
 
 
 def get_config(
-    package: str = OUTPUT_PACKAGE, kw_only: bool = True, compound_fields: bool = False
+    package: str, kw_only: bool = True, compound_fields: bool = False
 ) -> cfg.GeneratorConfig:
     # ALLOW "type" to be used as a field name
     text.stop_words.discard("type")
+    text.stop_words.discard("Type")
 
     # use our own camel_to_snake
     # Our's interprets adjacent capital letters as two words
