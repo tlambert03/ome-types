@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 class OMETransformer(SchemaTransformer):
     # overriding to remove the RenameDuplicateAttributes processor
-    # we don't need it because we inject proper enum names _generator
+    # we don't need it because we inject proper enum names in our _generator.py
     def analyze_classes(self, classes: list[Class]) -> list[Class]:
         """Analyzer the given class list and simplify attributes and extensions."""
         container = ClassContainer(config=self.config)
