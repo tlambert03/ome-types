@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, Sequence
 
+import pytest
 from pydantic import BaseModel
 from pydantic.typing import display_as_type
 
@@ -123,3 +124,112 @@ def test_names() -> None:
         old_names = json.load(f)
     new_names = _get_fields(ome_types.model.OME)
     _assert_names_match(old_names, new_names, ("OME",))
+
+
+V1_EXPORTS = [
+    ("affine_transform", "AffineTransform"),
+    ("annotation", "Annotation"),
+    ("annotation_ref", "AnnotationRef"),
+    ("arc", "Arc"),
+    ("basic_annotation", "BasicAnnotation"),
+    ("bin_data", "BinData"),
+    ("binary_file", "BinaryFile"),
+    ("boolean_annotation", "BooleanAnnotation"),
+    ("channel", "Channel"),
+    ("channel_ref", "ChannelRef"),
+    ("comment_annotation", "CommentAnnotation"),
+    ("dataset", "Dataset"),
+    ("dataset_ref", "DatasetRef"),
+    ("detector", "Detector"),
+    ("detector_settings", "DetectorSettings"),
+    ("dichroic", "Dichroic"),
+    ("dichroic_ref", "DichroicRef"),
+    ("double_annotation", "DoubleAnnotation"),
+    ("ellipse", "Ellipse"),
+    ("experiment", "Experiment"),
+    ("experiment_ref", "ExperimentRef"),
+    ("experimenter", "Experimenter"),
+    ("experimenter_group", "ExperimenterGroup"),
+    ("experimenter_group_ref", "ExperimenterGroupRef"),
+    ("experimenter_ref", "ExperimenterRef"),
+    ("external", "External"),
+    ("filament", "Filament"),
+    ("file_annotation", "FileAnnotation"),
+    ("filter", "Filter"),
+    ("filter_ref", "FilterRef"),
+    ("filter_set", "FilterSet"),
+    ("filter_set_ref", "FilterSetRef"),
+    ("folder", "Folder"),
+    ("folder_ref", "FolderRef"),
+    ("generic_excitation_source", "GenericExcitationSource"),
+    ("image", "Image"),
+    ("image_ref", "ImageRef"),
+    ("imaging_environment", "ImagingEnvironment"),
+    ("instrument", "Instrument"),
+    ("instrument_ref", "InstrumentRef"),
+    ("label", "Label"),
+    ("laser", "Laser"),
+    ("leader", "Leader"),
+    ("light_emitting_diode", "LightEmittingDiode"),
+    ("light_path", "LightPath"),
+    ("light_source", "LightSource"),
+    # ("light_source_group", "LightSourceGroup"),
+    ("light_source_settings", "LightSourceSettings"),
+    ("line", "Line"),
+    ("list_annotation", "ListAnnotation"),
+    ("long_annotation", "LongAnnotation"),
+    ("manufacturer_spec", "ManufacturerSpec"),
+    ("map", "Map"),
+    ("map_annotation", "MapAnnotation"),
+    ("mask", "Mask"),
+    ("microbeam_manipulation", "MicrobeamManipulation"),
+    ("microbeam_manipulation_ref", "MicrobeamManipulationRef"),
+    ("microscope", "Microscope"),
+    ("numeric_annotation", "NumericAnnotation"),
+    ("objective", "Objective"),
+    ("objective_settings", "ObjectiveSettings"),
+    ("ome", "OME"),
+    ("pixels", "Pixels"),
+    ("plane", "Plane"),
+    ("plate", "Plate"),
+    ("plate_acquisition", "PlateAcquisition"),
+    ("point", "Point"),
+    ("polygon", "Polygon"),
+    ("polyline", "Polyline"),
+    ("project", "Project"),
+    ("project_ref", "ProjectRef"),
+    ("pump", "Pump"),
+    ("reagent", "Reagent"),
+    ("reagent_ref", "ReagentRef"),
+    ("rectangle", "Rectangle"),
+    ("reference", "Reference"),
+    ("rights", "Rights"),
+    ("roi", "ROI"),
+    ("roi_ref", "ROIRef"),
+    ("screen", "Screen"),
+    ("settings", "Settings"),
+    ("shape", "Shape"),
+    # ("shape_group", "ShapeGroup"),
+    ("stage_label", "StageLabel"),
+    ("structured_annotations", "StructuredAnnotations"),
+    ("tag_annotation", "TagAnnotation"),
+    ("term_annotation", "TermAnnotation"),
+    ("text_annotation", "TextAnnotation"),
+    ("tiff_data", "TiffData"),
+    ("timestamp_annotation", "TimestampAnnotation"),
+    ("transmittance_range", "TransmittanceRange"),
+    ("type_annotation", "TypeAnnotation"),
+    ("well", "Well"),
+    ("well_sample", "WellSample"),
+    ("well_sample_ref", "WellSampleRef"),
+    ("xml_annotation", "XMLAnnotation"),
+]
+
+
+@pytest.mark.parametrize("name,cls", V1_EXPORTS)
+def test_model_imports(name: str, cls: str) -> None:
+    from importlib import import_module
+
+    with pytest.warns(UserWarning, match="Importing sumodules from ome_types.model"):
+        mod = import_module(f"ome_types.model.{name}")
+    assert getattr(mod, cls) is not None

@@ -112,3 +112,4 @@ src/ome_types/_version.py
 docs/source/_autosummary
 .benchmarks/
 _build/
+qupath/

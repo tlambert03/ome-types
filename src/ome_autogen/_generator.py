@@ -51,12 +51,20 @@ class OmeFilters(PydanticBaseFilters):
             attr.name = self.appinfo.plurals.get(attr.name, f"{attr.name}s")
         if self._is_color_attr(attr):
             return "Color"
+        elif self._is_union_attr(attr):
+            return "ShapeUnion"
+
         return super().field_type(attr, parents)
 
     @classmethod
     def build_import_patterns(cls) -> dict[str, dict]:
         patterns = super().build_import_patterns()
-        patterns.update({"ome_types.model._color": {"Color": [": Color ="]}})
+        patterns.update(
+            {
+                "ome_types.model._color": {"Color": [": Color ="]},
+                "ome_types.model._roi_union": {"ShapeUnion": [": ShapeUnion ="]},
+            }
+        )
         return {key: patterns[key] for key in sorted(patterns)}
 
     def field_default_value(self, attr: Attr, ns_map: dict | None = None) -> str:
@@ -64,11 +72,15 @@ class OmeFilters(PydanticBaseFilters):
             return repr(AUTO_SEQUENCE)
         if self._is_color_attr(attr):
             return "Color"
+        if self._is_union_attr(attr):
+            return "ShapeUnion"
         return super().field_default_value(attr, ns_map)
 
     def format_arguments(self, kwargs: dict, indent: int = 0) -> str:
+        # keep default_factory at the front
         if kwargs.get("default") == "Color":
-            # keep default_factory at the front
+            kwargs = {"default_factory": kwargs.pop("default"), **kwargs}
+        if kwargs.get("default") == "ShapeUnion":
             kwargs = {"default_factory": kwargs.pop("default"), **kwargs}
         return super().format_arguments(kwargs, indent)
 
@@ -81,3 +93,7 @@ class OmeFilters(PydanticBaseFilters):
     def _is_color_attr(self, attr: Attr) -> bool:
         # special logic to find Color types, for which we use our own type.
         return attr.name == "Color" and attr.types[0].datatype == DataType.INT
+
+    def _is_union_attr(self, attr: Attr) -> bool:
+        # special logic to find Color types, for which we use our own type.
+        return attr.name == "Union" and attr.types[0].substituted
