@@ -5,10 +5,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-from xsdata.codegen.transformer import SchemaTransformer
-
 from ome_autogen import _util
 from ome_autogen._config import OUTPUT_PACKAGE, get_config
+from ome_autogen._transformer import OMETransformer
 
 DO_MYPY = os.environ.get("OME_AUTOGEN_MYPY", "0") == "1" or "--mypy" in sys.argv
 SRC_PATH = Path(__file__).parent.parent
@@ -33,7 +32,7 @@ def build_model(
 ) -> None:
     """Convert the OME schema to a python model."""
     config = get_config()
-    transformer = SchemaTransformer(print=False, config=config)
+    transformer = OMETransformer(print=False, config=config)
 
     _print_gray(f"Processing {getattr(schema_file ,'name', schema_file)}...")
     transformer.process_sources([Path(schema_file).resolve().as_uri()])

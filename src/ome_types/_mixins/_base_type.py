@@ -24,18 +24,9 @@ if TYPE_CHECKING:
     import pint
 
 
-class Sentinel:
-    """Create singleton sentinel objects with a readable repr."""
-
-    def __init__(self, name: str) -> None:
-        self.name = name
-
-    def __repr__(self) -> str:
-        return f"{__name__}.{self.name}.{id(self):x}"
-
-
 # Default value to support automatic numbering for id field values.
-_AUTO_SEQUENCE = Sentinel("AUTO_SEQUENCE")
+AUTO_SEQUENCE = "__auto_sequence__"
+
 _COUNTERS: Dict[Type["OMEType"], int] = {}
 _UNIT_FIELD = "{}_unit"
 _QUANTITY_FIELD = "{}_quantity"
@@ -85,7 +76,7 @@ class OMEType(BaseModel):
 
     def __init__(__pydantic_self__, **data: Any) -> None:
         if "id" in __pydantic_self__.__fields__:
-            data.setdefault("id", _AUTO_SEQUENCE)
+            data.setdefault("id", AUTO_SEQUENCE)
         super().__init__(**data)
 
     def __init_subclass__(cls) -> None:
@@ -139,13 +130,13 @@ class OMEType(BaseModel):
         id_regex = cast(str, id_field.field_info.regex)
         id_name = id_regex.split(":")[-3]
         current_count = _COUNTERS.setdefault(cls, -1)
-        if isinstance(value, str):
+        if isinstance(value, str) and value != AUTO_SEQUENCE:
             # parse the id and update the counter
             *name, v_id = value.rsplit(":", 1)
             if not re.match(id_regex, value):
                 warnings.warn(f"Casting invalid {id_name}ID", stacklevel=2)
                 return cls._validate_id(
-                    int(v_id) if v_id.isnumeric() else _AUTO_SEQUENCE
+                    int(v_id) if v_id.isnumeric() else AUTO_SEQUENCE
                 )
 
             with contextlib.suppress(ValueError):
@@ -154,7 +145,7 @@ class OMEType(BaseModel):
 
         if isinstance(value, int):
             _COUNTERS[cls] = max(current_count, value)
-        elif value is _AUTO_SEQUENCE:
+        elif value == AUTO_SEQUENCE:
             # just increment the counter
             _COUNTERS[cls] += 1
             value = _COUNTERS[cls]
