@@ -8,7 +8,7 @@ from ._base_type import OMEType
 
 class BinDataMixin(OMEType):
     @root_validator(pre=True)
-    def _v(cls, values: dict) -> dict[str, Any]:
+    def _v(cls, values: dict) -> "dict[str, Any]":
         # This catches the case of <BinData Length="0"/>, where the parser may have
         # omitted value from the dict, and sets value to b""
         # seems like it could be done in a default_factory, but that would
