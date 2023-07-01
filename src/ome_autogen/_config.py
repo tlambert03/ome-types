@@ -68,19 +68,3 @@ def get_config(
         # Don't convert things like XMLAnnotation to XmlAnnotation
         conventions=cfg.GeneratorConventions(class_name=keep_case),
     )
-
-
-# # These are the fields with compound "chices"
-# OME ['Projects', 'Datasets', 'Folders', 'Experiments', 'Plates', 'Screens',
-#      'Experimenters', 'ExperimenterGroups', 'Instruments', 'Images',
-#      'StructuredAnnotations', 'ROIs', 'BinaryOnly']
-# Pixels ['BinDataBlocks', 'TiffDataBlocks', 'MetadataOnly']
-# Instrument ['GenericExcitationSource', 'LightEmittingDiode', 'Filament', 'Arc',
-#             'Laser']
-# BinaryFile ['External', 'BinData']
-# StructuredAnnotations ['XMLAnnotation', 'FileAnnotation', 'ListAnnotation',
-#                        'LongAnnotation', 'DoubleAnnotation', 'CommentAnnotation',
-#                        'BooleanAnnotation', 'TimestampAnnotation', 'TagAnnotation',
-#                        'TermAnnotation', 'MapAnnotation']
-# ROI -> Union ['Label', 'Polygon', 'Polyline', 'Line', 'Ellipse', 'Point',
-#               'Mask', 'Rectangle']
