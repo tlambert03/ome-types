@@ -1,3 +1,4 @@
+from contextlib import suppress
 from typing import Any, Tuple, Union
 
 from pydantic import color
@@ -5,20 +6,18 @@ from xsdata.formats.converter import Converter, converter
 
 __all__ = ["Color"]
 
-ColorTuple = Union[Tuple[int, int, int], Tuple[int, int, int, float]]
-ColorType = Union[ColorTuple, str, int]
+RGBA = Tuple[int, int, int, float]
+ColorType = Union[Tuple[int, int, int], RGBA, str, int]
 
 
 class Color(color.Color):
     def __init__(self, val: ColorType = -1) -> None:
-        try:
+        with suppress(ValueError):
             val = self._int2tuple(int(val))  # type: ignore
-        except ValueError:
-            pass
         super().__init__(val)  # type: ignore [arg-type]
 
     @classmethod
-    def _int2tuple(cls, val: int) -> tuple[int, int, int, float]:
+    def _int2tuple(cls, val: int) -> RGBA:
         return (val >> 24 & 255, val >> 16 & 255, val >> 8 & 255, (val & 255) / 255)
 
     def as_int32(self) -> int:
