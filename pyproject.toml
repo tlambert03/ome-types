@@ -57,18 +57,14 @@ docs = [
 ]
 test = ["pytest", "pytest-cov", "pytest-benchmark", "xmlschema"]
 
-# https://hatch.pypa.io/latest/config/metadata/
+# https://hatch.pypa.io/latest/plugins/build-hook/custom/
 [tool.hatch.build.targets.wheel.hooks.custom]
 # requirements to run the autogen script in hatch_build.py
-dependencies = [
-  "black",
-  "ruff",
-  "pydantic<2.0",
-  "xsdata[cli]>=23.6",
-  "xsdata-pydantic-basemodel @ git+https://github.com/tlambert03/xsdata-pydantic-basemodel",
-]
+require-runtime-dependencies = true
+dependencies = ["black", "ruff", "xsdata[cli]>=23.6"]
 
 
+# https://hatch.pypa.io/latest/config/metadata/
 [tool.hatch]
 version = { source = "vcs" }
 # required for github.com/tlambert03/xsdata-pydantic-basemodel

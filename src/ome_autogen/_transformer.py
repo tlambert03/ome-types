@@ -1,8 +1,14 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from xsdata.codegen.analyzer import ClassAnalyzer
 from xsdata.codegen.container import ClassContainer, Steps
 from xsdata.codegen.handlers import RenameDuplicateAttributes
-from xsdata.codegen.models import Class
 from xsdata.codegen.transformer import SchemaTransformer
+
+if TYPE_CHECKING:
+    from xsdata.codegen.models import Class
 
 
 class OMETransformer(SchemaTransformer):
