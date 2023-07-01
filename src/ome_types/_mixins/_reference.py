@@ -1,13 +1,11 @@
-from typing import TYPE_CHECKING, Any, Optional
+import weakref
+from typing import Any, Optional
 
 from ._base_type import OMEType
 
-if TYPE_CHECKING:
-    import weakref
-
 
 class ReferenceMixin(OMEType):
-    _ref: Optional["weakref.ReferenceType[OMEType]"] = None
+    _ref: Optional[weakref.ReferenceType] = None
 
     @property
     def ref(self) -> "OMEType | None":
