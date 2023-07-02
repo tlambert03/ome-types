@@ -200,10 +200,10 @@ def _add_defaults(xml: str) -> ElementTree.Element:
     # (and only in testing).
 
     schema = _get_schema()
-    d = cast(dict, schema.decode(xml, use_defaults=True))
+    d = cast(dict, schema.decode(xml, use_defaults=False))
     # Strip extra whitespace in the schemaLocation value.
     d["@xsi:schemaLocation"] = re.sub(r"\s+", " ", d["@xsi:schemaLocation"])
-    return schema.encode(d, path=NS_OME + "OME", use_defaults=True)  # type: ignore
+    return schema.encode(d, path=NS_OME + "OME", use_defaults=False)  # type: ignore
 
 
 def _canonicalize(xml: str, strip_empty: bool) -> str:
@@ -212,18 +212,38 @@ def _canonicalize(xml: str, strip_empty: bool) -> str:
     # These are the tags that appear in the example files with empty
     # content. Since our round-trip will drop empty elements, we'll need to
     # strip them from the "original" documents before comparison.
-    if strip_empty:
-        for tag in ("Description", "LightPath", "Map"):
-            for e in root.findall(f".//{NS_OME}{tag}[.='']..."):
-                e.remove(e.find(f"{NS_OME}{tag}"))  # type: ignore
+    # if strip_empty:
+    #     for tag in ("Description", "LightPath", "Map"):
+    #         for e in root.findall(f".//{NS_OME}{tag}[.='']..."):
+    #             e.remove(e.find(f"{NS_OME}{tag}"))  # type: ignore
 
     # ET.canonicalize can't handle an empty namespace so we need to
     # re-register the OME namespace with an actual name before calling
     # tostring.
-    _sort_elements(root)
+    # _sort_elements(root)
 
     ElementTree.register_namespace("ome", URI_OME)
     xml_out = ElementTree.tostring(root, "unicode")
     xml_out = ElementTree.canonicalize(xml_out, strip_text=True)
     xml_out = minidom.parseString(xml_out).toprettyxml(indent="  ")
     return xml_out
+
+
+def test_canonicalization(valid_xml: Path) -> None:
+    """Ensure we can losslessly round-trip XML through the model and back."""
+    if true_stem(valid_xml) in SKIP_ROUNDTRIP:
+        pytest.xfail("known issues with canonicalization")
+
+    xml = str(valid_xml)
+
+    try:
+        original = _canonicalize(xml, True)
+    except ValueError:
+        pytest.xfail("Roundtrip will fail if original XML is invalid")
+
+    ome = from_xml(xml)
+    new = to_xml(ome, canonicalize=True)
+    if new != original:
+        Path("original.xml").write_text(original)
+        Path("rewritten.xml").write_text(new)
+        assert new == original

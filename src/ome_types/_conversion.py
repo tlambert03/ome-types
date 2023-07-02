@@ -8,9 +8,12 @@ from typing import TYPE_CHECKING, Any, cast
 from xml.etree import ElementTree as ET
 
 from xsdata.formats.dataclass.parsers.config import ParserConfig
-from xsdata.formats.dataclass.serializers.config import SerializerConfig
 
-from xsdata_pydantic_basemodel.bindings import XmlParser, XmlSerializer
+from xsdata_pydantic_basemodel.bindings import (
+    SerializerConfig,
+    XmlParser,
+    XmlSerializer,
+)
 
 if TYPE_CHECKING:
     import io
@@ -85,27 +88,60 @@ def from_xml(
 
 def to_xml(
     ome: OME,
-    ignore_defaults: bool = True,
+    *,
+    # exclude_defaults takes precendence over exclude_unset
+    # if a value equals the default, it will be excluded
+    exclude_defaults: bool = False,
+    # exclude_unset will exclude any value that is not explicitly set
+    # but will INCLUDE values that are set to their default
+    exclude_unset: bool = True,
     indent: int = 2,
+    include_namespace: bool | None = None,
     include_schema_location: bool = True,
+    canonicalize: bool = False,
+    validate: bool = False,
 ) -> str:
     config = SerializerConfig(
         pretty_print=indent > 0,
         pretty_print_indent=" " * indent,
-        ignore_default_attributes=ignore_defaults,
+        ignore_default_attributes=exclude_defaults,
+        ignore_unset_attributes=exclude_unset,
     )
     if include_schema_location:
         config.schema_location = f"{OME_2016_06_URI} {OME_2016_06_URI}/ome.xsd"
 
     serializer = XmlSerializer(config=config)
-    xml = serializer.render(ome, ns_map={None: OME_2016_06_URI})
+    if include_namespace is None:
+        include_namespace = canonicalize
+
+    ns_map = {"ome" if include_namespace else None: OME_2016_06_URI}
+    xml = serializer.render(ome, ns_map=ns_map)
     # HACK: xsdata is always including <StructuredAnnotations/> because...
     # 1. we override the default for OME.structured_annotations so that
     #    it's always a present (if empty) list.  That was the v1 behavior
     #    and it allows ome.structured_annotations.append(...) to always work.
     # 2. xsdata thinks it's not nillable, and therefore always includes it
     # ... we might be able to do it better, but this fixes it for now.
-    return xml.replace("<StructuredAnnotations/>", "")
+    ns = "ome:" if include_namespace else ""
+    xml = xml.replace(f"<{ns}StructuredAnnotations/>", "")
+
+    if canonicalize:
+        xml = _canonicalize(xml, indent=" " * indent)
+    if validate:
+        from ome_types.validation import validate_xml
+
+        validate_xml(xml)
+    return xml
+
+
+def _canonicalize(xml: str, indent: str) -> str:
+    from xml.dom import minidom
+
+    root = ET.fromstring(xml)  # noqa: S314
+
+    xml_out = ET.tostring(root, "unicode")
+    xml_out = ET.canonicalize(xml_out, strip_text=True)
+    return minidom.parseString(xml_out).toprettyxml(indent=indent)  # noqa: S318
 
 
 def from_tiff(
