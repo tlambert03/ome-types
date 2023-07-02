@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 from pydantic import root_validator
 
-from ._base_type import OMEType
+from ome_types._mixins._base_type import OMEType
 
 
 class BinDataMixin(OMEType):

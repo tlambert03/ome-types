@@ -4,9 +4,8 @@ from xsdata.codegen.writer import CodeWriter
 from xsdata.models import config as cfg
 from xsdata.utils import text
 
+from ome_autogen._generator import OmeGenerator
 from ome_autogen._util import camel_to_snake
-
-from ._generator import OmeGenerator
 
 MIXIN_MODULE = "ome_types._mixins"
 MIXINS: list[tuple[str, str, bool]] = [

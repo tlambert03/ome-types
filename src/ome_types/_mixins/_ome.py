@@ -3,7 +3,7 @@ from __future__ import annotations
 import weakref
 from typing import TYPE_CHECKING, Any, cast
 
-from ._base_type import OMEType
+from ome_types._mixins._base_type import OMEType
 
 if TYPE_CHECKING:
     from pathlib import Path

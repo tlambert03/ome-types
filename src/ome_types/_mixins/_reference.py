@@ -1,7 +1,7 @@
 import weakref
 from typing import Any, Dict, Optional, Union
 
-from ._base_type import OMEType
+from ome_types._mixins._base_type import OMEType
 
 
 class ReferenceMixin(OMEType):
