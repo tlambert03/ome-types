@@ -4,17 +4,7 @@ import warnings
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    Dict,
-    Optional,
-    Sequence,
-    Set,
-    Type,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Sequence, Set, cast
 
 from pydantic import BaseModel, PrivateAttr, validator
 
@@ -27,7 +17,7 @@ if TYPE_CHECKING:
 # Default value to support automatic numbering for id field values.
 AUTO_SEQUENCE = "__auto_sequence__"
 
-_COUNTERS: Dict[Type["OMEType"], int] = {}
+_COUNTERS: Dict[str, int] = {}
 _UNIT_FIELD = "{}_unit"
 _QUANTITY_FIELD = "{}_quantity"
 DEPRECATED_NAMES = {
@@ -129,7 +119,8 @@ class OMEType(BaseModel):
         id_field = cls.__fields__["id"]
         id_regex = cast(str, id_field.field_info.regex)
         id_name = id_regex.split(":")[-3]
-        current_count = _COUNTERS.setdefault(cls, -1)
+
+        current_count = _COUNTERS.setdefault(id_name, -1)
         if isinstance(value, str) and value != AUTO_SEQUENCE:
             # parse the id and update the counter
             *name, v_id = value.rsplit(":", 1)
@@ -140,15 +131,15 @@ class OMEType(BaseModel):
                 )
 
             with contextlib.suppress(ValueError):
-                _COUNTERS[cls] = max(current_count, int(v_id))
+                _COUNTERS[id_name] = max(current_count, int(v_id))
             return value
 
         if isinstance(value, int):
-            _COUNTERS[cls] = max(current_count, value)
+            _COUNTERS[id_name] = max(current_count, value)
         elif value == AUTO_SEQUENCE:
             # just increment the counter
-            _COUNTERS[cls] += 1
-            value = _COUNTERS[cls]
+            _COUNTERS[id_name] += 1
+            value = _COUNTERS[id_name]
         else:
             raise ValueError(f"Invalid ID value: {value!r}, {type(value)}")
 

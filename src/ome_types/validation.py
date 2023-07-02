@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import io
+import os
 from contextlib import suppress
 from functools import lru_cache
 from pathlib import Path
@@ -44,7 +46,12 @@ def validate_xml_with_lxml(
     tree = etree.parse(schema or OME_2016_06_XSD)  # noqa: S320
     xmlschema = etree.XMLSchema(tree)
 
-    doc = etree.parse(xml)  # noqa: S320
+    if isinstance(xml, (str, bytes)) and not os.path.isfile(xml):
+        xml = io.BytesIO(xml.encode("utf-8") if isinstance(xml, str) else xml)
+        doc = etree.parse(xml)  # noqa: S320
+    else:
+        doc = etree.parse(xml)  # noqa: S320
+
     if not xmlschema.validate(doc):
         msg = f"Validation of {str(xml)[:20]!r} failed:"
         for error in xmlschema.error_log:

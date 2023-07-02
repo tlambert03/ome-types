@@ -97,7 +97,13 @@ def to_xml(
         config.schema_location = f"{OME_2016_06_URI} {OME_2016_06_URI}/ome.xsd"
 
     serializer = XmlSerializer(config=config)
-    return serializer.render(ome, ns_map={None: OME_2016_06_URI})
+    xml = serializer.render(ome, ns_map={None: OME_2016_06_URI})
+    # HACK: xsdata is always including this because...
+    # 1. we override the default for OME.structured_annotations so that
+    #    it's always a present (if empty) list.  That was the v1 behavior
+    # 2. xsdata thinks it's not nillable, and therefore always includes it
+    # ... we might be able to do it better, but this fixes it for now.
+    return xml.replace("<StructuredAnnotations/>", "")
 
 
 def from_tiff(

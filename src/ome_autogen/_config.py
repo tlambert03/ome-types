@@ -22,7 +22,7 @@ MIXINS: list[tuple[str, str, bool]] = [
     ),
 ]
 
-
+ALLOW_RESERVED_NAMES = {"type", "Type", "Union"}
 OME_FORMAT = "OME"
 
 
@@ -30,8 +30,7 @@ def get_config(
     package: str, kw_only: bool = True, compound_fields: bool = False
 ) -> cfg.GeneratorConfig:
     # ALLOW "type" to be used as a field name
-    text.stop_words.discard("type")
-    text.stop_words.discard("Type")
+    text.stop_words.difference_update(ALLOW_RESERVED_NAMES)
 
     # use our own camel_to_snake
     # Our's interprets adjacent capital letters as two words

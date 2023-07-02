@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import ast
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
-from xsdata.models.enums import DataType
 from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 from ome_autogen import _util
@@ -21,39 +19,6 @@ if TYPE_CHECKING:
 AUTO_SEQUENCE = "__auto_sequence__"
 
 
-ENUM_GETATTR_WARNING = """
-def __getattr__(name: str) -> Any:
-    _map = {map}
-    if name in _map:
-        import warnings
-
-        cls = globals()[_map[name]]
-
-        warnings.warn(
-            f"Accessing {{name!r}} at the top level of {{__name__!r}} is deprecated. "
-            f"Please access it through {{cls.__name__}}.{{name}} instead.",
-            stacklevel=2,
-        )
-
-        return getattr(cls, name)
-    raise AttributeError(f"module {{__name__!r}} has no attribute {{name!r}}")
-"""
-
-
-def make_gettattr(parents: dict[str, list[str]]) -> str:
-    children = {c: p for p, cs in parents.items() for c in cs}
-    return ENUM_GETATTR_WARNING.format(map=repr(children))
-
-
-def make_aliases(parents: dict[str, list[str]]) -> str:
-    out = []
-    for p, cs in parents.items():
-        for c in cs:
-            out.append(f"{c} = {p}.{c}")
-
-    return "\n".join(out)
-
-
 class OmeGenerator(DataclassGenerator):
     @classmethod
     def init_filters(cls, config: GeneratorConfig) -> Filters:
@@ -64,21 +29,44 @@ class OmeGenerator(DataclassGenerator):
     ) -> str:
         mod = super().render_module(resolver, classes)
 
-        # Here, we look for nested enums, and make them accessible at the top level
-        # of the module as well, with a deprecation warning.
-        parents: dict[str, list[str]] = {}
-        for node in ast.parse(mod).body:
-            if isinstance(node, ast.ClassDef):
-                for subnode in node.body:
-                    if isinstance(subnode, ast.ClassDef) and subnode.name != "Meta":
-                        parent = parents.setdefault(node.name, [])
-                        parent.append(subnode.name)
-        if parents:
-            # extra = make_gettattr(parents)
-            extra = make_aliases(parents)
-            mod = "from typing import Any\n" + mod + "\n\n" + extra
+        # xsdata renames classes like "FillRule" (which appears as a SimpleType
+        # inside of the Shape ComlexType) as "Shape_FillRule".
+        # We want to make them available as "FillRule" in the corresponding
+        # module, (i.e. the "Shape" module in this case).
+        # That is, we want "Shape = Shape_FillRule" included in the module.
+        # this is for backwards compatibility.
+        aliases = []
+        for c in classes:
+            for i in resolver.imports:
+                if f"{c.name}_" in i.qname:
+                    # import_name is something like 'Shape_FillRule'
+                    import_name = i.qname.rsplit("}", 1)[-1]
+                    # desired alias is just 'FillRule'
+                    alias = import_name.split(f"{c.name}_")[-1]
+                    aliases.append(f"{alias} = {import_name}")
+
+            # we also want inner (nested) classes to be available at the top level
+            # e.g. map.Map.M -> map.M
+            for inner in c.inner:
+                aliases.append(f"{inner.name} = {c.name}.{inner.name}")
+
+        if aliases:
+            mod += "\n\n" + "\n".join(aliases) + "\n"
 
         return mod
+
+
+class Override(NamedTuple):
+    element_name: str
+    class_name: str
+    module_name: str | None
+
+
+CLASS_OVERRIDES = [
+    Override("Color", "Color", "ome_types.model._color"),
+    Override("Union", "ShapeUnion", "ome_types.model._roi_union"),
+    Override("StructuredAnnotations", "StructuredAnnotations", None),
+]
 
 
 class OmeFilters(PydanticBaseFilters):
@@ -105,11 +93,10 @@ class OmeFilters(PydanticBaseFilters):
         # in the class.jinja2 template, so we directly modify the attr object here.
         if attr.is_list:
             attr.name = self.appinfo.plurals.get(attr.name, f"{attr.name}s")
-        if self._is_color_attr(attr):
-            return "Color"
-        elif self._is_union_attr(attr):
-            return "ShapeUnion"
 
+        for override in CLASS_OVERRIDES:
+            if attr.name == override.element_name:
+                return override.class_name
         return super().field_type(attr, parents)
 
     @classmethod
@@ -117,8 +104,9 @@ class OmeFilters(PydanticBaseFilters):
         patterns = super().build_import_patterns()
         patterns.update(
             {
-                "ome_types.model._color": {"Color": [": Color ="]},
-                "ome_types.model._roi_union": {"ShapeUnion": [": ShapeUnion ="]},
+                o.module_name: {o.class_name: [f": {o.class_name} ="]}
+                for o in CLASS_OVERRIDES
+                if o.module_name
             }
         )
         return {key: patterns[key] for key in sorted(patterns)}
@@ -126,18 +114,17 @@ class OmeFilters(PydanticBaseFilters):
     def field_default_value(self, attr: Attr, ns_map: dict | None = None) -> str:
         if attr.tag == "Attribute" and attr.name == "ID":
             return repr(AUTO_SEQUENCE)
-        if self._is_color_attr(attr):
-            return "Color"
-        if self._is_union_attr(attr):
-            return "ShapeUnion"
+        for override in CLASS_OVERRIDES:
+            if attr.name == override.element_name:
+                return override.class_name
         return super().field_default_value(attr, ns_map)
 
     def format_arguments(self, kwargs: dict, indent: int = 0) -> str:
         # keep default_factory at the front
-        if kwargs.get("default") == "Color":
+        factorize = [x.class_name for x in CLASS_OVERRIDES] + ["StructuredAnnotations"]
+        if kwargs.get("default") in factorize:
             kwargs = {"default_factory": kwargs.pop("default"), **kwargs}
-        if kwargs.get("default") == "ShapeUnion":
-            kwargs = {"default_factory": kwargs.pop("default"), **kwargs}
+
         return super().format_arguments(kwargs, indent)
 
     def constant_name(self, name: str, class_name: str) -> str:
@@ -145,11 +132,3 @@ class OmeFilters(PydanticBaseFilters):
             # use the enum names found in appinfo/xsdfu/enum
             return self.appinfo.enums[class_name][name].enum
         return super().constant_name(name, class_name)
-
-    def _is_color_attr(self, attr: Attr) -> bool:
-        # special logic to find Color types, for which we use our own type.
-        return attr.name == "Color" and attr.types[0].datatype == DataType.INT
-
-    def _is_union_attr(self, attr: Attr) -> bool:
-        # special logic to find Color types, for which we use our own type.
-        return attr.name == "Union" and attr.types[0].substituted
