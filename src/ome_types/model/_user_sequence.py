@@ -1,15 +1,15 @@
-from typing import Iterable, List, MutableSequence, TypeVar, overload
+from typing import Iterable, List, MutableSequence, TypeVar, Union, overload
 
 T = TypeVar("T")
 
 
 class UserSequence(MutableSequence[T]):
-    __root__: list[object]
+    __root__: List[object]
 
     def __repr__(self) -> str:
         return repr(self.__root__)
 
-    def __delitem__(self, _idx: int | slice) -> None:
+    def __delitem__(self, _idx: Union[int, slice]) -> None:
         del self.__root__[_idx]
 
     @overload
@@ -20,7 +20,7 @@ class UserSequence(MutableSequence[T]):
     def __getitem__(self, _idx: slice) -> List[T]:
         ...
 
-    def __getitem__(self, _idx: int | slice) -> T | List[T]:
+    def __getitem__(self, _idx: Union[int, slice]) -> Union[T, List[T]]:
         return self.__root__[_idx]  # type: ignore[return-value]
 
     def __len__(self) -> int:
@@ -34,7 +34,7 @@ class UserSequence(MutableSequence[T]):
     def __setitem__(self, _idx: slice, _val: Iterable[T]) -> None:
         ...
 
-    def __setitem__(self, _idx: int | slice, _val: T | Iterable[T]) -> None:
+    def __setitem__(self, _idx: Union[int, slice], _val: Union[T, Iterable[T]]) -> None:
         self.__root__[_idx] = _val  # type: ignore[index]
 
     def insert(self, index: int, value: T) -> None:

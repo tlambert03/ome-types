@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import List, Type, Union
+from typing import Dict, List, Type, Union
 
 from pydantic import Field, ValidationError, validator
 
@@ -16,7 +16,7 @@ from ome_types.model.ome_2016_06.rectangle import Rectangle
 from ._user_sequence import UserSequence
 
 ShapeType = Union[Rectangle, Mask, Point, Ellipse, Line, Polyline, Polygon, Label]
-_KINDS: dict[str, Type[ShapeType]] = {
+_KINDS: Dict[str, Type[ShapeType]] = {
     "rectangle": Rectangle,
     "mask": Mask,
     "point": Point,

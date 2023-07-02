@@ -1,16 +1,20 @@
+from __future__ import annotations
+
 import importlib.util
 import sys
 from importlib.abc import MetaPathFinder
-from importlib.machinery import ModuleSpec
 from pathlib import Path
-from types import ModuleType
-from typing import Sequence
+from typing import TYPE_CHECKING, Sequence
 
 from ome_types.model.ome_2016_06 import *  # noqa
 
 # these are here mostly to make mypy happy in pre-commit even when the model isn't built
 from ome_types.model.ome_2016_06 import OME as OME
 from ome_types.model.ome_2016_06 import Reference as Reference
+
+if TYPE_CHECKING:
+    from importlib.machinery import ModuleSpec
+    from types import ModuleType
 
 _OME_2016 = Path(__file__).parent / "ome_2016_06"
 

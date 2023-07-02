@@ -64,7 +64,7 @@ class Override(NamedTuple):
 
 CLASS_OVERRIDES = [
     Override("Color", "Color", "ome_types.model._color"),
-    Override("Union", "ShapeUnion", "ome_types.model._roi_union"),
+    Override("Union", "ShapeUnion", "ome_types.model._shape_union"),
     Override("StructuredAnnotations", "StructuredAnnotations", None),
 ]
 

@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 
 import pytest
-import shapely.geometry
 
 from ome_types import validate_xml
 
@@ -17,8 +16,9 @@ if "PAQUO_QUPATH_DIR" not in os.environ:
         os.environ["PAQUO_QUPATH_DIR"] = str(app_path)
 
 try:
+    import shapely.geometry
     from paquo.hierarchy import QuPathPathObjectHierarchy
-except ValueError:  # NOT an ImportError
+except (ValueError, ImportError):
     if os.getenv("CI"):
         raise
     pytest.skip("Paquo not installed", allow_module_level=True)
