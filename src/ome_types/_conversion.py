@@ -9,6 +9,7 @@ from xml.etree import ElementTree as ET
 
 from xsdata.formats.dataclass.parsers.config import ParserConfig
 from xsdata.formats.dataclass.serializers.config import SerializerConfig
+
 from xsdata_pydantic_basemodel.bindings import XmlParser, XmlSerializer
 
 if TYPE_CHECKING:
@@ -16,9 +17,9 @@ if TYPE_CHECKING:
     from typing import TypedDict
 
     from xsdata.formats.dataclass.parsers.mixins import XmlHandler
-    from xsdata_pydantic_basemodel.bindings import XmlContext
 
     from ome_types.model import OME
+    from xsdata_pydantic_basemodel.bindings import XmlContext
 
     class ParserKwargs(TypedDict, total=False):
         config: ParserConfig

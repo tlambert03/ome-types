@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
-from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 from ome_autogen import _util
+from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 if TYPE_CHECKING:
     from xsdata.codegen.models import Attr, Class
