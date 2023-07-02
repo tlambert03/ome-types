@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pickle
 import re
 from functools import lru_cache
 from pathlib import Path
@@ -128,14 +127,6 @@ def test_roundtrip_inverse(valid_xml: Path, tmp_path: Path) -> None:
 #         # Use an ElementTree.tostring kwarg and assert that it was passed through
 #         to_xml(element, xml_declaration=True)
 #         assert mocked_et_tostring.call_args.xml_declaration
-
-
-def test_serialization(valid_xml: Path) -> None:
-    """Test pickle serialization and reserialization."""
-    ome = from_xml(valid_xml)
-    serialized = pickle.dumps(ome)
-    deserialized = pickle.loads(serialized)
-    assert ome == deserialized
 
 
 def test_no_id() -> None:

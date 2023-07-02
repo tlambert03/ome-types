@@ -226,10 +226,17 @@ V1_EXPORTS = [
 ]
 
 
-@pytest.mark.parametrize("name,cls", V1_EXPORTS)
-def test_model_imports(name: str, cls: str) -> None:
+@pytest.mark.parametrize("name,cls_name", V1_EXPORTS)
+def test_model_imports(name: str, cls_name: str) -> None:
     from importlib import import_module
 
-    with pytest.warns(UserWarning, match="Importing sumodules from ome_types.model"):
+    with pytest.warns(UserWarning, match="Importing submodules from ome_types.model"):
         mod = import_module(f"ome_types.model.{name}")
-    assert getattr(mod, cls) is not None
+
+    cls = getattr(mod, cls_name)
+    assert cls is not None
+    real_module = mod = import_module(f"ome_types.model.ome_2016_06.{name}")
+
+    # modules and object must have the same id!  This is importat for pickle
+    assert real_module is mod
+    assert getattr(real_module, cls_name) is cls

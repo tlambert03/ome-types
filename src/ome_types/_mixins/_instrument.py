@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Union, cast
+from typing import TYPE_CHECKING, List, Union, cast
 
 if TYPE_CHECKING:
     from ome_types.model.ome_2016_06 import (
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 class InstrumentMixin:
     @property
-    def light_source_group(self) -> "list[LightSource]":
+    def light_source_group(self) -> List[LightSource]:
         slf = cast("Instrument", self)
         return [
             *slf.arcs,

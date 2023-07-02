@@ -1,5 +1,10 @@
-import pytest
+import pickle
+from pathlib import Path
 
+import pytest
+from distributed.protocol.serialize import deserialize, serialize
+
+from ome_types import from_xml
 from ome_types.model import OME, Channel, Image, Pixels
 
 
@@ -23,3 +28,17 @@ def test_color_unset(channel_kwargs: dict) -> None:
     )
 
     assert ("Color" in ome.to_xml()) is bool(channel_kwargs)
+
+
+def test_serialization(valid_xml: Path) -> None:
+    """Test pickle serialization and reserialization."""
+    ome = from_xml(valid_xml)
+    serialized = pickle.dumps(ome)
+    deserialized = pickle.loads(serialized)
+    assert ome == deserialized
+
+
+def test_distributed_serialize(valid_xml: Path) -> None:
+    ome1 = from_xml(valid_xml)
+    ome2 = deserialize(*serialize(ome1))
+    assert ome1 == ome2

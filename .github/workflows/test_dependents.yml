@@ -53,7 +53,7 @@ jobs:
 
       - name: Run Tests
         run: |
-          pytest --color=yes -k "not REMOTE" --ignore test_known_errors_without_cleaning \
+          pytest --color=yes -k "not test_known_errors_without_cleaning" \
             aicsimageio/tests/readers/test_ome_tiff_reader.py \
             aicsimageio/tests/readers/extra_readers/test_bioformats_reader.py \
             aicsimageio/tests/readers/extra_readers/test_ome_zarr_reader.py

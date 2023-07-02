@@ -5,12 +5,12 @@ import os
 from contextlib import suppress
 from functools import lru_cache
 from pathlib import Path
-from typing import IO, TYPE_CHECKING
+from typing import IO, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     import xmlschema
 
-    XMLSourceType = str | bytes | Path | IO[str] | IO[bytes]
+    XMLSourceType = Union[str, bytes, Path, IO[str], IO[bytes]]
 
 NS_OME = r"{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
 OME_2016_06_XSD = str(Path(__file__).parent / "ome-2016-06.xsd")
