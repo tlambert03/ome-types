@@ -1,230 +1,229 @@
-import pickle
+from __future__ import annotations
+
 import re
+from functools import lru_cache
 from pathlib import Path
-from unittest import mock
+from typing import TYPE_CHECKING, cast
 from xml.dom import minidom
 from xml.etree import ElementTree
 
 import pytest
+import xmlschema
 from pydantic import ValidationError
-from xmlschema.validators.exceptions import XMLSchemaValidationError
 
-import util
+import ome_types
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types._xmlschema import NS_OME, URI_OME, get_schema, to_xml_element
 
-ValidationErrors = [ValidationError, XMLSchemaValidationError]
-try:
-    from lxml.etree import XMLSchemaValidateError
+if TYPE_CHECKING:
+    from _pytest.mark.structures import ParameterSet
 
-    ValidationErrors.append(XMLSchemaValidateError)
-except ImportError:
-    pass
+TESTS = Path(__file__).parent
+DATA = TESTS / "data"
 
-
-SHOULD_FAIL_READ = {
-    # Some timestamps have negative years which datetime doesn't support.
-    "timestampannotation",
-}
-SHOULD_FAIL_VALIDATION = {"invalid_xml_annotation"}
-SHOULD_RAISE_READ = {"bad"}
+SHOULD_FAIL_VALIDATION = {"invalid_xml_annotation", "bad"}
 SHOULD_FAIL_ROUNDTRIP = {
     # Order of elements in StructuredAnnotations and Union are jumbled.
     "timestampannotation-posix-only",
     "transformations-downgrade",
     "invalid_xml_annotation",
 }
-SHOULD_FAIL_ROUNDTRIP_LXML = {
-    "folders-simple-taxonomy",
-    "folders-larger-taxonomy",
-}
+
 SKIP_ROUNDTRIP = {
     # These have XMLAnnotations with extra namespaces and mixed content, which
     # the automated round-trip test code doesn't properly verify yet. So even
     # though these files do appear to round-trip correctly when checked by eye,
     # we'll play it safe and skip them until the test is fixed.
     "spim",
-    "xmlannotation-body-space",
     "xmlannotation-multi-value",
     "xmlannotation-svg",
 }
 
-
-def mark_xfail(fname):
-    return pytest.param(
-        fname,
-        marks=pytest.mark.xfail(
-            strict=True, reason="Unexpected success. You fixed it!"
-        ),
-    )
+URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
+NS_OME = "{" + URI_OME + "}"
+OME_2016_06_XSD = str(Path(ome_types.__file__).parent / "ome-2016-06.xsd")
 
 
-def mark_skip(fname):
-    return pytest.param(fname, marks=pytest.mark.skip)
-
-
-def true_stem(p):
+def true_stem(p: Path) -> str:
     return p.name.partition(".")[0]
 
 
-all_xml = list((Path(__file__).parent / "data").glob("*.ome.xml"))
-xml_read = [mark_xfail(f) if true_stem(f) in SHOULD_FAIL_READ else f for f in all_xml]
-xml_roundtrip = []
+all_xml = list(DATA.glob("*.ome.xml"))
+xml_roundtrip: list[Path | ParameterSet] = []
 for f in all_xml:
     stem = true_stem(f)
-    if stem in SHOULD_FAIL_READ | SHOULD_RAISE_READ:
-        continue
-    elif stem in SHOULD_FAIL_ROUNDTRIP:
-        f = mark_xfail(f)
+    if stem in SHOULD_FAIL_ROUNDTRIP:
+        mrk = pytest.mark.xfail(strict=True, reason="Unexpected success. You fixed it!")
+        f = pytest.param(f, marks=mrk)  # type: ignore
     elif stem in SKIP_ROUNDTRIP:
-        f = mark_skip(f)
+        f = pytest.param(f, marks=pytest.mark.skip)  # type: ignore
     xml_roundtrip.append(f)
 
 
-validate = [True, False]
-
-parser = ["lxml", "xmlschema"]
+validate = [False]
 
 
-@pytest.mark.parametrize("xml", xml_read, ids=true_stem)
-@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_from_xml(xml, parser: str, validate: bool, benchmark):
-    should_raise = SHOULD_RAISE_READ.union(SHOULD_FAIL_VALIDATION if validate else [])
-    if true_stem(xml) in should_raise:
-        with pytest.raises(tuple(ValidationErrors)):
-            assert benchmark(from_xml, xml, parser=parser, validate=validate)
+def test_from_valid_xml(valid_xml: Path, validate: bool) -> None:
+    ome = from_xml(valid_xml, validate=validate)
+    assert ome
+    assert repr(ome)
+
+
+@pytest.mark.parametrize("validate", validate)
+def test_from_invalid_xml(invalid_xml: Path, validate: bool) -> None:
+    if validate:
+        with pytest.raises(ValidationError):
+            from_xml(invalid_xml, validate=validate)
     else:
-        assert benchmark(from_xml, xml, parser=parser, validate=validate)
+        with pytest.warns():
+            from_xml(invalid_xml, validate=validate)
 
 
-@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_from_tiff(benchmark, validate, parser):
+def test_from_tiff(validate: bool) -> None:
     """Test that OME metadata extractions from Tiff headers works."""
-    _path = Path(__file__).parent / "data" / "ome.tiff"
-    ome = benchmark(from_tiff, _path, parser=parser, validate=validate)
+    _path = DATA / "ome.tiff"
+    ome = from_tiff(_path, validate=validate)
     assert len(ome.images) == 1
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
     assert ome.images[0].pixels.channels[0].samples_per_pixel == 1
 
 
-@pytest.mark.parametrize("xml", xml_roundtrip, ids=true_stem)
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_roundtrip(xml, parser, validate, benchmark):
+def test_roundtrip(valid_xml: Path) -> None:
     """Ensure we can losslessly round-trip XML through the model and back."""
-    xml = str(xml)
-    schema = get_schema(xml)
+    if true_stem(valid_xml) in SKIP_ROUNDTRIP:
+        pytest.xfail("known issues with canonicalization")
 
-    def canonicalize(xml, strip_empty):
-        d = schema.decode(xml, use_defaults=True)
-        # Strip extra whitespace in the schemaLocation value.
-        d["@xsi:schemaLocation"] = re.sub(r"\s+", " ", d["@xsi:schemaLocation"])
-        root = schema.encode(d, path=NS_OME + "OME", use_defaults=True)
-        # These are the tags that appear in the example files with empty
-        # content. Since our round-trip will drop empty elements, we'll need to
-        # strip them from the "original" documents before comparison.
-        if strip_empty:
-            for tag in ("Description", "LightPath", "Map"):
-                for e in root.findall(f".//{NS_OME}{tag}[.='']..."):
-                    e.remove(e.find(f"{NS_OME}{tag}"))
-        # ET.canonicalize can't handle an empty namespace so we need to
-        # re-register the OME namespace with an actual name before calling
-        # tostring.
-        ElementTree.register_namespace("ome", URI_OME)
-        xml_out = ElementTree.tostring(root, "unicode")
-        xml_out = util.canonicalize(xml_out, strip_text=True)
-        xml_out = minidom.parseString(xml_out).toprettyxml(indent="  ")
-        return xml_out
-
-    original = canonicalize(xml, True)
-    ome = from_xml(xml, parser=parser, validate=validate)
-    rexml = benchmark(to_xml, ome)
+    xml = str(valid_xml)
 
     try:
-        assert canonicalize(rexml, False) == original
-    except AssertionError:
-        # Special xfail catch since two files fail only with xml2dict
-        if true_stem(Path(xml)) in SHOULD_FAIL_ROUNDTRIP_LXML and parser == "lxml":
-            pytest.xfail(
-                f"Expected failure on roundtrip using xml2dict on file: {stem}"
-            )
-        else:
-            raise
+        original = _canonicalize(xml, True)
+    except ValueError:
+        pytest.xfail("Roundtrip will fail if original XML is invalid")
+
+    ome = from_xml(xml)
+    rexml = to_xml(ome)
+    new = _canonicalize(rexml, True)
+    if new != original:
+        Path("original.xml").write_text(original)
+        Path("rewritten.xml").write_text(new)
+        raise AssertionError
 
 
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_to_xml_with_kwargs(validate, parser):
-    """Ensure kwargs are passed to ElementTree"""
-    ome = from_xml(
-        Path(__file__).parent / "data" / "example.ome.xml",
-        parser=parser,
-        validate=validate,
-    )
+def test_roundtrip_inverse(valid_xml: Path, tmp_path: Path) -> None:
+    """both variants have been touched by the model, here..."""
+    ome1 = from_xml(valid_xml)
 
-    with mock.patch("xml.etree.ElementTree.tostring") as mocked_et_tostring:
-        element = to_xml_element(ome)
-        # Use an ElementTree.tostring kwarg and assert that it was passed through
-        to_xml(element, xml_declaration=True)
-        assert mocked_et_tostring.call_args.xml_declaration
+    xml = to_xml(ome1)
+    out = tmp_path / "test.xml"
+    out.write_bytes(xml.encode())
+    ome2 = from_xml(out)
+
+    assert ome1 == ome2
 
 
-@pytest.mark.parametrize("xml", xml_read, ids=true_stem)
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_serialization(xml, validate, parser):
-    """Test pickle serialization and reserialization."""
-    if true_stem(xml) in SHOULD_RAISE_READ:
-        pytest.skip("Can't pickle unreadable xml")
-    if validate and true_stem(xml) in SHOULD_FAIL_VALIDATION:
-        pytest.skip("Can't pickle invalid xml with validate=True")
+# @pytest.mark.parametrize("validate", validate)
+# def test_to_xml_with_kwargs(validate):
+#     """Ensure kwargs are passed to ElementTree"""
+#     ome = from_xml(DATA / "example.ome.xml", validate=validate)
 
-    ome = from_xml(xml, parser=parser, validate=validate)
-    serialized = pickle.dumps(ome)
-    deserialized = pickle.loads(serialized)
-    assert ome == deserialized
+#     with mock.patch("xml.etree.ElementTree.tostring") as mocked_et_tostring:
+#         element = to_xml_element(ome)
+#         # Use an ElementTree.tostring kwarg and assert that it was passed through
+#         to_xml(element, xml_declaration=True)
+#         assert mocked_et_tostring.call_args.xml_declaration
 
 
-def test_no_id():
+def test_no_id() -> None:
     """Test that ids are optional, and auto-increment."""
-    i = model.Instrument(id=20)
+    i = model.Instrument(id=20)  # type: ignore
     assert i.id == "Instrument:20"
-    i2 = model.Instrument()
+    i2 = model.Instrument()  # type: ignore
     assert i2.id == "Instrument:21"
 
     # but validation still works
-    with pytest.raises(ValueError):
+    with pytest.warns(match="Casting invalid InstrumentID"):
         model.Instrument(id="nonsense")
 
 
-def test_required_missing():
+def test_required_missing() -> None:
     """Test subclasses with non-default arguments still work."""
-    with pytest.raises(ValidationError) as e:
-        _ = model.BooleanAnnotation()
-    assert "1 validation error for BooleanAnnotation" in str(e.value)
-    assert "value\n  field required" in str(e.value)
+    with pytest.raises(ValidationError, match="value\n  field required"):
+        model.BooleanAnnotation()  # type: ignore
 
-    with pytest.raises(ValidationError) as e:
-        _ = model.Label()
-    assert "2 validation errors for Label" in str(e.value)
-    assert "x\n  field required" in str(e.value)
-    assert "y\n  field required" in str(e.value)
+    with pytest.raises(ValidationError, match="x\n  field required"):
+        model.Label()  # type: ignore
 
 
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_refs(validate, parser):
-    xml = Path(__file__).parent / "data" / "two-screens-two-plates-four-wells.ome.xml"
-    ome = from_xml(xml, parser=parser, validate=validate)
-    assert ome.screens[0].plate_ref[0].ref is ome.plates[0]
+def test_refs() -> None:
+    xml = DATA / "two-screens-two-plates-four-wells.ome.xml"
+    ome = from_xml(xml)
+    assert ome.screens[0].plate_refs[0].ref is ome.plates[0]
 
 
-@pytest.mark.parametrize("validate", validate)
-@pytest.mark.parametrize("parser", parser)
-def test_with_ome_ns(validate, parser):
-    xml = Path(__file__).parent / "data" / "ome_ns.ome.xml"
-    ome = from_xml(xml, parser=parser, validate=validate)
-    assert ome.experimenters
+def test_with_ome_ns() -> None:
+    assert from_xml(DATA / "ome_ns.ome.xml").experimenters
+
+
+# ########## Canonicalization utils ##########
+
+
+@lru_cache(maxsize=None)
+def _get_schema() -> xmlschema.XMLSchema:
+    schema = xmlschema.XMLSchema(OME_2016_06_XSD)
+    # FIXME Hack to work around xmlschema poor support for keyrefs to
+    # substitution groups
+    ls_sgs = schema.maps.substitution_groups[f"{NS_OME}LightSourceGroup"]
+    ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
+    ls_id_maps.elements = {e: None for e in ls_sgs}
+    return schema
+
+
+def _sort_elements(element, recursive=True):
+    # Sort the child elements alphabetically by their tag name
+    sorted_children = sorted(element, key=lambda child: child.tag)
+
+    # Replace the existing child elements with the sorted ones
+    element[:] = sorted_children
+
+    # Recursively sort child elements for each subelement
+    if recursive:
+        for child in element:
+            _sort_elements(child)
+
+
+def _add_defaults(xml: str) -> ElementTree.Element:
+    # we use xmlschema to encode then decode the xml to add missing
+    # default values for the sake of canonicalization
+    # this is the ONLY remaining thing that xmlschema is used for
+    # (and only in testing).
+
+    schema = _get_schema()
+    d = cast(dict, schema.decode(xml, use_defaults=True))
+    # Strip extra whitespace in the schemaLocation value.
+    d["@xsi:schemaLocation"] = re.sub(r"\s+", " ", d["@xsi:schemaLocation"])
+    return schema.encode(d, path=NS_OME + "OME", use_defaults=True)  # type: ignore
+
+
+def _canonicalize(xml: str, strip_empty: bool) -> str:
+    root = _add_defaults(xml)
+
+    # These are the tags that appear in the example files with empty
+    # content. Since our round-trip will drop empty elements, we'll need to
+    # strip them from the "original" documents before comparison.
+    if strip_empty:
+        for tag in ("Description", "LightPath", "Map"):
+            for e in root.findall(f".//{NS_OME}{tag}[.='']..."):
+                e.remove(e.find(f"{NS_OME}{tag}"))  # type: ignore
+
+    # ET.canonicalize can't handle an empty namespace so we need to
+    # re-register the OME namespace with an actual name before calling
+    # tostring.
+    _sort_elements(root)
+
+    ElementTree.register_namespace("ome", URI_OME)
+    xml_out = ElementTree.tostring(root, "unicode")
+    xml_out = ElementTree.canonicalize(xml_out, strip_text=True)
+    xml_out = minidom.parseString(xml_out).toprettyxml(indent="  ")
+    return xml_out

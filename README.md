@@ -304,6 +304,3 @@ python src/ome_autogen.py
 To run tests quickly, just install and run `pytest`.  Note, however, that this
 requires that the `ome_types.model` module has already been built with `python
 src/ome_autogen.py`.
-
-Alternatively, you can install and run `tox` which will run tests and
-code-quality checks in an isolated environment.
