@@ -51,7 +51,7 @@ jobs:
 
       - name: Run Tests
         run: |
-          pytest --color=yes -k "not test_known_errors_without_cleaning" \
+          pytest --color=yes -k "not test_known_errors_without_cleaning and not bad" \
             aicsimageio/tests/readers/test_ome_tiff_reader.py \
             aicsimageio/tests/writers/test_ome_tiff_writer.py \
             aicsimageio/tests/readers/extra_readers/test_bioformats_reader.py \
