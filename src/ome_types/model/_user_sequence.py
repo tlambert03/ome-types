@@ -4,6 +4,8 @@ T = TypeVar("T")
 
 
 class UserSequence(MutableSequence[T]):
+    """Generric Mutable sequence, that expects the real list at __root__."""
+
     __root__: List[object]
 
     def __repr__(self) -> str:
