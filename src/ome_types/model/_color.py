@@ -30,7 +30,7 @@ class Color(color.Color):
     def __eq__(self, o: object) -> bool:
         if isinstance(o, Color):
             return self.as_int32() == o.as_int32()
-        return False
+        return NotImplemented  # pragma: no cover
 
     def __int__(self) -> int:
         return self.as_int32()

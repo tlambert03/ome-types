@@ -22,20 +22,20 @@ _UNIT_FIELD = "{}_unit"
 _QUANTITY_FIELD = "{}_quantity"
 DEPRECATED_NAMES = {
     "annotation_ref": "annotation_refs",
-    "image_ref": "image_refs",
-    "experimenter_ref": "experimenter_refs",
-    "leader": "leaders",
-    "roi_ref": "roi_refs",
-    "light_source_settings": "light_source_settings_combinations",
-    "folder_ref": "folder_refs",
     "bin_data": "bin_data_blocks",
+    "dataset_ref": "dataset_refs",
     "emission_filter_ref": "emission_filters",
     "excitation_filter_ref": "excitation_filters",
-    "microbeam_manipulation_ref": "microbeam_manipulation_refs",
+    "experimenter_ref": "experimenter_refs",
+    "folder_ref": "folder_refs",
+    "image_ref": "image_refs",
+    "leader": "leaders",
+    "light_source_settings": "light_source_settings_combinations",
     "m": "ms",
-    "well_sample_ref": "well_sample_refs",
-    "dataset_ref": "dataset_refs",
+    "microbeam_manipulation_ref": "microbeam_manipulation_refs",
     "plate_ref": "plate_refs",
+    "roi_ref": "roi_refs",
+    "well_sample_ref": "well_sample_refs",
 }
 
 
@@ -85,7 +85,7 @@ class OMEType(BaseModel):
             self.__fields__.values(), key=lambda f: f.name not in ("name", "id")
         ):
             if f.name.endswith("_"):
-                continue
+                continue  # pragma: no cover
             # https://github.com/python/mypy/issues/6910
             default = f.default_factory() if f.default_factory else f.default
             current = getattr(self, f.name)
@@ -125,10 +125,14 @@ class OMEType(BaseModel):
             # parse the id and update the counter
             *name, v_id = value.rsplit(":", 1)
             if not re.match(id_regex, value):
-                warnings.warn(f"Casting invalid {id_name}ID", stacklevel=2)
-                return cls._validate_id(
+                newname = cls._validate_id(
                     int(v_id) if v_id.isnumeric() else AUTO_SEQUENCE
                 )
+                warnings.warn(
+                    f"Casting invalid {id_name}ID {value!r} to {newname!r}",
+                    stacklevel=2,
+                )
+                return newname
 
             with contextlib.suppress(ValueError):
                 _COUNTERS[id_name] = max(current_count, int(v_id))

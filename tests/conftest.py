@@ -46,3 +46,8 @@ def valid_xml(request: pytest.FixtureRequest) -> Path:
 @pytest.fixture(params=INVALID, ids=_true_stem)
 def invalid_xml(request: pytest.FixtureRequest) -> Path:
     return request.param
+
+
+@pytest.fixture
+def single_xml() -> Path:
+    return DATA / "example.ome.xml"

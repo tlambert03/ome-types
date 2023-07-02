@@ -64,7 +64,9 @@ validate = [False]
 
 @pytest.mark.parametrize("validate", validate)
 def test_from_valid_xml(valid_xml: Path, validate: bool) -> None:
-    assert from_xml(valid_xml, validate=validate)
+    ome = from_xml(valid_xml, validate=validate)
+    assert ome
+    assert repr(ome)
 
 
 @pytest.mark.parametrize("validate", validate)
@@ -95,7 +97,11 @@ def test_roundtrip(valid_xml: Path) -> None:
 
     xml = str(valid_xml)
 
-    original = _canonicalize(xml, True)
+    try:
+        original = _canonicalize(xml, True)
+    except ValueError:
+        pytest.xfail("Roundtrip will fail if original XML is invalid")
+
     ome = from_xml(xml)
     rexml = to_xml(ome)
     new = _canonicalize(rexml, True)

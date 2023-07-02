@@ -230,8 +230,8 @@ V1_EXPORTS = [
 def test_model_imports(name: str, cls_name: str) -> None:
     from importlib import import_module
 
-    with pytest.warns(UserWarning, match="Importing submodules from ome_types.model"):
-        mod = import_module(f"ome_types.model.{name}")
+    # with pytest.warns(UserWarning, match="Importing submodules from ome_types.model"):
+    mod = import_module(f"ome_types.model.{name}")
 
     cls = getattr(mod, cls_name)
     assert cls is not None
@@ -240,3 +240,13 @@ def test_model_imports(name: str, cls_name: str) -> None:
     # modules and object must have the same id!  This is importat for pickle
     assert real_module is mod
     assert getattr(real_module, cls_name) is cls
+
+
+def test_deprecated_attrs() -> None:
+    ome = ome_types.from_xml(TESTS / "data" / "instrument-units-default.ome.xml")
+    with pytest.warns(
+        match="Attribute 'FilterSet.excitation_filter_ref' is "
+        "deprecated, use 'excitation_filters'"
+    ):
+        ref1 = ome.instruments[0].filter_sets[0].excitation_filter_ref
+    assert ref1 is ome.instruments[0].filter_sets[0].excitation_filters

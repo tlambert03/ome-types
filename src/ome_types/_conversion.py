@@ -98,9 +98,10 @@ def to_xml(
 
     serializer = XmlSerializer(config=config)
     xml = serializer.render(ome, ns_map={None: OME_2016_06_URI})
-    # HACK: xsdata is always including this because...
+    # HACK: xsdata is always including <StructuredAnnotations/> because...
     # 1. we override the default for OME.structured_annotations so that
     #    it's always a present (if empty) list.  That was the v1 behavior
+    #    and it allows ome.structured_annotations.append(...) to always work.
     # 2. xsdata thinks it's not nillable, and therefore always includes it
     # ... we might be able to do it better, but this fixes it for now.
     return xml.replace("<StructuredAnnotations/>", "")

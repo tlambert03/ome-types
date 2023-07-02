@@ -28,7 +28,7 @@ def validate_xml(xml: XMLSourceType, schema: Path | str | None = None) -> None:
     with suppress(ImportError):
         return validate_xml_with_lxml(xml, schema)
 
-    with suppress(ImportError):
+    with suppress(ImportError):  # pragma: no cover
         return validate_xml_with_xmlschema(xml, schema)
 
     raise ImportError(  # pragma: no cover
@@ -55,7 +55,6 @@ def validate_xml_with_lxml(
     if not xmlschema.validate(doc):
         msg = f"Validation of {str(xml)[:20]!r} failed:"
         for error in xmlschema.error_log:
-            print(dir(error))
             msg += f"\n  - line {error.line}: {error.message}"
         raise ValidationError(msg)
 
