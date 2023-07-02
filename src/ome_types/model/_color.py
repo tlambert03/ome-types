@@ -12,7 +12,7 @@ ColorType = Union[Tuple[int, int, int], RGBA, str, int]
 
 class Color(color.Color):
     def __init__(self, val: ColorType = -1) -> None:
-        with suppress(ValueError):
+        with suppress(ValueError, TypeError):
             val = self._int2tuple(int(val))  # type: ignore
         super().__init__(val)  # type: ignore [arg-type]
 
