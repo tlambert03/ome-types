@@ -66,7 +66,7 @@ def to_dict(source: OME | Path | str | bytes) -> dict[str, Any]:
 
 
 def _class_factory(cls: type, kwargs: Any) -> Any:
-    kwargs.setdefault("validation", "strict")
+    # kwargs.setdefault("validation", "strict")
     return cls(**kwargs)
 
 
