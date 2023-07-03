@@ -8,13 +8,13 @@ from xml.dom import minidom
 from xml.etree import ElementTree as ET
 
 import pytest
-import xmlschema
 from pydantic import ValidationError
 
 import ome_types
 from ome_types import from_tiff, from_xml, model, to_xml
 
 if TYPE_CHECKING:
+    import xmlschema
     from _pytest.mark.structures import ParameterSet
 
 TESTS = Path(__file__).parent
@@ -95,7 +95,12 @@ def test_roundtrip_inverse(valid_xml: Path, tmp_path: Path) -> None:
     """both variants have been touched by the model, here..."""
     ome1 = from_xml(valid_xml)
 
-    xml = to_xml(ome1)
+    # FIXME:
+    # there is a small difference in the XML output when using xml instead of lxml
+    # that makes the text of an xml annotation in `xmlannotation-multi-value` be
+    # 'B\n          ' instead of 'B'.
+    # we should investigate this and fix it, but here we just use indent=0 to avoid it.
+    xml = to_xml(ome1, indent=0)
     out = tmp_path / "test.xml"
     out.write_bytes(xml.encode())
     ome2 = from_xml(out)
@@ -191,6 +196,8 @@ def _canonicalize(xml: str | bytes, pretty: bool = False) -> str:
 
 @lru_cache(maxsize=None)
 def _get_schema() -> xmlschema.XMLSchemaBase:
+    xmlschema = pytest.importorskip("xmlschema")
+
     schema = xmlschema.XMLSchema(OME_2016_06_XSD)
     # FIXME Hack to work around xmlschema poor support for keyrefs to
     # substitution groups.  This can be removed, if decode(validation='skip') is used.
