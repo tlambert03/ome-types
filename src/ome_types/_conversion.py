@@ -49,15 +49,19 @@ MODULES = {
 
 
 def _get_ome_type(xml: str | bytes) -> type[OMEType]:
+    """Resolve a python model class for the root element of an OME XML document."""
     if isinstance(xml, str) and not xml.startswith("<"):
         root = ET.parse(xml).getroot()  # noqa: S314
     else:
+        if not isinstance(xml, bytes):
+            xml = xml.encode("utf-8")
         root = ET.fromstring(xml)  # noqa: S314
 
-    ns, localname = root.tag[1:].split("}", 1)
+    *ns, localname = root.tag[1:].split("}", 1)
+    ns = next(iter(ns), None)
 
-    if ns not in MODULES:
-        raise ValueError(f"Unsupported OME schema tag {root.tag}")
+    if not ns or ns not in MODULES:
+        raise ValueError(f"Unsupported OME schema tag {root.tag!r} in namespace {ns!r}")
 
     mod = importlib.import_module(MODULES[ns])
     try:

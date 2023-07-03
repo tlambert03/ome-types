@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 import ome_types
 from ome_types import from_tiff, from_xml, model, to_xml
+from ome_types._conversion import _get_ome_type
 
 if TYPE_CHECKING:
     import xmlschema
@@ -149,6 +150,18 @@ def test_refs() -> None:
 
 def test_with_ome_ns() -> None:
     assert from_xml(DATA / "ome_ns.ome.xml").experimenters
+
+
+def test_get_ome_type() -> None:
+    t = _get_ome_type(f'<Image xmlns="{URI_OME}" />')
+    assert t is model.Image
+
+    with pytest.raises(ValueError):
+        _get_ome_type("<Image />")
+
+    # this can be used to instantiate XML with a non OME root type:
+    project = from_xml(f'<Project xmlns="{URI_OME}" />')
+    assert isinstance(project, model.Project)
 
 
 def test_roundtrip(valid_xml: Path) -> None:
