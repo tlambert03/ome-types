@@ -11,11 +11,9 @@ if TYPE_CHECKING:
     from xsdata.codegen.models import Class
 
 
-UNWANTED_HANDLERS = (
-    # we don't need RenameDuplicateAttributes because we inject
-    # proper enum names in our _generator.py
-    (RenameDuplicateAttributes, None),
-)
+# we don't need RenameDuplicateAttributes because we inject
+# proper enum names in our _generator.py
+UNWANTED_HANDLERS = [(RenameDuplicateAttributes, None)]
 
 
 class OMETransformer(SchemaTransformer):

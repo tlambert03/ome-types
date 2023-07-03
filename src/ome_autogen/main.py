@@ -28,7 +28,6 @@ def build_model(
     output_dir: Path | str = SRC_PATH,
     schema_file: Path | str = SCHEMA_FILE,
     target_package: str = OUTPUT_PACKAGE,
-    line_length: int = 88,
     ruff_ignore: list[str] = RUFF_IGNORE,
     do_formatting: bool = True,
     do_mypy: bool = DO_MYPY,
@@ -40,33 +39,40 @@ def build_model(
     _print_gray(f"Processing {getattr(schema_file ,'name', schema_file)}...")
     transformer.process_sources([Path(schema_file).resolve().as_uri()])
 
-    package_dir = Path(output_dir) / OUTPUT_PACKAGE.replace(".", "/")
+    package_dir = str(Path(output_dir) / OUTPUT_PACKAGE.replace(".", "/"))
     rmtree(package_dir, ignore_errors=True)
     with _util.cd(output_dir):  # xsdata doesn't support output path
         _print_gray("Writing Files...")
         transformer.process_classes()
 
     if do_formatting:
-        _print_gray("Running black and ruff ...")
-
-        black = ["black", str(package_dir), "-q", f"--line-length={line_length}"]
-        subprocess.check_call(black)  # noqa S
-
-        ruff = ["ruff", "-q", "--fix", str(package_dir)]
-        ruff.extend(f"--ignore={ignore}" for ignore in ruff_ignore)
-        subprocess.check_call(ruff)  # noqa S
+        _fix_formatting(package_dir, ruff_ignore)
 
     if do_mypy:
-        _print_gray("Running mypy ...")
-
-        mypy = ["mypy", str(package_dir), "--strict"]
-
-        try:
-            subprocess.check_output(mypy, stderr=subprocess.STDOUT)  # noqa S
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"mypy errors:\n\n{e.output.decode()}") from e
+        _check_mypy(package_dir)
 
     _print_green(f"OME python model created at {OUTPUT_PACKAGE}")
+
+
+def _fix_formatting(package_dir: str, ruff_ignore: list[str] = RUFF_IGNORE) -> None:
+    _print_gray("Running black and ruff ...")
+
+    black = ["black", package_dir, "-q", "--line-length=88"]
+    subprocess.check_call(black)  # noqa S
+
+    ruff = ["ruff", "-q", "--fix", package_dir]
+    ruff.extend(f"--ignore={ignore}" for ignore in ruff_ignore)
+    subprocess.check_call(ruff)  # noqa S
+
+
+def _check_mypy(package_dir: str) -> None:
+    _print_gray("Running mypy ...")
+
+    mypy = ["mypy", package_dir, "--strict"]
+    try:
+        subprocess.check_output(mypy, stderr=subprocess.STDOUT)  # noqa S
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"mypy errors:\n\n{e.output.decode()}") from e
 
 
 def _print_gray(text: str) -> None:
