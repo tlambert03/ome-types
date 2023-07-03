@@ -1,20 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    ClassVar,
-    Generator,
-    Iterator,
-)
+from typing import TYPE_CHECKING, Any, Callable, Generator, Iterator
 from xml.etree.ElementTree import QName
 
 from xsdata.formats.dataclass import context, parsers, serializers
 from xsdata.formats.dataclass.serializers import config
+from xsdata.formats.dataclass.serializers.mixins import XmlWriterEvent
 from xsdata.models.enums import QNames
-from xsdata.utils import collections
+from xsdata.utils import collections, namespaces
 from xsdata.utils.constants import EMPTY_MAP, return_input
 
 if TYPE_CHECKING:
@@ -37,10 +31,15 @@ class XmlContext(context.XmlContext):
 
 class SerializerConfig(config.SerializerConfig):
     # here to add `ignore_unset_attributes` support to XmlSerializer
-    __slots__ = (*config.SerializerConfig.__slots__, "ignore_unset_attributes")
+    __slots__ = (
+        *config.SerializerConfig.__slots__,
+        "ignore_unset_attributes",
+        "attribute_sort_key",
+    )
 
     def __init__(self, **kwargs: Any) -> None:
         self.ignore_unset_attributes = kwargs.pop("ignore_unset_attributes", False)
+        self.attribute_sort_key = kwargs.pop("attribute_sort_key", None)
         super().__init__(**kwargs)
 
 
@@ -52,29 +51,55 @@ class XmlParser(parsers.XmlParser):
 @dataclass
 class XmlSerializer(serializers.XmlSerializer):
     context: XmlContext = field(default_factory=XmlContext)
-    _config: ClassVar[config.SerializerConfig | None] = None
 
+    # overriding so we can pass the args we want to next_attribute
+    # and so that we can skip unset values
     def write_dataclass(
         self,
-        obj: Any,
+        obj: BaseModel,
         namespace: str | None = None,
         qname: str | None = None,
         nillable: bool = False,
         xsi_type: str | None = None,
     ) -> Generator:
-        # This is a hack to support `ignore_unset_attributes` in XmlSerializer
-        # unforunately the `next_attribute` method is a class method and doesn't
-        # have access to the instance config, so we have to temporarily set it as a
-        # class variable and reset it after the method is called
-        XmlSerializer._config = self.config
-        try:
-            yield from super().write_dataclass(
-                obj, namespace, qname, nillable, xsi_type
-            )
-        finally:
-            XmlSerializer._config = None
+        """
+        Produce an events stream from a dataclass.
+
+        Optionally override the qualified name and the xsi properties
+        type and nil.
+        """
+        meta = self.context.build(
+            obj.__class__, namespace, globalns=self.config.globalns
+        )
+        qname = qname or meta.qname
+        nillable = nillable or meta.nillable
+        namespace, tag = namespaces.split_qname(qname)
+
+        yield XmlWriterEvent.START, qname
+
+        # XXX: reason 1 for overriding.
+        ignore_unset = getattr(self.config, "ignore_unset_attributes", False)
+        for key, value in self.next_attribute(
+            obj,
+            meta,
+            nillable,
+            xsi_type,
+            self.config.ignore_default_attributes,
+            ignore_unset,
+            getattr(self.config, "attribute_sort_key", None),
+        ):
+            yield XmlWriterEvent.ATTR, key, value
+
+        for var, value in self.next_value(obj, meta):
+            # XXX: reason 2 for overriding.
+            if ignore_unset and var.name not in obj.__fields_set__:
+                continue
+            yield from self.write_value(value, var, namespace)
+
+        yield XmlWriterEvent.END, qname
 
     # overriding so we can implement support for `ignore_unset_attributes`
+    # and so that we can sort attributes as we want
     @classmethod
     def next_attribute(
         cls,
@@ -83,6 +108,8 @@ class XmlSerializer(serializers.XmlSerializer):
         nillable: bool,
         xsi_type: str | None,
         ignore_optionals: bool,
+        ignore_unset: bool = False,
+        attribute_sort_key: Callable | None = None,
     ) -> Iterator[tuple[str, Any]]:
         """
         Return the attribute variables with their object values if set and not
@@ -96,17 +123,22 @@ class XmlSerializer(serializers.XmlSerializer):
             value
         :return:
         """
-        ignore_unset = getattr(cls._config, "ignore_unset_attributes", False)
-        set_fields = obj.__fields_set__ if ignore_unset else set()
 
-        for var in meta.get_attribute_vars():
+        set_fields = obj.__fields_set__ if ignore_unset else set()
+        vars_ = meta.get_attribute_vars()
+        if attribute_sort_key is not None:
+            vars_ = sorted(meta.get_attribute_vars(), key=attribute_sort_key)
+
+        # ^^^ new
+
+        for var in vars_:
             if var.is_attribute:
                 value = getattr(obj, var.name)
                 if (
                     value is None
                     or (collections.is_array(value) and not value)
                     or (ignore_optionals and var.is_optional(value))
-                    or (ignore_unset and var.name not in set_fields)
+                    or (ignore_unset and var.name not in set_fields)  # new
                 ):
                     continue
 

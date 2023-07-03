@@ -5,7 +5,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 from xml.dom import minidom
-from xml.etree import ElementTree
+from xml.etree import ElementTree as ET
 
 import pytest
 import xmlschema
@@ -39,6 +39,7 @@ SKIP_ROUNDTRIP = {
 }
 
 URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
+SCHEMA_LOCATION = "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"
 NS_OME = "{" + URI_OME + "}"
 OME_2016_06_XSD = str(Path(ome_types.__file__).parent / "ome-2016-06.xsd")
 
@@ -88,27 +89,6 @@ def test_from_tiff(validate: bool) -> None:
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
     assert ome.images[0].pixels.channels[0].samples_per_pixel == 1
-
-
-def test_roundtrip(valid_xml: Path) -> None:
-    """Ensure we can losslessly round-trip XML through the model and back."""
-    if true_stem(valid_xml) in SKIP_ROUNDTRIP:
-        pytest.xfail("known issues with canonicalization")
-
-    xml = str(valid_xml)
-
-    try:
-        original = _canonicalize(xml, True)
-    except ValueError:
-        pytest.xfail("Roundtrip will fail if original XML is invalid")
-
-    ome = from_xml(xml)
-    rexml = to_xml(ome)
-    new = _canonicalize(rexml, True)
-    if new != original:
-        Path("original.xml").write_text(original)
-        Path("rewritten.xml").write_text(new)
-        raise AssertionError
 
 
 def test_roundtrip_inverse(valid_xml: Path, tmp_path: Path) -> None:
@@ -166,84 +146,65 @@ def test_with_ome_ns() -> None:
     assert from_xml(DATA / "ome_ns.ome.xml").experimenters
 
 
-# ########## Canonicalization utils ##########
+def test_roundtrip(valid_xml: Path) -> None:
+    """Ensure we can losslessly round-trip XML through the model and back."""
+    if true_stem(valid_xml) in SKIP_ROUNDTRIP:
+        pytest.xfail("known issues with canonicalization")
+
+    original = _canonicalize(valid_xml.read_bytes())
+
+    ome = from_xml(valid_xml)
+    rexml = to_xml(ome)
+    new = _canonicalize(rexml)
+    if new != original:
+        Path("original.xml").write_text(original)
+        Path("rewritten.xml").write_text(new)
+        raise AssertionError
+
+
+# ########## Canonicalization utils for testing ##########
+
+
+def _canonicalize(xml: str | bytes, pretty: bool = False) -> str:
+    ET.register_namespace("ome", URI_OME)
+
+    # The only reason we're using xmlschema at this point is because
+    # it converts floats properly CutIn="550" -> CutIn="550.0" based on the schema
+    # once that is fixed, we can remove xmlschema entirely
+    schema = _get_schema()
+    decoded = schema.decode(xml)
+    root = cast(ET.Element, schema.encode(decoded, path=f"{NS_OME}OME"))
+
+    # Strip extra whitespace in the schemaLocation value.
+    root.attrib[SCHEMA_LOCATION] = re.sub(r"\s+", " ", root.attrib[SCHEMA_LOCATION])
+
+    # sorting elements actually breaks the validity of some documents,
+    # but it's useful for comparison sake.
+    _sort_elements(root)
+    xml_out = ET.tostring(root, "unicode")
+    xml_out = ET.canonicalize(xml_out, strip_text=True)
+    if pretty:
+        # totally optional for comparison sake... but nice for debugging
+        xml_out = minidom.parseString(xml_out).toprettyxml(indent="  ")
+    return xml_out
 
 
 @lru_cache(maxsize=None)
-def _get_schema() -> xmlschema.XMLSchema:
+def _get_schema() -> xmlschema.XMLSchemaBase:
     schema = xmlschema.XMLSchema(OME_2016_06_XSD)
     # FIXME Hack to work around xmlschema poor support for keyrefs to
-    # substitution groups
+    # substitution groups.  This can be removed, if decode(validation='skip') is used.
     ls_sgs = schema.maps.substitution_groups[f"{NS_OME}LightSourceGroup"]
     ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
     ls_id_maps.elements = {e: None for e in ls_sgs}
     return schema
 
 
-def _sort_elements(element, recursive=True):
-    # Sort the child elements alphabetically by their tag name
-    sorted_children = sorted(element, key=lambda child: child.tag)
-
+def _sort_elements(element: ET.Element, recursive: bool = True) -> None:
     # Replace the existing child elements with the sorted ones
-    element[:] = sorted_children
+    element[:] = sorted(element, key=lambda child: child.tag)
 
-    # Recursively sort child elements for each subelement
     if recursive:
+        # Recursively sort child elements for each subelement
         for child in element:
             _sort_elements(child)
-
-
-def _add_defaults(xml: str) -> ElementTree.Element:
-    # we use xmlschema to encode then decode the xml to add missing
-    # default values for the sake of canonicalization
-    # this is the ONLY remaining thing that xmlschema is used for
-    # (and only in testing).
-
-    schema = _get_schema()
-    d = cast(dict, schema.decode(xml, use_defaults=False))
-    # Strip extra whitespace in the schemaLocation value.
-    d["@xsi:schemaLocation"] = re.sub(r"\s+", " ", d["@xsi:schemaLocation"])
-    return schema.encode(d, path=NS_OME + "OME", use_defaults=False)  # type: ignore
-
-
-def _canonicalize(xml: str, strip_empty: bool) -> str:
-    root = _add_defaults(xml)
-
-    # These are the tags that appear in the example files with empty
-    # content. Since our round-trip will drop empty elements, we'll need to
-    # strip them from the "original" documents before comparison.
-    # if strip_empty:
-    #     for tag in ("Description", "LightPath", "Map"):
-    #         for e in root.findall(f".//{NS_OME}{tag}[.='']..."):
-    #             e.remove(e.find(f"{NS_OME}{tag}"))  # type: ignore
-
-    # ET.canonicalize can't handle an empty namespace so we need to
-    # re-register the OME namespace with an actual name before calling
-    # tostring.
-    # _sort_elements(root)
-
-    ElementTree.register_namespace("ome", URI_OME)
-    xml_out = ElementTree.tostring(root, "unicode")
-    xml_out = ElementTree.canonicalize(xml_out, strip_text=True)
-    xml_out = minidom.parseString(xml_out).toprettyxml(indent="  ")
-    return xml_out
-
-
-def test_canonicalization(valid_xml: Path) -> None:
-    """Ensure we can losslessly round-trip XML through the model and back."""
-    if true_stem(valid_xml) in SKIP_ROUNDTRIP:
-        pytest.xfail("known issues with canonicalization")
-
-    xml = str(valid_xml)
-
-    try:
-        original = _canonicalize(xml, True)
-    except ValueError:
-        pytest.xfail("Roundtrip will fail if original XML is invalid")
-
-    ome = from_xml(xml)
-    new = to_xml(ome, canonicalize=True)
-    if new != original:
-        Path("original.xml").write_text(original)
-        Path("rewritten.xml").write_text(new)
-        assert new == original

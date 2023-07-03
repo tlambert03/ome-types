@@ -1,11 +1,18 @@
 from __future__ import annotations
 
+import operator
 import os
 from dataclasses import is_dataclass
 from pathlib import Path
 from struct import Struct
 from typing import TYPE_CHECKING, Any, cast
-from xml.etree import ElementTree as ET
+
+from ome_types.validation import validate_xml
+
+try:
+    from lxml import etree as ET
+except ImportError:  # pragma: no cover
+    from xml.etree import ElementTree as ET
 
 from xsdata.formats.dataclass.parsers.config import ParserConfig
 
@@ -102,10 +109,12 @@ def to_xml(
     validate: bool = False,
 ) -> str:
     config = SerializerConfig(
-        pretty_print=indent > 0,
+        pretty_print=(indent > 0) and not canonicalize,  # canonicalize does it for us
         pretty_print_indent=" " * indent,
+        xml_declaration=False,
         ignore_default_attributes=exclude_defaults,
         ignore_unset_attributes=exclude_unset,
+        attribute_sort_key=operator.attrgetter("name") if canonicalize else None,
     )
     if include_schema_location:
         config.schema_location = f"{OME_2016_06_URI} {OME_2016_06_URI}/ome.xsd"
@@ -116,20 +125,10 @@ def to_xml(
 
     ns_map = {"ome" if include_namespace else None: OME_2016_06_URI}
     xml = serializer.render(ome, ns_map=ns_map)
-    # HACK: xsdata is always including <StructuredAnnotations/> because...
-    # 1. we override the default for OME.structured_annotations so that
-    #    it's always a present (if empty) list.  That was the v1 behavior
-    #    and it allows ome.structured_annotations.append(...) to always work.
-    # 2. xsdata thinks it's not nillable, and therefore always includes it
-    # ... we might be able to do it better, but this fixes it for now.
-    ns = "ome:" if include_namespace else ""
-    xml = xml.replace(f"<{ns}StructuredAnnotations/>", "")
 
     if canonicalize:
         xml = _canonicalize(xml, indent=" " * indent)
     if validate:
-        from ome_types.validation import validate_xml
-
         validate_xml(xml)
     return xml
 
@@ -137,10 +136,7 @@ def to_xml(
 def _canonicalize(xml: str, indent: str) -> str:
     from xml.dom import minidom
 
-    root = ET.fromstring(xml)  # noqa: S314
-
-    xml_out = ET.tostring(root, "unicode")
-    xml_out = ET.canonicalize(xml_out, strip_text=True)
+    xml_out = ET.canonicalize(xml, strip_text=True)
     return minidom.parseString(xml_out).toprettyxml(indent=indent)  # noqa: S318
 
 

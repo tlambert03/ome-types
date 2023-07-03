@@ -40,10 +40,10 @@ class OMEMixin:
 
         return from_tiff(path)
 
-    def to_xml(self) -> str:
+    def to_xml(self, **kwargs: Any) -> str:
         from ome_types._conversion import to_xml
 
-        return to_xml(cast("OME", self))
+        return to_xml(cast("OME", self), **kwargs)
 
 
 def collect_ids(value: Any) -> dict[str, OMEType]:

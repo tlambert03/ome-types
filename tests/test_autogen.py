@@ -1,4 +1,5 @@
 import importlib
+import os
 import sys
 from importlib.util import find_spec
 from pathlib import Path
@@ -23,6 +24,7 @@ def imports_autogen(monkeypatch: MonkeyPatch) -> None:
         monkeypatch.syspath_prepend(str(SRC))
 
 
+@pytest.mark.skipif(not os.getenv("CI"), reason="slow")
 @pytest.mark.usefixtures("imports_autogen")
 def test_autogen(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     """Test that autogen works without raising an exception.
