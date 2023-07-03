@@ -18,7 +18,6 @@ except ImportError:  # pragma: no cover
 
 from xsdata.formats.dataclass.parsers.config import ParserConfig
 
-from ome_types.model import OME
 from xsdata_pydantic_basemodel.bindings import (
     SerializerConfig,
     XmlParser,
@@ -32,6 +31,7 @@ if TYPE_CHECKING:
     from xsdata.formats.dataclass.parsers.mixins import XmlHandler
 
     from ome_types._mixins._base_type import OMEType
+    from ome_types.model import OME
     from xsdata_pydantic_basemodel.bindings import XmlContext
 
     class ParserKwargs(TypedDict, total=False):
@@ -110,7 +110,7 @@ def from_xml(
     # come out of this function, and will be more useful to most users.
     # For those who pass in an xml document that isn't just a root <OME> tag,
     # they can cast the result to the correct type themselves.
-    OME_type = cast(type[OME], _get_ome_type(xml))
+    OME_type = cast("type[OME]", _get_ome_type(xml))
 
     parser_ = XmlParser(**(parser_kwargs or {}))
     if isinstance(xml, bytes):

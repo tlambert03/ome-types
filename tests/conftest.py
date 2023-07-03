@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import sys
 from pathlib import Path
-from typing import Any, DefaultDict
+from typing import TYPE_CHECKING, Any, DefaultDict
 
 import pytest
 
 from ome_types import model
 from ome_types._mixins import _base_type
+
+if TYPE_CHECKING:
+    from collections import defaultdict
 
 DATA = Path(__file__).parent / "data"
 ALL_XML = set(DATA.glob("*.ome.xml"))
@@ -45,7 +50,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-USED_CLASS_KWARGS: DefaultDict[str, set[str]] = DefaultDict(set)
+USED_CLASS_KWARGS: defaultdict[str, set[str]] = DefaultDict(set)
 
 
 @pytest.fixture(autouse=True, scope="session")
