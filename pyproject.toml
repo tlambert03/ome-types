@@ -41,13 +41,7 @@ ome-types = "ome_types._napari_plugin"
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
 dev = ["black", "ruff", "xsdata[cli]>=23.6", "mypy"]
-docs = [
-  "numpydoc",
-  "pygments",
-  "sphinx==5.3.0",
-  "sphinx-rtd-theme==1.1.1",
-  "ipython",
-]
+docs = ["mkdocs-material", "mkdocstrings-python"]
 test = ["pytest", "pytest-cov", "xmlschema"]
 
 # https://hatch.pypa.io/latest/plugins/build-hook/custom/

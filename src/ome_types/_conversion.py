@@ -91,6 +91,29 @@ def from_xml(
     parser: Any = None,
     parser_kwargs: ParserKwargs | None = None,
 ) -> OME:
+    """Generate an OME object from an XML document.
+
+
+    Parameters
+    ----------
+    xml : Path | str | bytes
+        Path to an XML file, or a string or bytes containing XML.
+    validate : bool | None
+        Whether to validate the XML document against the OME schema.
+        If None, validation will be skipped if lxml is not available,
+        and will be performed otherwise.
+    parser : Any
+        Ignored, but kept for backwards compatibility.
+    parser_kwargs : ParserKwargs | None
+        Passed to the XmlParser constructor. If None, a default parser
+        will be used.
+
+
+    Returns
+    -------
+    OME
+        The OME object parsed from the XML document.
+    """
     if parser is not None:
         warnings.warn(
             "As of version 0.4.0, the parser argument is ignored. "
