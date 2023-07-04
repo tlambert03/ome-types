@@ -4,6 +4,7 @@ import weakref
 from typing import TYPE_CHECKING, Any, cast
 
 from ome_types._mixins._base_type import OMEType
+from ome_types._mixins._ids import CONVERTED_IDS
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -13,6 +14,8 @@ if TYPE_CHECKING:
 
 class OMEMixin:
     def __init__(self, **data: Any) -> None:
+        # Clear the cache of converted IDs, so that they are unique to each OME instance
+        CONVERTED_IDS.clear()
         super().__init__(**data)
         self._link_refs()
 
