@@ -1,13 +1,12 @@
-import contextlib
-import re
 import warnings
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, Optional, Sequence, Set, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, cast
 
 from pydantic import BaseModel, PrivateAttr, validator
 
+from ome_types._mixins._ids import validate_id
 from ome_types.units import ureg
 
 if TYPE_CHECKING:
@@ -17,7 +16,7 @@ if TYPE_CHECKING:
 # Default value to support automatic numbering for id field values.
 AUTO_SEQUENCE = "__auto_sequence__"
 
-_COUNTERS: Dict[str, int] = {}
+
 _UNIT_FIELD = "{}_unit"
 _QUANTITY_FIELD = "{}_quantity"
 DEPRECATED_NAMES = {
@@ -107,47 +106,7 @@ class OMEType(BaseModel):
             body = ""
         return f"{name}({body})"
 
-    @validator("id", pre=True, always=True, check_fields=False)
-    @classmethod
-    def _validate_id(cls, value: Any) -> Any:
-        """Pydantic validator for ID fields in OME models.
-
-        If no value is provided, this validator provides and integer ID, and stores the
-        maximum previously-seen value on the class.
-        """
-        # FIXME: clean this up
-        id_field = cls.__fields__["id"]
-        id_regex = cast(str, id_field.field_info.regex)
-        id_name = id_regex.split(":")[-3]
-
-        current_count = _COUNTERS.setdefault(id_name, -1)
-        if isinstance(value, str) and value != AUTO_SEQUENCE:
-            # parse the id and update the counter
-            *name, v_id = value.rsplit(":", 1)
-            if not re.match(id_regex, value):
-                newname = cls._validate_id(
-                    int(v_id) if v_id.isnumeric() else AUTO_SEQUENCE
-                )
-                warnings.warn(
-                    f"Casting invalid {id_name}ID {value!r} to {newname!r}",
-                    stacklevel=2,
-                )
-                return newname
-
-            with contextlib.suppress(ValueError):
-                _COUNTERS[id_name] = max(current_count, int(v_id))
-            return value
-
-        if isinstance(value, int):
-            _COUNTERS[id_name] = max(current_count, value)
-        elif value == AUTO_SEQUENCE:
-            # just increment the counter
-            _COUNTERS[id_name] += 1
-            value = _COUNTERS[id_name]
-        else:
-            raise ValueError(f"Invalid ID value: {value!r}, {type(value)}")
-
-        return f"{id_name}:{value}"
+    _v = validator("id", pre=True, always=True, check_fields=False)(validate_id)
 
     def __getattr__(self, key: str) -> Any:
         cls_name = self.__class__.__name__
