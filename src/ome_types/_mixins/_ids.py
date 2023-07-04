@@ -12,7 +12,10 @@ if TYPE_CHECKING:
 AUTO_SEQUENCE: Final = "__auto_sequence__"
 # map of id_name -> max id value
 ID_COUNTER: dict[str, int] = {}
+
 # map of (id_name, id_value) -> converted id
+# NOTE: this is cleared in OMEMixin.__init__, so that the set of converted IDs
+# is unique to each OME instance
 CONVERTED_IDS: dict[tuple[str, str], str] = {}
 
 
