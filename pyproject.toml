@@ -48,7 +48,13 @@ docs = [
   "sphinx-rtd-theme==1.1.1",
   "ipython",
 ]
-test = ["pytest", "pytest-cov", "xmlschema", "pytest-mypy-plugins"]
+test = [
+  "pytest",
+  "pytest-cov",
+  "xmlschema",
+  "pytest-mypy-plugins",
+  "types-lxml",
+]
 
 # https://hatch.pypa.io/latest/plugins/build-hook/custom/
 [tool.hatch.build.targets.wheel.hooks.custom]
