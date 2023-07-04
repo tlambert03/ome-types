@@ -22,7 +22,10 @@ class OMETree(QTreeWidget):
     """A Widget that can show OME XML."""
 
     def __init__(
-        self, ome_dict: dict = None, viewer: "napari.viewer.Viewer" = None, parent=None
+        self,
+        ome_dict: Optional[dict] = None,
+        viewer: "napari.viewer.Viewer" = None,
+        parent=None,
     ) -> None:
         super().__init__(parent=parent)
         self._viewer = viewer
