@@ -109,6 +109,7 @@ class OmeFilters(PydanticBaseFilters):
                 if o.module_name
             }
         )
+        patterns["ome_types._mixins._util"] = {"new_uuid": ["default_factory=new_uuid"]}
         return {key: patterns[key] for key in sorted(patterns)}
 
     def field_default_value(self, attr: Attr, ns_map: dict | None = None) -> str:
@@ -125,6 +126,11 @@ class OmeFilters(PydanticBaseFilters):
         if kwargs.get("default") in factorize:
             kwargs = {"default_factory": kwargs.pop("default"), **kwargs}
 
+        # uncomment this to use new_uuid as the default_factory for all UUIDs
+        # but then we have an equality checking problem in the tests
+        # if kwargs.get("metadata", {}).get("pattern", "").startswith("(urn:uuid:"):
+        #     kwargs.pop("default", None)
+        #     kwargs = {"default_factory": "new_uuid", **kwargs}
         return super().format_arguments(kwargs, indent)
 
     def constant_name(self, name: str, class_name: str) -> str:
