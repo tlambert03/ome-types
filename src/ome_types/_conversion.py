@@ -14,7 +14,7 @@ from ome_types.validation import validate_xml
 try:
     from lxml import etree as ET
 except ImportError:  # pragma: no cover
-    from xml.etree import ElementTree as ET
+    from xml.etree import ElementTree as ET  # type: ignore[no-redef]
 
 from xsdata.formats.dataclass.parsers.config import ParserConfig
 
@@ -57,8 +57,8 @@ def _get_ome_type(xml: str | bytes) -> type[OMEType]:
             xml = xml.encode("utf-8")
         root = ET.fromstring(xml)  # noqa: S314
 
-    *ns, localname = root.tag[1:].split("}", 1)
-    ns = next(iter(ns), None)
+    *_ns, localname = root.tag[1:].split("}", 1)
+    ns = next(iter(_ns), None)
 
     if not ns or ns not in MODULES:
         raise ValueError(f"Unsupported OME schema tag {root.tag!r} in namespace {ns!r}")

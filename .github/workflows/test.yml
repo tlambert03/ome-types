@@ -56,6 +56,23 @@ jobs:
 
       - uses: codecov/codecov-action@v2
 
+  test-types:
+    name: Typesafety
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          python -m pip install pytest pytest-mypy-plugins
+          python -m pip install .
+
+      - name: Test
+        run: pytest typesafety -v
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest

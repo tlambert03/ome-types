@@ -24,7 +24,7 @@ class OMEMixin:
         for ref in collect_references(self):
             # all reference subclasses do actually have an 'id' field
             # but it's not declared in the base class
-            ref._ref = weakref.ref(ids[ref.id])  # type: ignore [attr-defined]
+            ref._ref = weakref.ref(ids[ref.id])
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Support unpickle of our weakref references."""
@@ -66,7 +66,7 @@ def collect_ids(value: Any) -> dict[str, OMEType]:
             if f == "id" and not isinstance(value, Reference):
                 # We don't need to recurse on the id string, so just record it
                 # and move on.
-                ids[value.id] = value  # type: ignore
+                ids[value.id] = value
             else:
                 ids.update(collect_ids(getattr(value, f)))
     # Do nothing for uninteresting types.

@@ -76,7 +76,7 @@ class PydanticBaseModel(Dataclasses):
     def is_model(self, obj: Any) -> bool:
         clazz = obj if isinstance(obj, type) else type(obj)
         if issubclass(clazz, BaseModel):
-            clazz.update_forward_refs()  # type: ignore
+            clazz.update_forward_refs()
             return True
 
         return False

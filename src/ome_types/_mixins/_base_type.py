@@ -4,7 +4,7 @@ from enum import Enum
 from textwrap import indent
 from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, cast
 
-from pydantic import BaseModel, PrivateAttr, validator
+from pydantic import BaseModel, validator
 
 from ome_types._mixins._ids import validate_id
 from ome_types.units import ureg
@@ -57,11 +57,9 @@ class OMEType(BaseModel):
         underscore_attrs_are_private = True
         use_enum_values = False
         validate_all = True
-        validation_mode: str = "strict"
 
     # allow use with weakref
     __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
-    _validation_mode: str = PrivateAttr("strict")
 
     def __init__(__pydantic_self__, **data: Any) -> None:
         if "id" in __pydantic_self__.__fields__:
