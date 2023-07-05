@@ -1,8 +1,7 @@
 from contextlib import suppress
-from typing import Any, Tuple, Union
+from typing import Tuple, Union
 
 from pydantic import color
-from xsdata.formats.converter import Converter, converter
 
 __all__ = ["Color"]
 
@@ -34,14 +33,3 @@ class Color(color.Color):
 
     def __int__(self) -> int:
         return self.as_int32()
-
-
-class ColorConverter(Converter):
-    def serialize(self, value: Color, **kwargs: Any) -> str:
-        return str(value.as_int32())
-
-    def deserialize(self, value: Any, **kwargs: Any) -> Color:
-        return Color(value)
-
-
-converter.register_converter(Color, ColorConverter())

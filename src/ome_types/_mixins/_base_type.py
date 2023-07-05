@@ -85,7 +85,7 @@ class OMEType(BaseModel):
             elif isinstance(v, Enum):
                 v = v.value
             elif isinstance(v, datetime):
-                v = f"datetime.fromisoformat({v.isoformat()!r})"
+                v = v.isoformat()
             args.append((k, v))
         return sorted(args, key=lambda f: f[0] not in ("name", "id"))
 
