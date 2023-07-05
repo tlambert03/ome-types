@@ -228,3 +228,21 @@ def _sort_elements(element: ET.Element, recursive: bool = True) -> None:
         # Recursively sort child elements for each subelement
         for child in element:
             _sort_elements(child)
+
+
+@pytest.mark.parametrize("only", [True, False, {}, None])
+def test_metadata_only(only: bool) -> None:
+    pix = model.Pixels(
+        metadata_only=only,  # passing bool should be fine
+        size_c=1,
+        size_t=1,
+        size_x=1,
+        size_y=1,
+        size_z=1,
+        dimension_order="XYZCT",
+        type="uint8",
+    )
+    if only not in (False, None):  # note that empty dict is "truthy" for metadata_only
+        assert pix.metadata_only
+    else:
+        assert not pix.metadata_only
