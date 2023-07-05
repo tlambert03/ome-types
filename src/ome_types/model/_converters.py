@@ -1,4 +1,5 @@
 import datetime
+import warnings
 from typing import Any
 
 from xsdata.formats.converter import Converter, converter
@@ -19,6 +20,7 @@ class DateTimeConverter(Converter):
             msg = f"Invalid datetime: {value!r} {e}."
             if xmldt.year <= 0:
                 msg += "(BC dates are not supported)"
+            warnings.warn(msg, stacklevel=2)
             return datetime.datetime(1, 1, 1)
 
 
