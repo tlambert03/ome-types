@@ -26,7 +26,7 @@ class UserSequence(MutableSequence[T]):
         return self.__root__[_idx]  # type: ignore[return-value]
 
     def __len__(self) -> int:
-        return super().__len__()
+        return len(self.__root__)
 
     @overload
     def __setitem__(self, _idx: int, _val: T) -> None:

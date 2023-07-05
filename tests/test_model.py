@@ -264,3 +264,24 @@ def test_metadata_only(only: bool) -> None:
         assert pix.metadata_only
     else:
         assert not pix.metadata_only
+
+
+def test_deepcopy() -> None:
+    from copy import deepcopy
+
+    ome = from_xml(DATA / "example.ome.xml")
+    newome = deepcopy(ome)
+
+    assert ome == newome
+    assert ome is not newome
+
+
+def test_structured_annotations() -> None:
+    long = model.LongAnnotation(value=1)
+    annotations = [model.CommentAnnotation(value="test comment"), long]
+    ome = model.OME(structured_annotations=annotations)
+    assert ome
+    assert len(ome.structured_annotations) == 2
+    assert "Long" in ome.to_xml()
+    ome.structured_annotations.remove(long)
+    assert "Long" not in ome.to_xml()
