@@ -14,6 +14,7 @@ MIXINS: list[tuple[str, str, bool]] = [
     ("Instrument", f"{MIXIN_MODULE}._instrument.InstrumentMixin", False),
     ("Reference", f"{MIXIN_MODULE}._reference.ReferenceMixin", True),
     ("BinData", f"{MIXIN_MODULE}._bin_data.BinDataMixin", True),
+    ("Pixels", f"{MIXIN_MODULE}._pixels.PixelsMixin", True),
     (
         "StructuredAnnotations",
         f"{MIXIN_MODULE}._structured_annotations.StructuredAnnotationsMixin",
