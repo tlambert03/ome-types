@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import List
+from typing import Iterator, List
 
 from pydantic import Field, ValidationError, validator
 
@@ -60,3 +60,10 @@ class StructuredAnnotationList(OMEType, UserSequence[Annotation]):  # type: igno
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.__root__!r})"
+
+    # overriding BaseModel.__iter__ to behave more like a real Sequence
+    def __iter__(self) -> Iterator[Annotation]:  # type: ignore[override]
+        yield from self.__root__  # type: ignore[misc]  # see NOTE above
+
+    def __eq__(self, _value: object) -> bool:
+        return _value == self.__root__
