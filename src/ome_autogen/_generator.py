@@ -64,9 +64,15 @@ class Override(NamedTuple):
 
 CLASS_OVERRIDES = [
     Override("Color", "Color", "ome_types.model._color"),
+    Override("Color", "Color", "ome_types.model._color"),
     Override("Union", "ShapeUnion", "ome_types.model._shape_union"),
     Override("StructuredAnnotations", "StructuredAnnotations", None),
 ]
+IMPORT_PATTERNS = {
+    o.module_name: {o.class_name: [f": {o.class_name} ="]}
+    for o in CLASS_OVERRIDES
+    if o.module_name
+}
 
 
 class OmeFilters(PydanticBaseFilters):
@@ -97,19 +103,16 @@ class OmeFilters(PydanticBaseFilters):
         for override in CLASS_OVERRIDES:
             if attr.name == override.element_name:
                 return override.class_name
-        return super().field_type(attr, parents)
+        type_name = super().field_type(attr, parents)
+        # we want to use datetime.datetime instead of XmlDateTime
+        return type_name.replace("XmlDateTime", "datetime")
 
     @classmethod
     def build_import_patterns(cls) -> dict[str, dict]:
         patterns = super().build_import_patterns()
-        patterns.update(
-            {
-                o.module_name: {o.class_name: [f": {o.class_name} ="]}
-                for o in CLASS_OVERRIDES
-                if o.module_name
-            }
-        )
+        patterns.update(IMPORT_PATTERNS)
         patterns["ome_types._mixins._util"] = {"new_uuid": ["default_factory=new_uuid"]}
+        patterns["datetime"] = {"datetime": ["datetime"]}
         return {key: patterns[key] for key in sorted(patterns)}
 
     def field_default_value(self, attr: Attr, ns_map: dict | None = None) -> str:
