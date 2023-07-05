@@ -15,8 +15,6 @@ if TYPE_CHECKING:
     from omero.gateway import BlitzGateway
     from pytest import MonkeyPatch, TempPathFactory
 
-pytest.importorskip("generate_omero_objects")
-
 
 # this test can be run with only `pip install omero-cli-transfer --no-deps`
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
@@ -27,7 +25,7 @@ def test_populate_omero(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setitem(sys.modules, "omero.sys", MagicMock())
     monkeypatch.setitem(sys.modules, "ezomero", MagicMock())
 
-    from generate_omero_objects import populate_omero
+    gen_omero = pytest.importorskip("generate_omero_objects")
 
     conn = MagicMock()
     getId = conn.getUpdateService.return_value.saveAndReturnObject.return_value.getId
@@ -58,7 +56,9 @@ def test_populate_omero(monkeypatch: MonkeyPatch) -> None:
         projects=[project],
         datasets=[dataset],
     )
-    populate_omero(ome, img_map={}, conn=conn, hash="somehash", folder="", metadata=[])
+    gen_omero.populate_omero(
+        ome, img_map={}, conn=conn, hash="somehash", folder="", metadata=[]
+    )
     assert conn.method_calls
 
 
