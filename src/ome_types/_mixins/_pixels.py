@@ -11,7 +11,8 @@ class PixelsMixin(OMEType):
                 if not values["metadata_only"]:
                     values.pop("metadata_only")
                 else:
-                    from ome_types.model import MetadataOnly
+                    # type ignore in case the autogeneration hasn't been built
+                    from ome_types.model import MetadataOnly  # type: ignore
 
                     values["metadata_only"] = MetadataOnly()
 
