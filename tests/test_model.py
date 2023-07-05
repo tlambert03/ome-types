@@ -285,3 +285,5 @@ def test_structured_annotations() -> None:
     assert "Long" in ome.to_xml()
     ome.structured_annotations.remove(long)
     assert "Long" not in ome.to_xml()
+
+    assert list(ome.structured_annotations) == ome.structured_annotations
