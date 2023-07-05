@@ -1,6 +1,7 @@
 import warnings
 from datetime import datetime
 from enum import Enum
+from textwrap import indent
 from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, Tuple, cast
 
 from pydantic import BaseModel, validator
@@ -87,6 +88,16 @@ class OMEType(BaseModel):
                 v = f"datetime.fromisoformat({v.isoformat()!r})"
             args.append((k, v))
         return sorted(args, key=lambda f: f[0] not in ("name", "id"))
+
+    def __repr__(self) -> str:
+        lines = [f"{key}={val!r}," for key, val in self.__repr_args__()]
+        if len(lines) == 1:
+            body = lines[-1].rstrip(",")
+        elif lines:
+            body = "\n" + indent("\n".join(lines), "   ") + "\n"
+        else:
+            body = ""
+        return f"{self.__class__.__qualname__}({body})"
 
     def __getattr__(self, key: str) -> Any:
         """Getattr that redirects deprecated names."""
