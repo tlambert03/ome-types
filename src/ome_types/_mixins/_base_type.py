@@ -2,7 +2,7 @@ import warnings
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, Tuple, cast
 
 from pydantic import BaseModel, validator
 
@@ -61,10 +61,7 @@ class OMEType(BaseModel):
     # allow use with weakref
     __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
-    def __init__(__pydantic_self__, **data: Any) -> None:
-        if "id" in __pydantic_self__.__fields__:
-            data.setdefault("id", AUTO_SEQUENCE)
-        super().__init__(**data)
+    _v = validator("id", pre=True, always=True, check_fields=False)(validate_id)
 
     def __init_subclass__(cls) -> None:
         """Add `*_quantity` property for fields that have both a value and a unit.
@@ -75,38 +72,35 @@ class OMEType(BaseModel):
             if _UNIT_FIELD.format(field) in cls.__fields__:
                 setattr(cls, _QUANTITY_FIELD.format(field), _quantity_property(field))
 
+    def __repr_args__(self) -> Sequence[Tuple[Optional[str], Any]]:
+        """Repr with only set values, and truncated sequences."""
+        args = []
+        for k, v in self._iter(exclude_unset=True):
+            if isinstance(v, Sequence) and not isinstance(v, str):
+                # if this is a sequence with a long repr, just show the length
+                # and type
+                if len(repr(v).split(",")) > 5:
+                    type_name = self.__fields__[k].type_.__name__
+                    v = _RawRepr(f"[<{len(v)} {type_name}>]")
+            elif isinstance(v, Enum):
+                v = v.value
+            elif isinstance(v, datetime):
+                v = f"datetime.fromisoformat({v.isoformat()!r})"
+            args.append((k, v))
+        return sorted(args, key=lambda f: f[0] not in ("name", "id"))
+
     def __repr__(self) -> str:
-        name = self.__class__.__qualname__
-        lines = []
-        for f in sorted(
-            self.__fields__.values(), key=lambda f: f.name not in ("name", "id")
-        ):
-            if f.name.endswith("_"):
-                continue  # pragma: no cover
-            # https://github.com/python/mypy/issues/6910
-            default = f.default_factory() if f.default_factory else f.default
-            current = getattr(self, f.name)
-            if current != default:
-                if isinstance(current, Sequence) and not isinstance(current, str):
-                    rep = f"[<{len(current)} {f.name.title()}>]"
-                elif isinstance(current, Enum):
-                    rep = repr(current.value)
-                elif isinstance(current, datetime):
-                    rep = f"datetime.fromisoformat({current.isoformat()!r})"
-                else:
-                    rep = repr(current)
-                lines.append(f"{f.name}={rep},")
+        lines = [f"{key}={val!r}," for key, val in self.__repr_args__()]
         if len(lines) == 1:
             body = lines[-1].rstrip(",")
         elif lines:
             body = "\n" + indent("\n".join(lines), "   ") + "\n"
         else:
             body = ""
-        return f"{name}({body})"
-
-    _v = validator("id", pre=True, always=True, check_fields=False)(validate_id)
+        return f"{self.__class__.__qualname__}({body})"
 
     def __getattr__(self, key: str) -> Any:
+        """Getattr that redirects deprecated names."""
         cls_name = self.__class__.__name__
         if key in DEPRECATED_NAMES and hasattr(self, DEPRECATED_NAMES[key]):
             new_key = DEPRECATED_NAMES[key]
@@ -131,3 +125,13 @@ def _quantity_property(field_name: str) -> property:
         return ureg.Quantity(value, unit.value.replace(" ", "_"))
 
     return property(quantity)
+
+
+class _RawRepr:
+    """Helper class to allow repr to show raw values for fields that are sequences."""
+
+    def __init__(self, raw: str) -> None:
+        self.raw = raw
+
+    def __repr__(self) -> str:
+        return self.raw

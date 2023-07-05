@@ -31,7 +31,7 @@ def valid_xml(request: pytest.FixtureRequest) -> Path:
     return request.param
 
 
-@pytest.fixture(params=INVALID, ids=_true_stem)
+@pytest.fixture(params=sorted(INVALID), ids=_true_stem)
 def invalid_xml(request: pytest.FixtureRequest) -> Path:
     return request.param
 
