@@ -63,6 +63,13 @@ class OMEType(BaseModel):
 
     _v = validator("id", pre=True, always=True, check_fields=False)(validate_id)
 
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        field_names = set(self.__fields__.keys())
+        kwargs = set(data.keys())
+        if kwargs - field_names:
+            warnings.warn(f"Unrecognized fields: {kwargs - field_names}", stacklevel=2)
+
     def __init_subclass__(cls) -> None:
         """Add `*_quantity` property for fields that have both a value and a unit.
 
@@ -75,7 +82,7 @@ class OMEType(BaseModel):
     def __repr_args__(self) -> Sequence[Tuple[Optional[str], Any]]:
         """Repr with only set values, and truncated sequences."""
         args = []
-        for k, v in self._iter(exclude_unset=True):
+        for k, v in self._iter(exclude_defaults=True):
             if isinstance(v, Sequence) and not isinstance(v, str):
                 # if this is a sequence with a long repr, just show the length
                 # and type
