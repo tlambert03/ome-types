@@ -9,6 +9,8 @@ from pathlib import Path
 from struct import Struct
 from typing import TYPE_CHECKING, Any, cast
 
+from pydantic import BaseModel
+
 from ome_types.validation import validate_xml
 
 try:
@@ -66,18 +68,21 @@ def _get_ome_type(xml: str | bytes) -> type[OMEType]:
     mod = importlib.import_module(MODULES[ns])
     try:
         return getattr(mod, localname)
-    except AttributeError as e:
+    except AttributeError as e:  # pragma: no cover
         raise ValueError(
             f"Could not find a class for {localname!r} in {mod.__name__}"
         ) from e
 
 
 def to_dict(source: OME | Path | str | bytes) -> dict[str, Any]:
-    if is_dataclass(source):
+    if is_dataclass(source):  # pragma: no cover
         raise NotImplementedError("dataclass -> dict is not supported yet")
 
+    if isinstance(source, BaseModel):
+        return source.dict(exclude_unset=True)
+
     return from_xml(  # type: ignore[return-value]
-        cast("Path | str | bytes", source),
+        source,
         # the class_factory is what prevents class instantiation,
         # simply returning the params instead
         parser_kwargs={"config": ParserConfig(class_factory=lambda a, b: b)},
@@ -91,7 +96,7 @@ def from_xml(
     parser: Any = None,
     parser_kwargs: ParserKwargs | None = None,
 ) -> OME:
-    if parser is not None:
+    if parser is not None:  # pragma: no cover
         warnings.warn(
             "As of version 0.4.0, the parser argument is ignored. "
             "lxml will be used if available in the environment, but you can "
@@ -193,7 +198,7 @@ def tiff2xml(path: Path | str) -> bytes:
     """Extract the OME-XML from a TIFF file."""
     with Path(path).open(mode="rb") as fh:
         head = fh.read(4)
-        if head not in TIFF_TYPES:
+        if head not in TIFF_TYPES:  # pragma: no cover
             raise ValueError(f"{path!r} does not have a recognized TIFF header")
 
         offset_fmt, tagno_fmt, tagsize, codeformat = TIFF_TYPES[head]
@@ -213,7 +218,7 @@ def tiff2xml(path: Path | str) -> bytes:
                 fh.seek(offset_fmt.unpack(tagstruct[-offset_size:])[0])
                 desc = fh.read(size)
                 break
-        else:
+        else:  # pragma: no cover
             raise ValueError(f"No OME metadata found in file: {path}")
     if desc[-1] == 0:
         desc = desc[:-1]
