@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import re
 from functools import lru_cache
 from pathlib import Path
@@ -228,3 +229,7 @@ def _sort_elements(element: ET.Element, recursive: bool = True) -> None:
         # Recursively sort child elements for each subelement
         for child in element:
             _sort_elements(child)
+
+
+def test_datetimes() -> None:
+    model.TimestampAnnotation(value=datetime.datetime.now())

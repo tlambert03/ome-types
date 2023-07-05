@@ -71,3 +71,8 @@ class OMEMetaPathFinder(MetaPathFinder):
 
 
 sys.meta_path.append(OMEMetaPathFinder())
+
+from ome_types.model._converters import register_converters  # noqa
+
+register_converters()
+del register_converters
