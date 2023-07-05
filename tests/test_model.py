@@ -87,6 +87,23 @@ def test_get_ome_type() -> None:
     assert isinstance(project, model.Project)
 
 
+def test_datetimes() -> None:
+    now = datetime.datetime.now()
+    anno = model.TimestampAnnotation(value=now)
+    assert anno.value == now
+    anno = model.TimestampAnnotation(value="0066-07-18T00:00:00")
+    assert anno.value == datetime.datetime(66, 7, 18)
+
+    XML = """<?xml version="1.0" ?>
+    <TimestampAnnotation  xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06"
+        ID="Annotation:11" Namespace="sample.openmicroscopy.org/time/dinosaur">
+      <Value>-231400000-01-01T00:00:00</Value>
+    </TimestampAnnotation>
+    """
+    with pytest.warns(match="Invalid datetime.*BC dates are not supported"):
+        from_xml(XML)
+
+
 @pytest.mark.parametrize("only", [True, False, {}, None])
 def test_metadata_only(only: bool) -> None:
     pix = model.Pixels(
@@ -103,20 +120,3 @@ def test_metadata_only(only: bool) -> None:
         assert pix.metadata_only
     else:
         assert not pix.metadata_only
-
-
-def test_datetimes() -> None:
-    now = datetime.datetime.now()
-    anno = model.TimestampAnnotation(value=now)
-    assert anno.value == now
-    anno = model.TimestampAnnotation(value="0066-07-18T00:00:00")
-    assert anno.value == datetime.datetime(66, 7, 18)
-
-    XML = """<?xml version="1.0" ?>
-    <TimestampAnnotation  xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06"
-        ID="Annotation:11" Namespace="sample.openmicroscopy.org/time/dinosaur">
-      <Value>-231400000-01-01T00:00:00</Value>
-    </TimestampAnnotation>
-    """
-    with pytest.warns(match="Invalid datetime.*BC dates are not supported"):
-        from_xml(XML)
