@@ -19,6 +19,28 @@ if TYPE_CHECKING:
 AUTO_SEQUENCE = "__auto_sequence__"
 
 
+class Override(NamedTuple):
+    element_name: str
+    class_name: str
+    module_name: str | None
+
+
+CLASS_OVERRIDES = [
+    Override("Color", "Color", "ome_types.model._color"),
+    Override("Union", "ShapeUnion", "ome_types.model._shape_union"),
+    Override(
+        "StructuredAnnotations",
+        "StructuredAnnotationList",
+        "ome_types.model._structured_annotations",
+    ),
+]
+IMPORT_PATTERNS = {
+    o.module_name: {o.class_name: [f": {o.class_name} ="]}
+    for o in CLASS_OVERRIDES
+    if o.module_name
+}
+
+
 class OmeGenerator(DataclassGenerator):
     @classmethod
     def init_filters(cls, config: GeneratorConfig) -> Filters:
@@ -54,25 +76,6 @@ class OmeGenerator(DataclassGenerator):
             mod += "\n\n" + "\n".join(aliases) + "\n"
 
         return mod
-
-
-class Override(NamedTuple):
-    element_name: str
-    class_name: str
-    module_name: str | None
-
-
-CLASS_OVERRIDES = [
-    Override("Color", "Color", "ome_types.model._color"),
-    Override("Color", "Color", "ome_types.model._color"),
-    Override("Union", "ShapeUnion", "ome_types.model._shape_union"),
-    Override("StructuredAnnotations", "StructuredAnnotations", None),
-]
-IMPORT_PATTERNS = {
-    o.module_name: {o.class_name: [f": {o.class_name} ="]}
-    for o in CLASS_OVERRIDES
-    if o.module_name
-}
 
 
 class OmeFilters(PydanticBaseFilters):
