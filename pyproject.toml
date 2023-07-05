@@ -151,7 +151,7 @@ target-version = ['py38']
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = ["tests"]
-addopts = '--mypy-only-local-stub'
+addopts = '--mypy-only-local-stub --color=yes'
 filterwarnings = [
   "error",
   "ignore:Casting invalid AnnotationID:UserWarning",
