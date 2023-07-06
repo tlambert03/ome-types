@@ -1,10 +1,4 @@
 """xsdata pydantic plugin using BaseModel."""
-from importlib.metadata import PackageNotFoundError, version
-
-try:
-    __version__ = version("xsdata-pydantic-basemodel")
-except PackageNotFoundError:  # pragma: no cover
-    __version__ = "uninstalled"
-
+__version__ = "0.1.0"  # FIXME when you pull it out of the ome-types repo
 __author__ = "Talley Lambert"
 __email__ = "talley.lambert@gmail.com"

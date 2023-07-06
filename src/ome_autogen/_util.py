@@ -10,7 +10,7 @@ from typing import Any, Iterator, NamedTuple, cast
 from xml.etree import ElementTree as ET
 
 SRC_PATH = Path(__file__).parent.parent
-SCHEMA_FILE = SRC_PATH / "ome_types" / "ome-2016-06.xsd"
+SCHEMA_FILE = (SRC_PATH / "ome_types" / "ome-2016-06.xsd").absolute()
 
 
 @contextmanager

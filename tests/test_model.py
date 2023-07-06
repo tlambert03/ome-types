@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import re
+import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -165,6 +166,7 @@ def test_get_ome_type() -> None:
     assert isinstance(project, model.Project)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 def test_roundtrip(valid_xml: Path) -> None:
     """Ensure we can losslessly round-trip XML through the model and back."""
     if true_stem(valid_xml) in SKIP_ROUNDTRIP:

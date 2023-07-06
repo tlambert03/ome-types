@@ -32,4 +32,4 @@ repos:
         additional_dependencies:
           - pydantic<2
           - Pint
-          - types-lxml
+          - types-lxml; python_version > '3.8'
