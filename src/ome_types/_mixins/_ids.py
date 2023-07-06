@@ -3,10 +3,11 @@ from __future__ import annotations
 import re
 import warnings
 from contextlib import suppress
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from pydantic import BaseModel
+    from typing_extensions import Final
 
 # Default value to support automatic numbering for id field values.
 AUTO_SEQUENCE: Final = "__auto_sequence__"
