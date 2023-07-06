@@ -106,12 +106,14 @@ class OmeFilters(PydanticBaseFilters):
         return Filters.class_bases(self, obj, class_name)
 
     def _attr_is_optional(self, attr: Attr) -> bool:
+        if attr.name in NO_OPTIONAL:
+            return False
         return attr.is_nillable or (
             attr.default is None and (attr.is_optional or not self.format.kw_only)
         )
 
     def _format_type(self, attr: Attr, result: str) -> str:
-        if self._attr_is_optional(attr) and attr.name not in NO_OPTIONAL:
+        if self._attr_is_optional(attr):
             return f"None | {result}" if self.union_type else f"Optional[{result}]"
         return result
 
