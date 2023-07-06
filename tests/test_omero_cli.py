@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from ome_types import OME, model
+from ome_types import OME
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 # this test can be run with only `pip install omero-cli-transfer --no-deps`
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-def test_populate_omero(monkeypatch: MonkeyPatch) -> None:
+def test_populate_omero(monkeypatch: MonkeyPatch, full_ome_object: OME) -> None:
     monkeypatch.setitem(sys.modules, "omero.gateway", MagicMock())
     monkeypatch.setitem(sys.modules, "omero.rtypes", MagicMock())
     monkeypatch.setitem(sys.modules, "omero.model", MagicMock())
@@ -31,33 +31,13 @@ def test_populate_omero(monkeypatch: MonkeyPatch) -> None:
     getId = conn.getUpdateService.return_value.saveAndReturnObject.return_value.getId
     getId.return_value.val = 2
 
-    ann = model.CommentAnnotation(value="test comment", id="Annotation:-123")
-    plate = model.Plate(
-        name="MyPlate", annotation_refs=[model.AnnotationRef(id=ann.id)]
-    )
-    img = model.Image(
-        name="MyImage",
-        pixels=model.Pixels(
-            size_c=1,
-            size_t=1,
-            size_z=10,
-            size_x=100,
-            size_y=100,
-            dimension_order="XYZCT",
-            type="uint8",
-        ),
-    )
-    project = model.Project(name="MyProject", description="Project description")
-    dataset = model.Dataset(name="MyDataset", image_refs=[model.ImageRef(id=img.id)])
-    ome = OME(
-        images=[img],
-        plates=[plate],
-        structured_annotations=[ann],
-        projects=[project],
-        datasets=[dataset],
-    )
     gen_omero.populate_omero(
-        ome, img_map={}, conn=conn, hash="somehash", folder="", metadata=[]
+        full_ome_object,
+        img_map={"Image:0": (1, 2, 3)},
+        conn=conn,
+        hash="somehash",
+        folder="",
+        metadata=["md5", "img_id", "plate_id", "timestamp"],
     )
     assert conn.method_calls
 
