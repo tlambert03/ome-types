@@ -19,6 +19,40 @@ if TYPE_CHECKING:
 AUTO_SEQUENCE = "__auto_sequence__"
 
 
+class Override(NamedTuple):
+    element_name: str  # name of the attribute in the XSD
+    class_name: str  # name of our override class
+    module_name: str | None  # module where the override class is defined
+
+
+CLASS_OVERRIDES = [
+    Override("FillColor", "Color", "ome_types.model._color"),
+    Override("StrokeColor", "Color", "ome_types.model._color"),
+    Override("Color", "Color", "ome_types.model._color"),
+    Override("Union", "ShapeUnion", "ome_types.model._shape_union"),
+    Override(
+        "StructuredAnnotations",
+        "StructuredAnnotationList",
+        "ome_types.model._structured_annotations",
+    ),
+]
+# classes that should never be optional, but always have default_factories
+NO_OPTIONAL = {"Union", "StructuredAnnotations"}
+
+# if these names are found as default=..., turn them into default_factory=...
+FACTORIZE = set([x.class_name for x in CLASS_OVERRIDES] + ["StructuredAnnotations"])
+
+# prebuilt maps for usage in code below
+OVERRIDE_ELEM_TO_CLASS = {o.element_name: o.class_name for o in CLASS_OVERRIDES}
+IMPORT_PATTERNS = {
+    o.module_name: {
+        o.class_name: [f": {o.class_name} =", f": Optional[{o.class_name}] ="]
+    }
+    for o in CLASS_OVERRIDES
+    if o.module_name
+}
+
+
 class OmeGenerator(DataclassGenerator):
     @classmethod
     def init_filters(cls, config: GeneratorConfig) -> Filters:
@@ -56,19 +90,6 @@ class OmeGenerator(DataclassGenerator):
         return mod
 
 
-class Override(NamedTuple):
-    element_name: str
-    class_name: str
-    module_name: str | None
-
-
-CLASS_OVERRIDES = [
-    Override("Color", "Color", "ome_types.model._color"),
-    Override("Union", "ShapeUnion", "ome_types.model._shape_union"),
-    Override("StructuredAnnotations", "StructuredAnnotations", None),
-]
-
-
 class OmeFilters(PydanticBaseFilters):
     def __init__(self, config: GeneratorConfig):
         super().__init__(config)
@@ -84,31 +105,41 @@ class OmeFilters(PydanticBaseFilters):
         # This could go once PydanticBaseFilters is better about deduping
         return Filters.class_bases(self, obj, class_name)
 
+    def _attr_is_optional(self, attr: Attr) -> bool:
+        if attr.name in NO_OPTIONAL:
+            return False
+        return attr.is_nillable or (
+            attr.default is None and (attr.is_optional or not self.format.kw_only)
+        )
+
+    def _format_type(self, attr: Attr, result: str) -> str:
+        if self._attr_is_optional(attr):
+            return f"None | {result}" if self.union_type else f"Optional[{result}]"
+        return result
+
     def field_type(self, attr: Attr, parents: list[str]) -> str:
-        # HACK
-        # It would be nicer to put this in the self.field_name method...but that
-        # method only receives the attr name, not the attr object, and so we
-        # don't know at that point whether it belongs to a list or not.
-        # This hack works only because this method is called BEFORE self.field_name
-        # in the class.jinja2 template, so we directly modify the attr object here.
         if attr.is_list:
+            # HACK
+            # It would be nicer to put this in the self.field_name method...but that
+            # method only receives the attr name, not the attr object, and so we
+            # don't know at that point whether it belongs to a list or not.
+            # This hack works only because this method is called BEFORE self.field_name
+            # in the class.jinja2 template, so we directly modify the attr object here.
             attr.name = self.appinfo.plurals.get(attr.name, f"{attr.name}s")
 
-        for override in CLASS_OVERRIDES:
-            if attr.name == override.element_name:
-                return override.class_name
-        return super().field_type(attr, parents)
+        if attr.name in OVERRIDE_ELEM_TO_CLASS:
+            return self._format_type(attr, OVERRIDE_ELEM_TO_CLASS[attr.name])
+
+        type_name = super().field_type(attr, parents)
+        # we want to use datetime.datetime instead of XmlDateTime
+        return type_name.replace("XmlDateTime", "datetime")
 
     @classmethod
     def build_import_patterns(cls) -> dict[str, dict]:
         patterns = super().build_import_patterns()
-        patterns.update(
-            {
-                o.module_name: {o.class_name: [f": {o.class_name} ="]}
-                for o in CLASS_OVERRIDES
-                if o.module_name
-            }
-        )
+        patterns.update(IMPORT_PATTERNS)
+        patterns["ome_types._mixins._util"] = {"new_uuid": ["default_factory=new_uuid"]}
+        patterns["datetime"] = {"datetime": ["datetime"]}
         return {key: patterns[key] for key in sorted(patterns)}
 
     def field_default_value(self, attr: Attr, ns_map: dict | None = None) -> str:
@@ -116,15 +147,20 @@ class OmeFilters(PydanticBaseFilters):
             return repr(AUTO_SEQUENCE)
         for override in CLASS_OVERRIDES:
             if attr.name == override.element_name:
-                return override.class_name
+                if not self._attr_is_optional(attr):
+                    return override.class_name
         return super().field_default_value(attr, ns_map)
 
     def format_arguments(self, kwargs: dict, indent: int = 0) -> str:
         # keep default_factory at the front
-        factorize = [x.class_name for x in CLASS_OVERRIDES] + ["StructuredAnnotations"]
-        if kwargs.get("default") in factorize:
+        if kwargs.get("default") in FACTORIZE:
             kwargs = {"default_factory": kwargs.pop("default"), **kwargs}
 
+        # uncomment this to use new_uuid as the default_factory for all UUIDs
+        # but then we have an equality checking problem in the tests
+        # if kwargs.get("metadata", {}).get("pattern", "").startswith("(urn:uuid:"):
+        #     kwargs.pop("default", None)
+        #     kwargs = {"default_factory": "new_uuid", **kwargs}
         return super().format_arguments(kwargs, indent)
 
     def constant_name(self, name: str, class_name: str) -> str:

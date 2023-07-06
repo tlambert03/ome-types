@@ -31,7 +31,7 @@ def valid_xml(request: pytest.FixtureRequest) -> Path:
     return request.param
 
 
-@pytest.fixture(params=INVALID, ids=_true_stem)
+@pytest.fixture(params=sorted(INVALID), ids=_true_stem)
 def invalid_xml(request: pytest.FixtureRequest) -> Path:
     return request.param
 
@@ -139,3 +139,83 @@ def pytest_configure(config: pytest.Config) -> None:
     custom_reporter = CustomTerminalReporter(config, sys.stdout)
     config.pluginmanager.unregister(standard_reporter)
     config.pluginmanager.register(custom_reporter, "terminalreporter")
+
+
+@pytest.fixture
+def full_ome_object() -> model.OME:
+    """Mostly used for the omero test, a fully populated OME object."""
+    comment_ann = model.CommentAnnotation(value="test comment", id="Annotation:-123")
+    comment2 = model.CommentAnnotation(value="test comment", id="Annotation:-1233")
+    roi = model.ROI(
+        id="ROI:0",
+        name="MyROI",
+        union=[
+            model.Rectangle(x=1, y=2, width=3, height=10, fill_color="rgba(0,0,0,0.5)"),
+            model.Polygon(fill_color="blue", points="0,0 1,2 3,5"),
+            model.Line(x1=1, y1=2, x2=3, y2=4, stroke_color="red", stroke_width=3),
+            model.Point(x=1, y=2, stroke_color="red", stroke_width=3),
+            model.Ellipse(x=1, y=2, radius_x=5, radius_y=10),
+            model.Polyline(points="0,0 1,2 3,5"),
+            model.Label(x=1, y=2, text="hello", fill_color="blue"),
+        ],
+    )
+    img = model.Image(
+        id="Image:0",
+        name="MyImage",
+        pixels=model.Pixels(
+            size_c=1,
+            size_t=1,
+            size_z=10,
+            size_x=100,
+            size_y=100,
+            dimension_order="XYZCT",
+            type="uint8",
+        ),
+        roi_refs=[model.ROIRef(id=roi.id)],
+    )
+    well = model.Well(
+        color="red",
+        column=1,
+        row=5,
+        well_samples=[model.WellSample(index=1, image_ref=model.ImageRef(id=img.id))],
+    )
+    plate = model.Plate(
+        name="MyPlate",
+        annotation_refs=[model.AnnotationRef(id=comment_ann.id)],
+        wells=[well],
+    )
+    project = model.Project(name="MyProject", description="Project description")
+    dataset = model.Dataset(name="MyDataset", image_refs=[model.ImageRef(id=img.id)])
+    return model.OME(
+        images=[img],
+        plates=[plate],
+        rois=[roi],
+        structured_annotations=[
+            comment_ann,
+            comment2,
+            model.CommentAnnotation(value="test comment2"),
+            model.LongAnnotation(value=1),
+            model.FileAnnotation(
+                description="a file",
+                annotation_refs=[model.AnnotationRef(id=comment2.id)],
+                binary_file=model.BinaryFile(file_name="file.txt", size=100),
+            ),
+            model.TagAnnotation(value="some-tag"),
+            model.MapAnnotation(
+                value={
+                    "ms": [
+                        {"value": "v1", "k": "md5"},
+                        {"value": "v2", "k": "origin_image_id"},
+                        {"value": "v3", "k": "origin_plate_id"},
+                        {"value": "v4", "k": "packing_timestamp"},
+                    ]
+                },
+                id="Annotation:-456",
+            ),
+            model.MapAnnotation(
+                value={"ms": [{"value": "v3", "k": "k"}]}, id="Annotation:3"
+            ),
+        ],
+        projects=[project],
+        datasets=[dataset],
+    )

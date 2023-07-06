@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import datetime
 import re
+import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -164,6 +166,7 @@ def test_get_ome_type() -> None:
     assert isinstance(project, model.Project)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 def test_roundtrip(valid_xml: Path) -> None:
     """Ensure we can losslessly round-trip XML through the model and back."""
     if true_stem(valid_xml) in SKIP_ROUNDTRIP:
@@ -228,3 +231,74 @@ def _sort_elements(element: ET.Element, recursive: bool = True) -> None:
         # Recursively sort child elements for each subelement
         for child in element:
             _sort_elements(child)
+
+
+def test_datetimes() -> None:
+    now = datetime.datetime.now()
+    anno = model.TimestampAnnotation(value=now)
+    assert anno.value == now
+    anno = model.TimestampAnnotation(value="0066-07-18T00:00:00")
+    assert anno.value == datetime.datetime(66, 7, 18)
+
+    XML = """<?xml version="1.0" ?>
+    <TimestampAnnotation  xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06"
+        ID="Annotation:11" Namespace="sample.openmicroscopy.org/time/dinosaur">
+      <Value>-231400000-01-01T00:00:00</Value>
+    </TimestampAnnotation>
+    """
+    with pytest.warns(match="Invalid datetime.*BC dates are not supported"):
+        from_xml(XML)
+
+
+@pytest.mark.parametrize("only", [True, False, {}, None])
+def test_metadata_only(only: bool) -> None:
+    pix = model.Pixels(
+        metadata_only=only,  # passing bool should be fine
+        size_c=1,
+        size_t=1,
+        size_x=1,
+        size_y=1,
+        size_z=1,
+        dimension_order="XYZCT",
+        type="uint8",
+    )
+    if only not in (False, None):  # note that empty dict is "truthy" for metadata_only
+        assert pix.metadata_only
+    else:
+        assert not pix.metadata_only
+
+
+def test_deepcopy() -> None:
+    from copy import deepcopy
+
+    ome = from_xml(DATA / "example.ome.xml")
+    newome = deepcopy(ome)
+
+    assert ome == newome
+    assert ome is not newome
+
+
+def test_structured_annotations() -> None:
+    long = model.LongAnnotation(value=1)
+    annotations = [model.CommentAnnotation(value="test comment"), long]
+    ome = model.OME(structured_annotations=annotations)
+    assert ome
+    assert len(ome.structured_annotations) == 2
+    assert "Long" in ome.to_xml()
+    ome.structured_annotations.remove(long)
+    assert "Long" not in ome.to_xml()
+
+    assert list(ome.structured_annotations) == ome.structured_annotations
+
+
+def test_colors() -> None:
+    from ome_types.model.simple_types import Color
+
+    shape = model.Shape(fill_color="red", stroke_color="blue")
+    assert isinstance(shape.fill_color, Color)
+    assert isinstance(shape.stroke_color, Color)
+    assert shape.fill_color.as_rgb_tuple() == (255, 0, 0)
+    assert shape.stroke_color.as_named() == "blue"
+
+    assert model.Shape().fill_color is None
+    assert model.Shape().stroke_color is None

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import warnings
 import weakref
 from typing import TYPE_CHECKING, Any, cast
 
 from ome_types._mixins._base_type import OMEType
+from ome_types._mixins._ids import CONVERTED_IDS
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -13,6 +15,8 @@ if TYPE_CHECKING:
 
 class OMEMixin:
     def __init__(self, **data: Any) -> None:
+        # Clear the cache of converted IDs, so that they are unique to each OME instance
+        CONVERTED_IDS.clear()
         super().__init__(**data)
         self._link_refs()
 
@@ -21,7 +25,10 @@ class OMEMixin:
         for ref in collect_references(self):
             # all reference subclasses do actually have an 'id' field
             # but it's not declared in the base class
-            ref._ref = weakref.ref(ids[ref.id])  # type: ignore [attr-defined]
+            if ref.id in ids:
+                ref._ref = weakref.ref(ids[ref.id])
+            else:
+                warnings.warn(f"Reference to unknown ID: {ref.id}", stacklevel=2)
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Support unpickle of our weakref references."""
@@ -63,7 +70,7 @@ def collect_ids(value: Any) -> dict[str, OMEType]:
             if f == "id" and not isinstance(value, Reference):
                 # We don't need to recurse on the id string, so just record it
                 # and move on.
-                ids[value.id] = value  # type: ignore
+                ids[value.id] = value
             else:
                 ids.update(collect_ids(getattr(value, f)))
     # Do nothing for uninteresting types.

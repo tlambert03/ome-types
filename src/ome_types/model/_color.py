@@ -1,8 +1,7 @@
 from contextlib import suppress
-from typing import Any, Tuple, Union
+from typing import Tuple, Union
 
 from pydantic import color
-from xsdata.formats.converter import Converter, converter
 
 __all__ = ["Color"]
 
@@ -21,6 +20,7 @@ class Color(color.Color):
         return (val >> 24 & 255, val >> 16 & 255, val >> 8 & 255, (val & 255) / 255)
 
     def as_int32(self) -> int:
+        """Convert to an int32, with alpha in the least significant byte."""
         r, g, b, *a = self.as_rgb_tuple()
         v = r << 24 | g << 16 | b << 8 | int((a[0] if a else 1) * 255)
         if v < 2**32 // 2:
@@ -34,14 +34,3 @@ class Color(color.Color):
 
     def __int__(self) -> int:
         return self.as_int32()
-
-
-class ColorConverter(Converter):
-    def serialize(self, value: Color, **kwargs: Any) -> str:
-        return str(value.as_int32())
-
-    def deserialize(self, value: Any, **kwargs: Any) -> Color:
-        return Color(value)
-
-
-converter.register_converter(Color, ColorConverter())
