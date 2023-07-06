@@ -133,7 +133,7 @@ jobs:
         working-directory: ome-types
 
       - name: Run Tests
-        run: pytest --color=yes -k -v tests/test_ome.py
+        run: pytest --color=yes -v tests/test_ome.py
 
   test_omero_cli:
     name: test omero-cli-transfer
