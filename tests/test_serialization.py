@@ -1,5 +1,9 @@
+import pickle
+from pathlib import Path
+
 import pytest
 
+from ome_types import from_xml
 from ome_types.model import OME, Channel, Image, Pixels
 
 
@@ -16,7 +20,6 @@ def test_color_unset(channel_kwargs: dict) -> None:
                     size_z=1,
                     dimension_order="XYZTC",
                     type="uint16",
-                    metadata_only=True,
                     channels=[Channel(**channel_kwargs)],
                 )
             )
@@ -24,3 +27,11 @@ def test_color_unset(channel_kwargs: dict) -> None:
     )
 
     assert ("Color" in ome.to_xml()) is bool(channel_kwargs)
+
+
+def test_serialization(valid_xml: Path) -> None:
+    """Test pickle serialization and reserialization."""
+    ome = from_xml(valid_xml)
+    serialized = pickle.dumps(ome)
+    deserialized = pickle.loads(serialized)
+    assert ome == deserialized

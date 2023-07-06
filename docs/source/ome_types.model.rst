@@ -56,7 +56,6 @@ ome\_types.model
       LightEmittingDiode
       LightPath
       LightSource
-      LightSourceGroup
       LightSourceSettings
       Line
       ListAnnotation
@@ -92,7 +91,6 @@ ome\_types.model
       Screen
       Settings
       Shape
-      ShapeGroup
       StageLabel
       StructuredAnnotations
       TagAnnotation

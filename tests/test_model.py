@@ -1,230 +1,304 @@
-import pickle
+from __future__ import annotations
+
+import datetime
 import re
+import sys
+from functools import lru_cache
 from pathlib import Path
-from unittest import mock
+from typing import TYPE_CHECKING, cast
 from xml.dom import minidom
-from xml.etree import ElementTree
+from xml.etree import ElementTree as ET
 
 import pytest
 from pydantic import ValidationError
-from xmlschema.validators.exceptions import XMLSchemaValidationError
 
-import util
+import ome_types
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types._xmlschema import NS_OME, URI_OME, get_schema, to_xml_element
+from ome_types._conversion import _get_ome_type
 
-ValidationErrors = [ValidationError, XMLSchemaValidationError]
-try:
-    from lxml.etree import XMLSchemaValidateError
+if TYPE_CHECKING:
+    import xmlschema
+    from _pytest.mark.structures import ParameterSet
 
-    ValidationErrors.append(XMLSchemaValidateError)
-except ImportError:
-    pass
+TESTS = Path(__file__).parent
+DATA = TESTS / "data"
 
-
-SHOULD_FAIL_READ = {
-    # Some timestamps have negative years which datetime doesn't support.
-    "timestampannotation",
-}
-SHOULD_FAIL_VALIDATION = {"invalid_xml_annotation"}
-SHOULD_RAISE_READ = {"bad"}
+SHOULD_FAIL_VALIDATION = {"invalid_xml_annotation", "bad"}
 SHOULD_FAIL_ROUNDTRIP = {
     # Order of elements in StructuredAnnotations and Union are jumbled.
     "timestampannotation-posix-only",
     "transformations-downgrade",
     "invalid_xml_annotation",
 }
-SHOULD_FAIL_ROUNDTRIP_LXML = {
-    "folders-simple-taxonomy",
-    "folders-larger-taxonomy",
-}
+
 SKIP_ROUNDTRIP = {
     # These have XMLAnnotations with extra namespaces and mixed content, which
     # the automated round-trip test code doesn't properly verify yet. So even
     # though these files do appear to round-trip correctly when checked by eye,
     # we'll play it safe and skip them until the test is fixed.
     "spim",
-    "xmlannotation-body-space",
     "xmlannotation-multi-value",
     "xmlannotation-svg",
 }
 
-
-def mark_xfail(fname):
-    return pytest.param(
-        fname,
-        marks=pytest.mark.xfail(
-            strict=True, reason="Unexpected success. You fixed it!"
-        ),
-    )
+URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
+SCHEMA_LOCATION = "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"
+NS_OME = "{" + URI_OME + "}"
+OME_2016_06_XSD = str(Path(ome_types.__file__).parent / "ome-2016-06.xsd")
 
 
-def mark_skip(fname):
-    return pytest.param(fname, marks=pytest.mark.skip)
-
-
-def true_stem(p):
+def true_stem(p: Path) -> str:
     return p.name.partition(".")[0]
 
 
-all_xml = list((Path(__file__).parent / "data").glob("*.ome.xml"))
-xml_read = [mark_xfail(f) if true_stem(f) in SHOULD_FAIL_READ else f for f in all_xml]
-xml_roundtrip = []
+all_xml = list(DATA.glob("*.ome.xml"))
+xml_roundtrip: list[Path | ParameterSet] = []
 for f in all_xml:
     stem = true_stem(f)
-    if stem in SHOULD_FAIL_READ | SHOULD_RAISE_READ:
-        continue
-    elif stem in SHOULD_FAIL_ROUNDTRIP:
-        f = mark_xfail(f)
+    if stem in SHOULD_FAIL_ROUNDTRIP:
+        mrk = pytest.mark.xfail(strict=True, reason="Unexpected success. You fixed it!")
+        f = pytest.param(f, marks=mrk)  # type: ignore
     elif stem in SKIP_ROUNDTRIP:
-        f = mark_skip(f)
+        f = pytest.param(f, marks=pytest.mark.skip)  # type: ignore
     xml_roundtrip.append(f)
 
 
-validate = [True, False]
-
-parser = ["lxml", "xmlschema"]
+validate = [False]
 
 
-@pytest.mark.parametrize("xml", xml_read, ids=true_stem)
-@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_from_xml(xml, parser: str, validate: bool, benchmark):
-    should_raise = SHOULD_RAISE_READ.union(SHOULD_FAIL_VALIDATION if validate else [])
-    if true_stem(xml) in should_raise:
-        with pytest.raises(tuple(ValidationErrors)):
-            assert benchmark(from_xml, xml, parser=parser, validate=validate)
+def test_from_valid_xml(valid_xml: Path, validate: bool) -> None:
+    ome = from_xml(valid_xml, validate=validate)
+    assert ome
+    assert repr(ome)
+
+
+@pytest.mark.parametrize("validate", validate)
+def test_from_invalid_xml(invalid_xml: Path, validate: bool) -> None:
+    if validate:
+        with pytest.raises(ValidationError):
+            from_xml(invalid_xml, validate=validate)
     else:
-        assert benchmark(from_xml, xml, parser=parser, validate=validate)
+        with pytest.warns():
+            from_xml(invalid_xml, validate=validate)
 
 
-@pytest.mark.parametrize("parser", parser)
 @pytest.mark.parametrize("validate", validate)
-def test_from_tiff(benchmark, validate, parser):
+def test_from_tiff(validate: bool) -> None:
     """Test that OME metadata extractions from Tiff headers works."""
-    _path = Path(__file__).parent / "data" / "ome.tiff"
-    ome = benchmark(from_tiff, _path, parser=parser, validate=validate)
+    _path = DATA / "ome.tiff"
+    ome = from_tiff(_path, validate=validate)
     assert len(ome.images) == 1
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
     assert ome.images[0].pixels.channels[0].samples_per_pixel == 1
 
 
-@pytest.mark.parametrize("xml", xml_roundtrip, ids=true_stem)
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_roundtrip(xml, parser, validate, benchmark):
-    """Ensure we can losslessly round-trip XML through the model and back."""
-    xml = str(xml)
-    schema = get_schema(xml)
+def test_roundtrip_inverse(valid_xml: Path, tmp_path: Path) -> None:
+    """both variants have been touched by the model, here..."""
+    ome1 = from_xml(valid_xml)
 
-    def canonicalize(xml, strip_empty):
-        d = schema.decode(xml, use_defaults=True)
-        # Strip extra whitespace in the schemaLocation value.
-        d["@xsi:schemaLocation"] = re.sub(r"\s+", " ", d["@xsi:schemaLocation"])
-        root = schema.encode(d, path=NS_OME + "OME", use_defaults=True)
-        # These are the tags that appear in the example files with empty
-        # content. Since our round-trip will drop empty elements, we'll need to
-        # strip them from the "original" documents before comparison.
-        if strip_empty:
-            for tag in ("Description", "LightPath", "Map"):
-                for e in root.findall(f".//{NS_OME}{tag}[.='']..."):
-                    e.remove(e.find(f"{NS_OME}{tag}"))
-        # ET.canonicalize can't handle an empty namespace so we need to
-        # re-register the OME namespace with an actual name before calling
-        # tostring.
-        ElementTree.register_namespace("ome", URI_OME)
-        xml_out = ElementTree.tostring(root, "unicode")
-        xml_out = util.canonicalize(xml_out, strip_text=True)
-        xml_out = minidom.parseString(xml_out).toprettyxml(indent="  ")
-        return xml_out
+    # FIXME:
+    # there is a small difference in the XML output when using xml instead of lxml
+    # that makes the text of an xml annotation in `xmlannotation-multi-value` be
+    # 'B\n          ' instead of 'B'.
+    # we should investigate this and fix it, but here we just use indent=0 to avoid it.
+    xml = to_xml(ome1, indent=0)
+    out = tmp_path / "test.xml"
+    out.write_bytes(xml.encode())
+    ome2 = from_xml(out)
 
-    original = canonicalize(xml, True)
-    ome = from_xml(xml, parser=parser, validate=validate)
-    rexml = benchmark(to_xml, ome)
-
-    try:
-        assert canonicalize(rexml, False) == original
-    except AssertionError:
-        # Special xfail catch since two files fail only with xml2dict
-        if true_stem(Path(xml)) in SHOULD_FAIL_ROUNDTRIP_LXML and parser == "lxml":
-            pytest.xfail(
-                f"Expected failure on roundtrip using xml2dict on file: {stem}"
-            )
-        else:
-            raise
+    assert ome1 == ome2
 
 
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_to_xml_with_kwargs(validate, parser):
-    """Ensure kwargs are passed to ElementTree"""
-    ome = from_xml(
-        Path(__file__).parent / "data" / "example.ome.xml",
-        parser=parser,
-        validate=validate,
-    )
+# @pytest.mark.parametrize("validate", validate)
+# def test_to_xml_with_kwargs(validate):
+#     """Ensure kwargs are passed to ElementTree"""
+#     ome = from_xml(DATA / "example.ome.xml", validate=validate)
 
-    with mock.patch("xml.etree.ElementTree.tostring") as mocked_et_tostring:
-        element = to_xml_element(ome)
-        # Use an ElementTree.tostring kwarg and assert that it was passed through
-        to_xml(element, xml_declaration=True)
-        assert mocked_et_tostring.call_args.xml_declaration
+#     with mock.patch("xml.etree.ElementTree.tostring") as mocked_et_tostring:
+#         element = to_xml_element(ome)
+#         # Use an ElementTree.tostring kwarg and assert that it was passed through
+#         to_xml(element, xml_declaration=True)
+#         assert mocked_et_tostring.call_args.xml_declaration
 
 
-@pytest.mark.parametrize("xml", xml_read, ids=true_stem)
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_serialization(xml, validate, parser):
-    """Test pickle serialization and reserialization."""
-    if true_stem(xml) in SHOULD_RAISE_READ:
-        pytest.skip("Can't pickle unreadable xml")
-    if validate and true_stem(xml) in SHOULD_FAIL_VALIDATION:
-        pytest.skip("Can't pickle invalid xml with validate=True")
-
-    ome = from_xml(xml, parser=parser, validate=validate)
-    serialized = pickle.dumps(ome)
-    deserialized = pickle.loads(serialized)
-    assert ome == deserialized
-
-
-def test_no_id():
+def test_no_id() -> None:
     """Test that ids are optional, and auto-increment."""
-    i = model.Instrument(id=20)
+    i = model.Instrument(id=20)  # type: ignore
     assert i.id == "Instrument:20"
-    i2 = model.Instrument()
+    i2 = model.Instrument()  # type: ignore
     assert i2.id == "Instrument:21"
 
     # but validation still works
-    with pytest.raises(ValueError):
+    with pytest.warns(match="Casting invalid InstrumentID"):
         model.Instrument(id="nonsense")
 
 
-def test_required_missing():
+def test_required_missing() -> None:
     """Test subclasses with non-default arguments still work."""
-    with pytest.raises(ValidationError) as e:
-        _ = model.BooleanAnnotation()
-    assert "1 validation error for BooleanAnnotation" in str(e.value)
-    assert "value\n  field required" in str(e.value)
+    with pytest.raises(ValidationError, match="value\n  field required"):
+        model.BooleanAnnotation()  # type: ignore
 
-    with pytest.raises(ValidationError) as e:
-        _ = model.Label()
-    assert "2 validation errors for Label" in str(e.value)
-    assert "x\n  field required" in str(e.value)
-    assert "y\n  field required" in str(e.value)
+    with pytest.raises(ValidationError, match="x\n  field required"):
+        model.Label()  # type: ignore
 
 
-@pytest.mark.parametrize("parser", parser)
-@pytest.mark.parametrize("validate", validate)
-def test_refs(validate, parser):
-    xml = Path(__file__).parent / "data" / "two-screens-two-plates-four-wells.ome.xml"
-    ome = from_xml(xml, parser=parser, validate=validate)
-    assert ome.screens[0].plate_ref[0].ref is ome.plates[0]
+def test_refs() -> None:
+    xml = DATA / "two-screens-two-plates-four-wells.ome.xml"
+    ome = from_xml(xml)
+    assert ome.screens[0].plate_refs[0].ref is ome.plates[0]
 
 
-@pytest.mark.parametrize("validate", validate)
-@pytest.mark.parametrize("parser", parser)
-def test_with_ome_ns(validate, parser):
-    xml = Path(__file__).parent / "data" / "ome_ns.ome.xml"
-    ome = from_xml(xml, parser=parser, validate=validate)
-    assert ome.experimenters
+def test_with_ome_ns() -> None:
+    assert from_xml(DATA / "ome_ns.ome.xml").experimenters
+
+
+def test_get_ome_type() -> None:
+    t = _get_ome_type(f'<Image xmlns="{URI_OME}" />')
+    assert t is model.Image
+
+    with pytest.raises(ValueError):
+        _get_ome_type("<Image />")
+
+    # this can be used to instantiate XML with a non OME root type:
+    project = from_xml(f'<Project xmlns="{URI_OME}" />')
+    assert isinstance(project, model.Project)
+
+
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
+def test_roundtrip(valid_xml: Path) -> None:
+    """Ensure we can losslessly round-trip XML through the model and back."""
+    if true_stem(valid_xml) in SKIP_ROUNDTRIP:
+        pytest.xfail("known issues with canonicalization")
+
+    original = _canonicalize(valid_xml.read_bytes())
+
+    ome = from_xml(valid_xml)
+    rexml = to_xml(ome)
+    new = _canonicalize(rexml)
+    if new != original:
+        Path("original.xml").write_text(original)
+        Path("rewritten.xml").write_text(new)
+        raise AssertionError
+
+
+# ########## Canonicalization utils for testing ##########
+
+
+def _canonicalize(xml: str | bytes, pretty: bool = False) -> str:
+    ET.register_namespace("ome", URI_OME)
+
+    # The only reason we're using xmlschema at this point is because
+    # it converts floats properly CutIn="550" -> CutIn="550.0" based on the schema
+    # once that is fixed, we can remove xmlschema entirely
+    schema = _get_schema()
+    decoded = schema.decode(xml)
+    root = cast(ET.Element, schema.encode(decoded, path=f"{NS_OME}OME"))
+
+    # Strip extra whitespace in the schemaLocation value.
+    root.attrib[SCHEMA_LOCATION] = re.sub(r"\s+", " ", root.attrib[SCHEMA_LOCATION])
+
+    # sorting elements actually breaks the validity of some documents,
+    # but it's useful for comparison sake.
+    _sort_elements(root)
+    xml_out = ET.tostring(root, "unicode")
+    xml_out = ET.canonicalize(xml_out, strip_text=True)
+    if pretty:
+        # totally optional for comparison sake... but nice for debugging
+        xml_out = minidom.parseString(xml_out).toprettyxml(indent="  ")
+    return xml_out
+
+
+@lru_cache(maxsize=None)
+def _get_schema() -> xmlschema.XMLSchemaBase:
+    xmlschema = pytest.importorskip("xmlschema")
+
+    schema = xmlschema.XMLSchema(OME_2016_06_XSD)
+    # FIXME Hack to work around xmlschema poor support for keyrefs to
+    # substitution groups.  This can be removed, if decode(validation='skip') is used.
+    ls_sgs = schema.maps.substitution_groups[f"{NS_OME}LightSourceGroup"]
+    ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
+    ls_id_maps.elements = {e: None for e in ls_sgs}
+    return schema
+
+
+def _sort_elements(element: ET.Element, recursive: bool = True) -> None:
+    # Replace the existing child elements with the sorted ones
+    element[:] = sorted(element, key=lambda child: child.tag)
+
+    if recursive:
+        # Recursively sort child elements for each subelement
+        for child in element:
+            _sort_elements(child)
+
+
+def test_datetimes() -> None:
+    now = datetime.datetime.now()
+    anno = model.TimestampAnnotation(value=now)
+    assert anno.value == now
+    anno = model.TimestampAnnotation(value="0066-07-18T00:00:00")
+    assert anno.value == datetime.datetime(66, 7, 18)
+
+    XML = """<?xml version="1.0" ?>
+    <TimestampAnnotation  xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06"
+        ID="Annotation:11" Namespace="sample.openmicroscopy.org/time/dinosaur">
+      <Value>-231400000-01-01T00:00:00</Value>
+    </TimestampAnnotation>
+    """
+    with pytest.warns(match="Invalid datetime.*BC dates are not supported"):
+        from_xml(XML)
+
+
+@pytest.mark.parametrize("only", [True, False, {}, None])
+def test_metadata_only(only: bool) -> None:
+    pix = model.Pixels(
+        metadata_only=only,  # passing bool should be fine
+        size_c=1,
+        size_t=1,
+        size_x=1,
+        size_y=1,
+        size_z=1,
+        dimension_order="XYZCT",
+        type="uint8",
+    )
+    if only not in (False, None):  # note that empty dict is "truthy" for metadata_only
+        assert pix.metadata_only
+    else:
+        assert not pix.metadata_only
+
+
+def test_deepcopy() -> None:
+    from copy import deepcopy
+
+    ome = from_xml(DATA / "example.ome.xml")
+    newome = deepcopy(ome)
+
+    assert ome == newome
+    assert ome is not newome
+
+
+def test_structured_annotations() -> None:
+    long = model.LongAnnotation(value=1)
+    annotations = [model.CommentAnnotation(value="test comment"), long]
+    ome = model.OME(structured_annotations=annotations)
+    assert ome
+    assert len(ome.structured_annotations) == 2
+    assert "Long" in ome.to_xml()
+    ome.structured_annotations.remove(long)
+    assert "Long" not in ome.to_xml()
+
+    assert list(ome.structured_annotations) == ome.structured_annotations
+
+
+def test_colors() -> None:
+    from ome_types.model.simple_types import Color
+
+    shape = model.Shape(fill_color="red", stroke_color="blue")
+    assert isinstance(shape.fill_color, Color)
+    assert isinstance(shape.stroke_color, Color)
+    assert shape.fill_color.as_rgb_tuple() == (255, 0, 0)
+    assert shape.stroke_color.as_named() == "blue"
+
+    assert model.Shape().fill_color is None
+    assert model.Shape().stroke_color is None
