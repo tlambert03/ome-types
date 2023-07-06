@@ -79,7 +79,7 @@ def to_dict(source: OME | Path | str | bytes) -> dict[str, Any]:
         raise NotImplementedError("dataclass -> dict is not supported yet")
 
     if isinstance(source, BaseModel):
-        return source.dict(exclude_unset=True)
+        return source.dict(exclude_defaults=True)
 
     return from_xml(  # type: ignore[return-value]
         source,

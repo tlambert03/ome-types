@@ -76,10 +76,12 @@ def test_roundtrip_inverse(valid_xml: Path, tmp_path: Path) -> None:
 
 
 def test_to_dict(valid_xml: Path) -> None:
-    """both variants have been touched by the model, here..."""
     ome1 = from_xml(valid_xml)
     d = to_dict(ome1)
-    ome2 = OME(**d)
+    try:
+        ome2 = OME(**d)
+    except Exception:
+        breakpoint()
     assert ome1 == ome2
 
 

@@ -33,6 +33,7 @@ AnnotationTypes = (
     TermAnnotation,
     MapAnnotation,
 )
+_KINDS = {cls.__name__.lower(): cls for cls in AnnotationTypes}
 
 
 class StructuredAnnotationList(OMEType, UserSequence[Annotation]):  # type: ignore[misc]
@@ -53,6 +54,8 @@ class StructuredAnnotationList(OMEType, UserSequence[Annotation]):  # type: igno
         if isinstance(v, AnnotationTypes):
             return v
         if isinstance(v, dict):
+            if "kind" in v:
+                return _KINDS[v.pop("kind")](**v)
             for cls_ in AnnotationTypes:
                 with suppress(ValidationError):
                     return cls_(**v)

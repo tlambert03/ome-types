@@ -56,7 +56,7 @@ class ShapeUnion(OMEType, UserSequence[ShapeType]):  # type: ignore[misc]
 
             for cls_ in _ShapeCls:
                 with suppress(ValidationError):
-                    return cls_(**v)
+                    return cls_(warn_extra=False, **v)
         raise ValueError(f"Invalid shape: {v}")
 
     def __repr__(self) -> str:
