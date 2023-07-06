@@ -143,3 +143,16 @@ def test_structured_annotations() -> None:
     assert "Long" not in ome.to_xml()
 
     assert list(ome.structured_annotations) == ome.structured_annotations
+
+
+def test_colors() -> None:
+    from ome_types.model.simple_types import Color
+
+    shape = model.Shape(fill_color="red", stroke_color="blue")
+    assert isinstance(shape.fill_color, Color)
+    assert isinstance(shape.stroke_color, Color)
+    assert shape.fill_color.as_rgb_tuple() == (255, 0, 0)
+    assert shape.stroke_color.as_named() == "blue"
+
+    assert model.Shape().fill_color is None
+    assert model.Shape().stroke_color is None
