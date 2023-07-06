@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 import weakref
 from typing import TYPE_CHECKING, Any, cast
 
@@ -24,7 +25,10 @@ class OMEMixin:
         for ref in collect_references(self):
             # all reference subclasses do actually have an 'id' field
             # but it's not declared in the base class
-            ref._ref = weakref.ref(ids[ref.id])
+            if ref.id in ids:
+                ref._ref = weakref.ref(ids[ref.id])
+            else:
+                warnings.warn(f"Reference to unknown ID: {ref.id}", stacklevel=2)
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Support unpickle of our weakref references."""

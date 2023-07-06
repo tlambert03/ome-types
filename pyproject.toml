@@ -151,14 +151,15 @@ target-version = ['py38']
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = ["tests"]
-addopts = '--mypy-only-local-stub'
+addopts = '--mypy-only-local-stub --color=yes'
 filterwarnings = [
   "error",
   "ignore:Casting invalid AnnotationID:UserWarning",
   # FIXME: i think this might be an xsdata issue?
   "ignore::ResourceWarning",
-  "ignore:::pkg_resources",  # paquo tests
-  "ignore:::paquo",          # paquo tests
+  "ignore:pkg_resources is deprecated",  # paquo tests
+  "ignore:::paquo",                      # paquo tests
+  "ignore:the imp module is deprecated", # omero tests
 ]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
