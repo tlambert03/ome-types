@@ -84,6 +84,8 @@ class OMEType(BaseModel):
         args = []
         for k, v in self._iter(exclude_defaults=True):
             if isinstance(v, Sequence) and not isinstance(v, str):
+                if v == []:  # skip empty lists
+                    continue
                 # if this is a sequence with a long repr, just show the length
                 # and type
                 if len(repr(v).split(",")) > 5:

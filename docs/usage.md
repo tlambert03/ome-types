@@ -13,7 +13,7 @@ For example, you can parse an ome.xml, and then explore it with pythonic
 ``` python
 In [1]: from ome_types import from_xml
 
-In [2]: ome = from_xml('tests/data/hcs.ome.xml')
+In [2]: ome = from_xml('tests/data/hcs.ome.xml')  # or ome_types.OME.from_xml()
 ```
 
 [ome_types.from_xml][] returns an instance of [ome_types.OME][].
@@ -147,16 +147,16 @@ Out[21]:
  )]
 ```
 
-## Exporting
+## Serialization
 
-Finally, you can generate the OME-XML representation of the OME model
-object, for writing to a standalone .ome.xml file or inserting into the
+You can generate the OME-XML representation of the OME model
+object, for writing to a standalone `.ome.xml` file or inserting into the
 header of an OME-TIFF file:
 
 ``` python
 In [22]: from ome_types import to_xml
 
-In [23]: print(to_xml(ome))
+In [23]: print(to_xml(ome))  # or ome.to_xml()
 <OME ...>
     <Plate ColumnNamingConvention="letter" Columns="12" ID="Plate:1" ...>
         ...
