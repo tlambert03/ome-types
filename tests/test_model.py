@@ -9,21 +9,18 @@ from pydantic import ValidationError
 from ome_types import from_tiff, from_xml, model
 from ome_types._conversion import _get_ome_type
 
-TESTS = Path(__file__).parent
-DATA = TESTS / "data"
-URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
-
-validate = [False]
+DATA = Path(__file__).parent / "data"
+VALIDATE = [False]
 
 
-@pytest.mark.parametrize("validate", validate)
+@pytest.mark.parametrize("validate", VALIDATE)
 def test_from_valid_xml(valid_xml: Path, validate: bool) -> None:
     ome = from_xml(valid_xml, validate=validate)
     assert ome
     assert repr(ome)
 
 
-@pytest.mark.parametrize("validate", validate)
+@pytest.mark.parametrize("validate", VALIDATE)
 def test_from_invalid_xml(invalid_xml: Path, validate: bool) -> None:
     if validate:
         with pytest.raises(ValidationError):
@@ -33,7 +30,7 @@ def test_from_invalid_xml(invalid_xml: Path, validate: bool) -> None:
             from_xml(invalid_xml, validate=validate)
 
 
-@pytest.mark.parametrize("validate", validate)
+@pytest.mark.parametrize("validate", VALIDATE)
 def test_from_tiff(validate: bool) -> None:
     """Test that OME metadata extractions from Tiff headers works."""
     _path = DATA / "ome.tiff"
@@ -76,6 +73,8 @@ def test_with_ome_ns() -> None:
 
 
 def test_get_ome_type() -> None:
+    URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
+
     t = _get_ome_type(f'<Image xmlns="{URI_OME}" />')
     assert t is model.Image
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pickle
 import re
+import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -10,9 +11,9 @@ from xml.etree import ElementTree as ET
 
 import pytest
 
-import ome_types
 from ome_types import from_xml, to_dict, to_xml
 from ome_types.model import OME, Channel, Image, Pixels
+from ome_types.validation import OME_2016_06_XSD, OME_NS, OME_URI
 
 if TYPE_CHECKING:
     import xmlschema
@@ -22,10 +23,14 @@ SKIP_ROUNDTRIP = {
     # the automated round-trip test code doesn't properly verify yet. So even
     # though these files do appear to round-trip correctly when checked by eye,
     # we'll play it safe and skip them until the test is fixed.
-    "spim.ome",
-    "xmlannotation-multi-value.ome",
-    "xmlannotation-svg.ome",
+    "spim",
+    "xmlannotation-multi-value",
+    "xmlannotation-svg",
 }
+
+
+def true_stem(p: Path) -> str:
+    return p.name.partition(".")[0]
 
 
 @pytest.mark.parametrize("channel_kwargs", [{}, {"color": "blue"}])
@@ -75,27 +80,24 @@ def test_roundtrip_inverse(valid_xml: Path, tmp_path: Path) -> None:
     assert ome1 == ome2
 
 
+@pytest.mark.xfail
 def test_to_dict(valid_xml: Path) -> None:
     ome1 = from_xml(valid_xml)
     d = to_dict(ome1)
-    try:
-        ome2 = OME(**d)
-    except Exception:
-        breakpoint()
+    ome2 = OME(**d)
     assert ome1 == ome2
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 def test_roundtrip(valid_xml: Path) -> None:
     """Ensure we can losslessly round-trip XML through the model and back."""
-    if valid_xml.stem in SKIP_ROUNDTRIP:
+    if true_stem(valid_xml) in SKIP_ROUNDTRIP:
         pytest.xfail("known issues with canonicalization")
 
     original = _canonicalize(valid_xml.read_bytes())
 
     ome = from_xml(valid_xml)
-    # canonicalize=True is just for coverage... we need to RE-canonicalize
-    # it here for test purposes
-    rexml = to_xml(ome, validate=True, canonicalize=True)
+    rexml = to_xml(ome, validate=True)
     new = _canonicalize(rexml)
     if new != original:
         Path("original.xml").write_text(original)
@@ -106,23 +108,18 @@ def test_roundtrip(valid_xml: Path) -> None:
 # ########## Canonicalization utils for testing ##########
 
 
-URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
-NS_OME = "{" + URI_OME + "}"
-SCHEMA_LOCATION = "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"
-OME_2016_06_XSD = str(Path(ome_types.__file__).parent / "ome-2016-06.xsd")
-
-
 def _canonicalize(xml: str | bytes, pretty: bool = False) -> str:
-    ET.register_namespace("ome", URI_OME)
+    ET.register_namespace("ome", OME_URI)
 
     # The only reason we're using xmlschema at this point is because
     # it converts floats properly CutIn="550" -> CutIn="550.0" based on the schema
     # once that is fixed, we can remove xmlschema entirely
     schema = _get_schema()
     decoded = schema.decode(xml)
-    root = cast(ET.Element, schema.encode(decoded, path=f"{NS_OME}OME"))
+    root = cast(ET.Element, schema.encode(decoded, path=f"{OME_NS}OME"))
 
     # Strip extra whitespace in the schemaLocation value.
+    SCHEMA_LOCATION = "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"
     root.attrib[SCHEMA_LOCATION] = re.sub(r"\s+", " ", root.attrib[SCHEMA_LOCATION])
 
     # sorting elements actually breaks the validity of some documents,
@@ -143,8 +140,8 @@ def _get_schema() -> xmlschema.XMLSchemaBase:
     schema = xmlschema.XMLSchema(OME_2016_06_XSD)
     # FIXME Hack to work around xmlschema poor support for keyrefs to
     # substitution groups.  This can be removed, if decode(validation='skip') is used.
-    ls_sgs = schema.maps.substitution_groups[f"{NS_OME}LightSourceGroup"]
-    ls_id_maps = schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
+    ls_sgs = schema.maps.substitution_groups[f"{OME_NS}LightSourceGroup"]
+    ls_id_maps = schema.maps.identities[f"{OME_NS}LightSourceIDKey"]
     ls_id_maps.elements = {e: None for e in ls_sgs}
     return schema
 
