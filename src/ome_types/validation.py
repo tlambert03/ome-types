@@ -12,7 +12,8 @@ if TYPE_CHECKING:
 
     XMLSourceType = Union[str, bytes, Path, IO[str], IO[bytes]]
 
-NS_OME = r"{http://www.openmicroscopy.org/Schemas/OME/2016-06}"
+OME_URI = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
+OME_NS = f"{{{OME_URI}}}"
 OME_2016_06_XSD = str(Path(__file__).parent / "ome-2016-06.xsd")
 
 
@@ -79,7 +80,7 @@ def _get_XMLSchema(schema: Path | str) -> xmlschema.XMLSchema:
     xml_schema = xmlschema.XMLSchema(schema)
     # FIXME Hack to work around xmlschema poor support for keyrefs to
     # substitution groups
-    ls_sgs = xml_schema.maps.substitution_groups[f"{NS_OME}LightSourceGroup"]
-    ls_id_maps = xml_schema.maps.identities[f"{NS_OME}LightSourceIDKey"]
+    ls_sgs = xml_schema.maps.substitution_groups[f"{OME_NS}LightSourceGroup"]
+    ls_id_maps = xml_schema.maps.identities[f"{OME_NS}LightSourceIDKey"]
     ls_id_maps.elements = {e: None for e in ls_sgs}
     return xml_schema
