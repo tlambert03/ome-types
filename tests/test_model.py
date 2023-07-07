@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from ome_types import from_tiff, from_xml, model
 from ome_types._conversion import _get_ome_type
+from ome_types.validation import OME_URI
 
 DATA = Path(__file__).parent / "data"
 VALIDATE = [False]
@@ -73,16 +74,14 @@ def test_with_ome_ns() -> None:
 
 
 def test_get_ome_type() -> None:
-    URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
-
-    t = _get_ome_type(f'<Image xmlns="{URI_OME}" />')
+    t = _get_ome_type(f'<Image xmlns="{OME_URI}" />')
     assert t is model.Image
 
     with pytest.raises(ValueError):
         _get_ome_type("<Image />")
 
     # this can be used to instantiate XML with a non OME root type:
-    project = from_xml(f'<Project xmlns="{URI_OME}" />')
+    project = from_xml(f'<Project xmlns="{OME_URI}" />')
     assert isinstance(project, model.Project)
 
 
