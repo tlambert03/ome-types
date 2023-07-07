@@ -4,6 +4,12 @@ from pydantic import BaseModel
 
 
 class KindMixin(BaseModel):
+    """This mixin adds a `kind` field to the dict output.
+
+    This helps for casting a dict to a specific subclass, when the fields are
+    otherwise identical.
+    """
+
     def __init__(self, **data: Any) -> None:
         data.pop("kind", None)
         return super().__init__(**data)
