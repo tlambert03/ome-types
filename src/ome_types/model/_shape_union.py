@@ -30,6 +30,20 @@ _ShapeCls = tuple(_KINDS.values())
 
 
 class ShapeUnion(OMEType, UserSequence[ShapeType]):  # type: ignore[misc]
+    """A mutable sequence of [`ome_types.model.Shape`][].
+
+    Members of this sequence must be one of the following types:
+
+    - [`ome_types.model.Rectangle`][]
+    - [`ome_types.model.Mask`][]
+    - [`ome_types.model.Point`][]
+    - [`ome_types.model.Ellipse`][]
+    - [`ome_types.model.Line`][]
+    - [`ome_types.model.Polyline`][]
+    - [`ome_types.model.Polygon`][]
+    - [`ome_types.model.Label`][]
+    """
+
     # NOTE: in reality, this is List[ShapeGroupType]... but
     # for some reason that messes up xsdata data binding
     __root__: List[object] = Field(

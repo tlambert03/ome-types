@@ -125,7 +125,11 @@ class OmeFilters(PydanticBaseFilters):
         # https://github.com/tefra/xsdata/issues/818
         for attr in obj.attrs:
             name = attr.name
-            name = self.constant_name(name, obj.name) if obj.is_enumeration else name
+            name = (
+                self.constant_name(name, obj.name)
+                if obj.is_enumeration
+                else self.field_name(name, obj.name)
+            )
             with self._modern_typing():
                 type_ = self.field_type(attr, [obj.name])
             help_ = attr.help

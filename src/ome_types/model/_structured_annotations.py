@@ -36,6 +36,23 @@ AnnotationTypes = (
 
 
 class StructuredAnnotationList(OMEType, UserSequence[Annotation]):  # type: ignore[misc]
+    """A mutable sequence of [`ome_types.model.Annotation`][].
+
+    Members of this sequence must be one of the following types:
+
+    - [`ome_types.model.XMLAnnotation`][]
+    - [`ome_types.model.FileAnnotation`][]
+    - [`ome_types.model.ListAnnotation`][]
+    - [`ome_types.model.LongAnnotation`][]
+    - [`ome_types.model.DoubleAnnotation`][]
+    - [`ome_types.model.CommentAnnotation`][]
+    - [`ome_types.model.BooleanAnnotation`][]
+    - [`ome_types.model.TimestampAnnotation`][]
+    - [`ome_types.model.TagAnnotation`][]
+    - [`ome_types.model.TermAnnotation`][]
+    - [`ome_types.model.MapAnnotation`][]
+    """
+
     # NOTE: in reality, this is List[StructuredAnnotationTypes]... but
     # for some reason that messes up xsdata data binding
     __root__: List[object] = Field(
