@@ -22,7 +22,7 @@ div.doc-contents:not(.first) {
 
 
 div.doc-function h2.doc-heading {
-  line-height: 1;
+  line-height: 1.2;
   margin-left: 20px;
   text-indent: -20px;
   margin-bottom: 30px;

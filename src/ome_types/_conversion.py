@@ -73,6 +73,18 @@ def _get_ome_type(xml: str | bytes) -> type[OMEType]:
 
 
 def to_dict(source: OME | Path | str | bytes) -> dict[str, Any]:
+    """Return a dictionary representation of an OME or XML document.
+
+    Parameters
+    ----------
+    source : OME | Path | str | bytes
+        An OME object, or a path to an XML file, or a string or bytes containing XML.
+
+    Returns
+    -------
+    dict[str, Any]
+        A dictionary representation of the OME object or XML document.
+    """
     if is_dataclass(source):
         raise NotImplementedError("dataclass -> dict is not supported yet")
 
@@ -93,7 +105,6 @@ def from_xml(
 ) -> OME:
     """Generate an OME object from an XML document.
 
-
     Parameters
     ----------
     xml : Path | str | bytes
@@ -107,7 +118,6 @@ def from_xml(
     parser_kwargs : ParserKwargs | None
         Passed to the XmlParser constructor. If None, a default parser
         will be used.
-
 
     Returns
     -------
@@ -196,6 +206,20 @@ def from_tiff(
     validate: bool | None = None,
     parser_kwargs: ParserKwargs | None = None,
 ) -> OME:
+    """Generate an OME object from a TIFF file.
+
+    Parameters
+    ----------
+    path : Path | str
+        Path to a TIFF file.
+    validate : bool | None
+        Whether to validate the XML document against the OME schema before parsing.
+        If None, validation will be skipped if lxml is not available,
+        and will be performed otherwise.
+    parser_kwargs : ParserKwargs | None
+        Passed to the XmlParser constructor. If None, a default parser
+        will be used.
+    """
     xml = tiff2xml(path)
     return from_xml(xml, validate=validate, parser_kwargs=parser_kwargs)
 
