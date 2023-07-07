@@ -27,6 +27,15 @@ SKIP_ROUNDTRIP = {
     "xmlannotation-multi-value",
     "xmlannotation-svg",
 }
+SKIP_DICT_ROUNDTRIP = SKIP_ROUNDTRIP.union(
+    {
+        "timestampannotation",
+        "timestampannotation-posix-only",
+        "transformations-upgrade",
+        "transformations-downgrade",
+        "xmlannotation-body-space",
+    }
+)
 
 
 def true_stem(p: Path) -> str:
@@ -80,12 +89,12 @@ def test_roundtrip_inverse(valid_xml: Path, tmp_path: Path) -> None:
     assert ome1 == ome2
 
 
-@pytest.mark.xfail
 def test_to_dict(valid_xml: Path) -> None:
     ome1 = from_xml(valid_xml)
     d = to_dict(ome1)
     ome2 = OME(**d)
-    assert ome1 == ome2
+    if true_stem(valid_xml) not in SKIP_DICT_ROUNDTRIP:
+        assert ome1 == ome2
 
 
 @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
