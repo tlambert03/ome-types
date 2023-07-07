@@ -68,7 +68,10 @@ class OMEType(BaseModel):
         field_names = set(self.__fields__.keys())
         kwargs = set(data.keys())
         if kwargs - field_names:
-            warnings.warn(f"Unrecognized fields: {kwargs - field_names}", stacklevel=2)
+            warnings.warn(
+                f"Unrecognized fields for type {type(self)}: {kwargs - field_names}",
+                stacklevel=2,
+            )
 
     def __init_subclass__(cls) -> None:
         """Add `*_quantity` property for fields that have both a value and a unit.

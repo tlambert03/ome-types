@@ -9,30 +9,32 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout built branch
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
-          ref: "built"
           fetch-depth: 0
 
       - uses: actions/setup-python@v4
         with:
           python-version: "3.x"
 
-      - name: Clone main
-        run: git clone https://github.com/tlambert03/ome-types
-      - name: Build
+      - name: Build wheel
         run: |
           python -m pip install --upgrade pip build
-          python -m build ome-types --wheel
-          rm -rf ome_types
-          unzip ome-types/dist/ome_types-*
+          python -m build --wheel
+          unzip -q dist/*.whl -d ./unzipped
 
-      - name: Commit
-        if: github.event_name == 'push'
+      - name: Commit changes
         run: |
-          git config user.name "Talley Lambert"
-          git config user.email "talley.lambert@gmail.com"
-          git add ome_types
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          git add ./unzipped
           git commit -m 'Commit from GitHub Actions (built_branch.yml)'
-          git push --set-upstream origin built
+
+      - name: Push
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: built
+          force: true
+          directory: ./unzipped
