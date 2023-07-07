@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NamedTuple
+from contextlib import contextmanager
+from pathlib import Path
+from typing import TYPE_CHECKING, Iterator, NamedTuple, cast
 
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
@@ -9,6 +11,7 @@ from ome_autogen import _util
 from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 if TYPE_CHECKING:
+    from jinja2 import Environment, FileSystemLoader
     from xsdata.codegen.models import Attr, Class
     from xsdata.codegen.resolver import DependenciesResolver
     from xsdata.models.config import GeneratorConfig
@@ -91,6 +94,12 @@ class OmeGenerator(DataclassGenerator):
 
 
 class OmeFilters(PydanticBaseFilters):
+    def register(self, env: Environment) -> None:
+        # add our own templates dir to the search path
+        tpl_dir = Path(__file__).parent.joinpath("templates")
+        cast("FileSystemLoader", env.loader).searchpath.insert(0, str(tpl_dir))
+        return super().register(env)
+
     def __init__(self, config: GeneratorConfig):
         super().__init__(config)
 
@@ -98,6 +107,31 @@ class OmeFilters(PydanticBaseFilters):
         # the config.  For now, we just assume it's the OME schema and that's the
         # hardcoded default in _util.get_appinfo
         self.appinfo = _util.get_appinfo()
+
+    @contextmanager
+    def _modern_typing(self) -> Iterator[None]:
+        """Context manager to use modern typing syntax."""
+        prev_u, self.union_type = self.union_type, True
+        prev_s, self.subscriptable_types = self.subscriptable_types, True
+        try:
+            yield
+        finally:
+            self.union_type = prev_u
+            self.subscriptable_types = prev_s
+
+    def class_params(self, obj: Class) -> Iterator[tuple[str, str, str]]:
+        # This method override goes along with the docstring jinja template override
+        # to fixup the numpy docstring format.
+        # https://github.com/tefra/xsdata/issues/818
+        for attr in obj.attrs:
+            name = attr.name
+            name = self.constant_name(name, obj.name) if obj.is_enumeration else name
+            with self._modern_typing():
+                type_ = self.field_type(attr, [obj.name])
+            help_ = attr.help
+            if not help_:
+                help_ = f"(The {obj.name} {attr.name})."
+            yield name, type_, self.clean_docstring(help_)
 
     def class_bases(self, obj: Class, class_name: str) -> list[str]:
         # we don't need PydanticBaseFilters to add the Base class

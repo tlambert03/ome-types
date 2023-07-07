@@ -5,7 +5,7 @@ repo_url: https://github.com/tlambert03/ome-types
 edit_uri: edit/main/docs/
 site_description: Python dataclasses for the OME data model
 copyright: 'Talley Lambert &copy; 2023'
-# strict: true
+strict: true
 
 watch:
   - src
@@ -19,14 +19,14 @@ theme:
   palette:
     # Palette toggle for light mode
     - scheme: default
-      primary: blue
+      primary: teal
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
 
     # Palette toggle for dark mode
     - scheme: slate
-      primary: indigo
+      primary: blue grey
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -52,7 +52,7 @@ plugins:
             show_source: false
             show_root_toc_entry: false
             docstring_style: numpy
-            docstring_section_style: list
+            # docstring_section_style: list
             show_signature_annotations: true
             signature_crossrefs: true
             filters:
@@ -60,7 +60,7 @@ plugins:
               - "!^_"
           import:
             - https://docs.python.org/3/objects.inv
-            # - https://numpy.org/doc/stable/objects.inv
+            - https://pint.readthedocs.io/en/stable/objects.inv
 
 extra_css:
   - styles/extra.css
