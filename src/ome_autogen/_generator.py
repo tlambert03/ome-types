@@ -152,7 +152,7 @@ class OmeFilters(PydanticBaseFilters):
         return result
 
     def field_type(self, attr: Attr, parents: list[str]) -> str:
-        if attr.is_list:
+        if attr.is_list and not getattr(attr, "_plural_set", False):
             # HACK
             # It would be nicer to put this in the self.field_name method...but that
             # method only receives the attr name, not the attr object, and so we
@@ -160,6 +160,7 @@ class OmeFilters(PydanticBaseFilters):
             # This hack works only because this method is called BEFORE self.field_name
             # in the class.jinja2 template, so we directly modify the attr object here.
             attr.name = self.appinfo.plurals.get(attr.name, f"{attr.name}s")
+            attr._plural_set = True  # type: ignore
 
         if attr.name in OVERRIDE_ELEM_TO_CLASS:
             return self._format_type(attr, OVERRIDE_ELEM_TO_CLASS[attr.name])
