@@ -21,6 +21,7 @@ except (ValueError, ImportError):
     pytest.skip("Paquo not installed", allow_module_level=True)
 
 
+@pytest.mark.filterwarnings("ignore:Field 'm' is deprecated. Use 'ms' instead")
 @pytest.mark.filterwarnings("ignore:Importing submodules from ome_types.model")
 def test_to_ome_xml() -> None:
     h = QuPathPathObjectHierarchy()

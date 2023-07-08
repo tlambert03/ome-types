@@ -2,7 +2,17 @@ import warnings
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, Tuple, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Dict,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    cast,
+)
 
 from pydantic import BaseModel, validator
 
@@ -38,6 +48,20 @@ DEPRECATED_NAMES = {
 }
 
 
+def _move_deprecated_fields(data: Dict[str, Any], field_names: Set[str]) -> None:
+    for key in list(data):
+        if (
+            key not in field_names
+            and key in DEPRECATED_NAMES
+            and DEPRECATED_NAMES[key] in field_names
+        ):
+            warnings.warn(
+                f"Field {key!r} is deprecated. Use {DEPRECATED_NAMES[key]!r} instead.",
+                stacklevel=2,
+            )
+            data[DEPRECATED_NAMES[key]] = data.pop(key)
+
+
 class OMEType(BaseModel):
     """The base class that all OME Types inherit from.
 
@@ -64,8 +88,9 @@ class OMEType(BaseModel):
     _v = validator("id", pre=True, always=True, check_fields=False)(validate_id)
 
     def __init__(self, **data: Any) -> None:
-        super().__init__(**data)
         field_names = set(self.__fields__.keys())
+        _move_deprecated_fields(data, field_names)
+        super().__init__(**data)
         kwargs = set(data.keys())
         if kwargs - field_names:
             warnings.warn(
@@ -130,7 +155,7 @@ def _quantity_property(field_name: str) -> property:
 
     def quantity(self: Any) -> Optional["pint.Quantity"]:
         value = getattr(self, field_name)
-        if value is None:
+        if value is None:  # pragma: no cover
             return None
 
         unit = cast("Enum", getattr(self, _UNIT_FIELD.format(field_name)))

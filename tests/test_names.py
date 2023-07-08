@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from pydantic.typing import display_as_type
 
 import ome_types
+from ome_types import model
 
 TESTS = Path(__file__).parent
 KNOWN_CHANGES: dict[str, list[tuple[str, str | None]]] = {
@@ -250,3 +251,12 @@ def test_deprecated_attrs() -> None:
     ):
         ref1 = ome.instruments[0].filter_sets[0].excitation_filter_ref
     assert ref1 is ome.instruments[0].filter_sets[0].excitation_filters
+
+
+def test_deprecated_init_args() -> None:
+    with pytest.warns(match="Field 'm' is deprecated. Use 'ms' instead"):
+        mapann = model.MapAnnotation(
+            id="Annotation:3",
+            value=model.Map(m=[{"k": "key", "value": "value"}]),  # type: ignore
+        )
+    assert len(mapann.value.ms) == 1
