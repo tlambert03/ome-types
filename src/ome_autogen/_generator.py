@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, NamedTuple, cast
@@ -123,6 +124,19 @@ class OmeFilters(PydanticBaseFilters):
         # This method override goes along with the docstring jinja template override
         # to fixup the numpy docstring format.
         # https://github.com/tefra/xsdata/issues/818
+
+        if sys.version_info < (3, 8):
+            # i don't know why, but in python 3.7, it's not picking up our
+            # template ... so this method yields too many values to unpack
+            # xsdata/formats/dataclass/templates/docstrings.numpy.jinja2", line 6
+            #   {%- for var_name, var_doc in obj | class_params %}
+            #       ValueError: too many values to unpack (expected 2)
+            # however, it's not at all important that we be able to build docs correctly
+            # on python 3.7.  The built wheel will still work fine (and won't be built
+            # on python 3.7 anyway)
+            yield from super().class_params(obj)
+            return
+
         for attr in obj.attrs:
             name = attr.name
             name = (
