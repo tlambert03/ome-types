@@ -134,6 +134,7 @@ ignore = [
   ".pre-commit-config.yaml",
   ".github_changelog_generator",
   ".readthedocs.yml",
+  "mkdocs.yml",
   "docs/**/*",
   "tests/**/*",
   "typesafety/**/*",
