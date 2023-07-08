@@ -5,7 +5,7 @@ except ImportError:  # pragma: no cover
 
 try:
     __version__ = version("ome-types")
-except PackageNotFoundError:
+except PackageNotFoundError:  # pragma: no cover
     __version__ = "unknown"
 
 from ome_types import model

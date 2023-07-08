@@ -18,6 +18,7 @@ from ome_types.validation import OME_2016_06_XSD, OME_NS, OME_URI
 if TYPE_CHECKING:
     import xmlschema
 
+DATA = Path(__file__).parent / "data"
 SKIP_ROUNDTRIP = {
     # These have XMLAnnotations with extra namespaces and mixed content, which
     # the automated round-trip test code doesn't properly verify yet. So even
@@ -154,3 +155,8 @@ def _sort_elements(element: ET.Element, recursive: bool = True) -> None:
         # Recursively sort child elements for each subelement
         for child in element:
             _sort_elements(child)
+
+
+def test_canonicalize() -> None:
+    ome = from_xml(DATA / "example.ome.xml", validate=True)
+    _ = to_xml(ome, validate=True, canonicalize=True)
