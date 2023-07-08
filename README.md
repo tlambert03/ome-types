@@ -40,6 +40,7 @@ With all optional dependencies:
 # pint => if you want to use object.<field>_quantity properties
 pip install ome-types[lxml,pint]
 ```
+
 ### from conda
 
 ```shell
