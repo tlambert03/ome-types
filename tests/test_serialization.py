@@ -158,5 +158,6 @@ def _sort_elements(element: ET.Element, recursive: bool = True) -> None:
 
 
 def test_canonicalize() -> None:
+    pytest.importorskip("lxml")
     ome = from_xml(DATA / "example.ome.xml", validate=True)
     _ = to_xml(ome, validate=True, canonicalize=True)
