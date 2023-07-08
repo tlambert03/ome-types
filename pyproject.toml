@@ -29,10 +29,8 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-  "Pint >=0.15",
-  "lxml >=4.8.0",
-  "pydantic[email] <2.0",
-  "xsdata",
+  "pydantic <2.0",
+  "xsdata >=23.5",                              # 23.6 necessary for codegen, but not for runtime
   "importlib_metadata; python_version < '3.8'",
 ]
 
@@ -47,6 +45,8 @@ ome-types = "ome_types._napari_plugin"
 # extras
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
+pint = ["Pint >=0.15"]
+lxml = ["lxml >=4.8.0"]
 dev = [
   "black",
   "ruff",
@@ -56,7 +56,14 @@ dev = [
   "types-lxml; python_version >= '3.8'",
 ]
 docs = ["mkdocs-material", "mkdocstrings-python"]
-test = ["pytest", "pytest-cov", "xmlschema", "pytest-mypy-plugins"]
+test = [
+  "pint",
+  "lxml",
+  "pytest",
+  "pytest-cov",
+  "xmlschema",
+  "pytest-mypy-plugins",
+]
 
 # https://hatch.pypa.io/latest/plugins/build-hook/custom/
 [tool.hatch.build.targets.wheel.hooks.custom]
