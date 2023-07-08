@@ -1,12 +1,18 @@
 import pytest
-from pint import DimensionalityError
+
+try:
+    from pint import DimensionalityError
+except ImportError:
+    # Pint is not installed, so we can't run these tests.
+    pytest.skip("Pint is not installed", allow_module_level=True)
+
 from pydantic import ValidationError
 
 from ome_types.model import Channel, Laser, Plane, simple_types
 from ome_types.units import ureg
 
 
-def test_quantity_math():
+def test_quantity_math() -> None:
     """Validate math on quantities with different but compatible units."""
     channel = Channel(
         excitation_wavelength=475,
@@ -21,7 +27,7 @@ def test_quantity_math():
     assert abs(shift.to("nm").m - 55) < 1e-12
 
 
-def test_invalid_unit():
+def test_invalid_unit() -> None:
     """Ensure incompatible units in constructor raises ValidationError."""
     with pytest.raises(ValidationError):
         Channel(
@@ -30,7 +36,7 @@ def test_invalid_unit():
         )
 
 
-def test_dimensionality_error():
+def test_dimensionality_error() -> None:
     """Ensure math on incompatible units raises DimensionalityError."""
     laser = Laser(
         id="LightSource:1",
@@ -42,7 +48,7 @@ def test_dimensionality_error():
         laser.repetition_rate_quantity + laser.wavelength_quantity
 
 
-def test_reference_frame():
+def test_reference_frame() -> None:
     """Validate reference_frame behavior."""
     plane = Plane(
         the_c=0,
