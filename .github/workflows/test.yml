@@ -52,7 +52,7 @@ jobs:
       - name: Test
         run: pytest --cov --cov-report=xml
 
-      - name: retest withou lxml or xmlschema
+      - name: retest without lxml or xmlschema
         if: matrix.platform == 'ubuntu-latest'
         run: |
           pip uninstall -y lxml xmlschema

@@ -42,10 +42,10 @@ class OMEType(BaseModel):
     """The base class that all OME Types inherit from.
 
     This provides some global conveniences around auto-setting ids. (i.e., making them
-    optional in the class constructor, but never ``None`` after initialization.).
-    It provides a nice __repr__ that hides things that haven't been changed from
+    optional in the class constructor, but never `None` after initialization.).
+    It provides a nice `__repr__` that hides things that haven't been changed from
     defaults.  It adds ``*_quantity`` property for fields that have both a value and a
-    unit, where ``*_quantity`` is a pint ``Quantity``.  It also provides pickling
+    unit, where `*_quantity` is a [`pint.Quantity`][].  It also provides pickling
     support.
     """
 
@@ -87,6 +87,8 @@ class OMEType(BaseModel):
         args = []
         for k, v in self._iter(exclude_defaults=True):
             if isinstance(v, Sequence) and not isinstance(v, str):
+                if v == []:  # skip empty lists
+                    continue
                 # if this is a sequence with a long repr, just show the length
                 # and type
                 if len(repr(v).split(",")) > 5:

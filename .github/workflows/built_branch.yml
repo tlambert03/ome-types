@@ -12,6 +12,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          path: ome-types
 
       - uses: actions/setup-python@v4
         with:
@@ -19,16 +20,20 @@ jobs:
 
       - name: Build wheel
         run: |
+          cd ome-types
           python -m pip install --upgrade pip build
           python -m build --wheel
           unzip -q dist/*.whl -d ./unzipped
+          mv ./unzipped/ome_types/ ..
+          cd ..
+          rm -rf ./ome-types
 
       - name: Commit changes
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-          git add ./unzipped
+          git add .
           git commit -m 'Commit from GitHub Actions (built_branch.yml)'
 
       - name: Push
@@ -37,4 +42,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: built
           force: true
-          directory: ./unzipped

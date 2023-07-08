@@ -60,7 +60,7 @@ class PydanticBaseFilters(Filters):
 
     def move_metadata_to_pydantic_field(self, kwargs: dict, pop: bool = False) -> None:
         """Move metadata from the metadata dict to the pydantic Field kwargs."""
-        # XXX: can we pop them?  or does xsdata need them in the metdata dict as well?
+        # XXX: can we pop them?  or does xsdata need them in the metadata dict as well?
         if "metadata" not in kwargs:  # pragma: no cover
             return
 

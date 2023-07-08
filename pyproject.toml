@@ -55,13 +55,7 @@ dev = [
   "pre-commit",
   "types-lxml; python_version >= '3.8'",
 ]
-docs = [
-  "numpydoc",
-  "pygments",
-  "sphinx==5.3.0",
-  "sphinx-rtd-theme==1.1.1",
-  "ipython",
-]
+docs = ["mkdocs-material", "mkdocstrings-python"]
 test = ["pytest", "pytest-cov", "xmlschema", "pytest-mypy-plugins"]
 
 # https://hatch.pypa.io/latest/plugins/build-hook/custom/
@@ -140,6 +134,7 @@ ignore = [
   ".pre-commit-config.yaml",
   ".github_changelog_generator",
   ".readthedocs.yml",
+  "mkdocs.yml",
   "docs/**/*",
   "tests/**/*",
   "typesafety/**/*",

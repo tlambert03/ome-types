@@ -1,6 +1,7 @@
-"""This module is only here for backwards compatibility.
+"""This module is only here for backwards compatibility with v<0.4.0 of ome-types.
 
-Should add a deprecation warning.
+Most of the types defined here are also exported from `ome_types.model`.  But for
+now, you can also import them from here.
 """
 from enum import Enum
 
