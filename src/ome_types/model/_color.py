@@ -10,6 +10,8 @@ ColorType = Union[Tuple[int, int, int], RGBA, str, int]
 
 
 class Color(color.Color):
+    """A Pydantic Color subclass that converts to and from OME int32 types."""
+
     def __init__(self, val: ColorType = -1) -> None:
         with suppress(ValueError, TypeError):
             val = self._int2tuple(int(val))  # type: ignore

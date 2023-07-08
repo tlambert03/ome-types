@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NamedTuple
+import sys
+from contextlib import contextmanager
+from pathlib import Path
+from typing import TYPE_CHECKING, Iterator, NamedTuple, cast
 
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
@@ -9,6 +12,7 @@ from ome_autogen import _util
 from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 if TYPE_CHECKING:
+    from jinja2 import Environment, FileSystemLoader
     from xsdata.codegen.models import Attr, Class
     from xsdata.codegen.resolver import DependenciesResolver
     from xsdata.models.config import GeneratorConfig
@@ -91,6 +95,12 @@ class OmeGenerator(DataclassGenerator):
 
 
 class OmeFilters(PydanticBaseFilters):
+    def register(self, env: Environment) -> None:
+        # add our own templates dir to the search path
+        tpl_dir = Path(__file__).parent.joinpath("templates")
+        cast("FileSystemLoader", env.loader).searchpath.insert(0, str(tpl_dir))
+        return super().register(env)
+
     def __init__(self, config: GeneratorConfig):
         super().__init__(config)
 
@@ -98,6 +108,48 @@ class OmeFilters(PydanticBaseFilters):
         # the config.  For now, we just assume it's the OME schema and that's the
         # hardcoded default in _util.get_appinfo
         self.appinfo = _util.get_appinfo()
+
+    @contextmanager
+    def _modern_typing(self) -> Iterator[None]:
+        """Context manager to use modern typing syntax."""
+        prev_u, self.union_type = self.union_type, True
+        prev_s, self.subscriptable_types = self.subscriptable_types, True
+        try:
+            yield
+        finally:
+            self.union_type = prev_u
+            self.subscriptable_types = prev_s
+
+    def class_params(self, obj: Class) -> Iterator[tuple[str, str, str]]:
+        # This method override goes along with the docstring jinja template override
+        # to fixup the numpy docstring format.
+        # https://github.com/tefra/xsdata/issues/818
+
+        if sys.version_info < (3, 8):
+            # i don't know why, but in python 3.7, it's not picking up our
+            # template ... so this method yields too many values to unpack
+            # xsdata/formats/dataclass/templates/docstrings.numpy.jinja2", line 6
+            #   {%- for var_name, var_doc in obj | class_params %}
+            #       ValueError: too many values to unpack (expected 2)
+            # however, it's not at all important that we be able to build docs correctly
+            # on python 3.7.  The built wheel will still work fine (and won't be built
+            # on python 3.7 anyway)
+            yield from super().class_params(obj)
+            return
+
+        for attr in obj.attrs:
+            name = attr.name
+            name = (
+                self.constant_name(name, obj.name)
+                if obj.is_enumeration
+                else self.field_name(name, obj.name)
+            )
+            with self._modern_typing():
+                type_ = self.field_type(attr, [obj.name])
+            help_ = attr.help
+            if not help_:
+                help_ = f"(The {obj.name} {attr.name})."
+            yield name, type_, self.clean_docstring(help_)
 
     def class_bases(self, obj: Class, class_name: str) -> list[str]:
         # we don't need PydanticBaseFilters to add the Base class
@@ -118,7 +170,7 @@ class OmeFilters(PydanticBaseFilters):
         return result
 
     def field_type(self, attr: Attr, parents: list[str]) -> str:
-        if attr.is_list:
+        if attr.is_list and not getattr(attr, "_plural_set", False):
             # HACK
             # It would be nicer to put this in the self.field_name method...but that
             # method only receives the attr name, not the attr object, and so we
@@ -126,6 +178,7 @@ class OmeFilters(PydanticBaseFilters):
             # This hack works only because this method is called BEFORE self.field_name
             # in the class.jinja2 template, so we directly modify the attr object here.
             attr.name = self.appinfo.plurals.get(attr.name, f"{attr.name}s")
+            attr._plural_set = True  # type: ignore
 
         if attr.name in OVERRIDE_ELEM_TO_CLASS:
             return self._format_type(attr, OVERRIDE_ELEM_TO_CLASS[attr.name])
