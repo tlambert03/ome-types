@@ -2,7 +2,17 @@ import warnings
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import TYPE_CHECKING, Any, ClassVar, Optional, Sequence, Set, Tuple, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Dict,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    cast,
+)
 
 from pydantic import BaseModel, validator
 
@@ -38,7 +48,7 @@ DEPRECATED_NAMES = {
 }
 
 
-def _move_deprecated_fields(data: dict[str, Any], field_names: set[str]) -> None:
+def _move_deprecated_fields(data: Dict[str, Any], field_names: Set[str]) -> None:
     for key in list(data):
         if (
             key not in field_names
