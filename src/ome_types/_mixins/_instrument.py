@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 class InstrumentMixin:
     @property
     def light_source_group(self) -> List["LightSource"]:
+        # here for backwards compatibility
         slf = cast("Instrument", self)
         return [
             *slf.arcs,

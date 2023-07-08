@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 # we don't need RenameDuplicateAttributes because we inject
 # proper enum names in our _generator.py
-UNWANTED_HANDLERS = [(RenameDuplicateAttributes, None)]
+UNWANTED_HANDLERS = [RenameDuplicateAttributes]
 
 
 def display_help(self: Attribute) -> str | None:
@@ -63,12 +63,10 @@ class OMETransformer(SchemaTransformer):
         container = ClassContainer(config=self.config)
 
         for handlers in container.processors.values():
-            for idx, h in enumerate(list(handlers)):
-                for unwanted, wanted in UNWANTED_HANDLERS:
+            for h in list(handlers):
+                for unwanted in UNWANTED_HANDLERS:
                     if isinstance(h, unwanted):
                         handlers.remove(h)
-                        if wanted is not None:
-                            handlers.insert(idx, wanted(container))
 
         container.extend(classes)
 

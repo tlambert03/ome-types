@@ -155,7 +155,7 @@ def _quantity_property(field_name: str) -> property:
 
     def quantity(self: Any) -> Optional["pint.Quantity"]:
         value = getattr(self, field_name)
-        if value is None:
+        if value is None:  # pragma: no cover
             return None
 
         unit = cast("Enum", getattr(self, _UNIT_FIELD.format(field_name)))

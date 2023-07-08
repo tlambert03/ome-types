@@ -14,7 +14,7 @@ class BinDataMixin(OMEType):
         # seems like it could be done in a default_factory, but that would
         # require more modification of xsdata I think
         if "value" not in values:
-            if values.get("length") != 0:
+            if values.get("length") != 0:  # pragma: no cover
                 warnings.warn(
                     "BinData length is non-zero but value is missing", stacklevel=2
                 )

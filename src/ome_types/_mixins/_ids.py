@@ -77,7 +77,7 @@ def validate_id(cls: type[BaseModel], value: int | str) -> Any:
         msg = f"Casting invalid {id_name}ID {value!r} to {newname!r}"
         warnings.warn(msg, stacklevel=2)
         return newname
-    elif not isinstance(value, int):
+    elif not isinstance(value, int):  # pragma: no cover
         raise ValueError(f"Invalid ID value: {value!r}, {type(value)}")
 
     # update the counter to be at least this value
