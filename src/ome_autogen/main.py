@@ -71,7 +71,7 @@ def _check_mypy(package_dir: str) -> None:
     mypy = ["mypy", package_dir, "--strict"]
     try:
         subprocess.check_output(mypy, stderr=subprocess.STDOUT)  # noqa S
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError as e:  # pragma: no cover
         raise RuntimeError(f"mypy errors:\n\n{e.output.decode()}") from e
 
 

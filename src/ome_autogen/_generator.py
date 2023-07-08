@@ -125,7 +125,7 @@ class OmeFilters(PydanticBaseFilters):
         # to fixup the numpy docstring format.
         # https://github.com/tefra/xsdata/issues/818
 
-        if sys.version_info < (3, 8):
+        if sys.version_info < (3, 8):  # pragma: no cover
             # i don't know why, but in python 3.7, it's not picking up our
             # template ... so this method yields too many values to unpack
             # xsdata/formats/dataclass/templates/docstrings.numpy.jinja2", line 6
