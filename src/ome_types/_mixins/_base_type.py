@@ -2,33 +2,21 @@ import warnings
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    Dict,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    cast,
-)
+from typing import Any, ClassVar, Dict, Optional, Sequence, Set, Tuple
 
 from pydantic import BaseModel, validator
 
 from ome_types._mixins._ids import validate_id
-from ome_types.units import ureg
 
-if TYPE_CHECKING:
-    import pint
-
+try:
+    from ome_types.units import add_quantity_properties
+except ImportError:
+    add_quantity_properties = lambda cls: None  # noqa: E731
 
 # Default value to support automatic numbering for id field values.
 AUTO_SEQUENCE = "__auto_sequence__"
 
 
-_UNIT_FIELD = "{}_unit"
-_QUANTITY_FIELD = "{}_quantity"
 DEPRECATED_NAMES = {
     "annotation_ref": "annotation_refs",
     "bin_data": "bin_data_blocks",
@@ -103,9 +91,7 @@ class OMEType(BaseModel):
 
         where `*_quantity` is a pint `Quantity`.
         """
-        for field in cls.__fields__:
-            if _UNIT_FIELD.format(field) in cls.__fields__:
-                setattr(cls, _QUANTITY_FIELD.format(field), _quantity_property(field))
+        add_quantity_properties(cls)
 
     def __repr_args__(self) -> Sequence[Tuple[Optional[str], Any]]:
         """Repr with only set values, and truncated sequences."""
@@ -148,20 +134,6 @@ class OMEType(BaseModel):
             )
             return getattr(self, new_key)
         raise AttributeError(f"{cls_name} object has no attribute {key!r}")
-
-
-def _quantity_property(field_name: str) -> property:
-    """Create property that returns a ``pint.Quantity`` combining value and unit."""
-
-    def quantity(self: Any) -> Optional["pint.Quantity"]:
-        value = getattr(self, field_name)
-        if value is None:  # pragma: no cover
-            return None
-
-        unit = cast("Enum", getattr(self, _UNIT_FIELD.format(field_name)))
-        return ureg.Quantity(value, unit.value.replace(" ", "_"))
-
-    return property(quantity)
 
 
 class _RawRepr:

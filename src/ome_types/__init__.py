@@ -8,10 +8,11 @@ try:
 except PackageNotFoundError:  # pragma: no cover
     __version__ = "unknown"
 
+from typing import Any
+
 from ome_types import model
 from ome_types._conversion import from_tiff, from_xml, to_dict, to_xml
 from ome_types.model import OME
-from ome_types.units import ureg
 from ome_types.validation import validate_xml
 
 __all__ = [
@@ -25,3 +26,11 @@ __all__ = [
     "ureg",
     "validate_xml",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    if name == "ureg":
+        from ome_types.units import ureg
+
+        return ureg
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
