@@ -52,7 +52,7 @@ MODULES = {
 
 def _get_ome_type(xml: str | bytes) -> type[OMEType]:
     """Resolve a python model class for the root element of an OME XML document."""
-    if isinstance(xml, str) and not xml.startswith("<"):
+    if isinstance(xml, str) and not xml.lstrip().startswith("<"):
         root = ET.parse(xml).getroot()  # noqa: S314
     else:
         if not isinstance(xml, bytes):

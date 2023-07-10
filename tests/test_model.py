@@ -172,3 +172,21 @@ def test_xml_annotation() -> None:
     assert isinstance(xml_ann.value.any_elements[0], AnyElement)
 
     assert raw_xml in to_xml(xml_ann, indent=0)
+
+
+def test_bad_date() -> None:
+    """Test that dates with too many microseconds are handled gracefully."""
+
+    XML = """
+    <OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">
+    <Image ID="Image:0">
+        <AcquisitionDate>2020-09-08T17:26:16.769000000</AcquisitionDate>
+        <Pixels DimensionOrder="XYCTZ" Type="uint8" SizeC="1" SizeT="1"
+                SizeX="18" SizeY="24" SizeZ="5">
+        </Pixels>
+    </Image>
+    </OME>
+    """
+
+    obj = from_xml(XML)
+    assert obj.images[0].acquisition_date.microsecond == 769000  # type: ignore
