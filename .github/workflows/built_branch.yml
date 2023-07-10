@@ -24,25 +24,17 @@ jobs:
 
       - name: Replace working tree with wheel
         run: |
-          pwd
-          ls -la
           shopt -s extglob
           rm -rf !("dist"|"*.git")
-          ls -la
           unzip -o dist/*.whl -d .
-          ls -la
           rm -rf dist *.dist-info .github* .gitignore .r* .p*
-          ls -la
 
       - name: Commit files
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add .
-          git add ome_types
-          git status
           git commit -am "Built wheel"
-          git status
 
       - name: Push to built branch
         uses: ad-m/github-push-action@master
