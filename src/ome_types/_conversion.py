@@ -176,6 +176,36 @@ def to_xml(
     canonicalize: bool = False,
     validate: bool = False,
 ) -> str:
+    """Generate an XML document from an OME object.
+
+    Parameters
+    ----------
+    ome : OMEType
+        Instance of an ome-types model class.
+    exclude_defaults : bool, optional
+        Whether to exclude attributes that are set to their default value,
+        by default False.
+    exclude_unset : bool, optional
+        Whether to exclude attributes that are not explicitly set,
+        by default True.
+    indent : int, optional
+        Number of spaces to indent the XML document, by default 2.
+    include_namespace : bool | None, optional
+        Whether to include the OME namespace in the root element.  If `None`, will
+        be set to the value of `canonicalize`, by default None.
+    include_schema_location : bool, optional
+        Whether to include the schema location in the root element, by default True.
+    canonicalize : bool, optional
+        Whether to canonicalize the XML output, by default False.
+    validate : bool, optional
+        Whether to validate the XML document against the OME schema, after rendering.
+        (In most cases, this will be redundant and unnecessary.)
+
+    Returns
+    -------
+    str
+        The XML document as a string.
+    """
     config = SerializerConfig(
         pretty_print=(indent > 0) and not canonicalize,  # canonicalize does it for us
         pretty_print_indent=" " * indent,
