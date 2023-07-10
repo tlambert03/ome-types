@@ -31,7 +31,7 @@ jobs:
           ls -la
           unzip -o dist/*.whl -d .
           ls -la
-          rm -rf dist *.dist-info .github* .gitignore .r*
+          rm -rf dist *.dist-info .github* .gitignore .r* .p*
           ls -la
 
       - name: Commit files
@@ -39,7 +39,7 @@ jobs:
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add .
-          git add ome-types
+          git add ome_types
           git status
           git commit -am "Built wheel"
           git status
