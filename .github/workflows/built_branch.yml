@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -21,10 +24,15 @@ jobs:
 
       - name: Replace working tree with wheel
         run: |
-          shopt -s extglob
+          pwd
+          ls -la
+          shopt -s extglob dotglob
           rm -rf !("dist"|"*.git")
+          ls -la
           unzip -o dist/*.whl -d .
+          ls -la
           rm -rf dist
+          ls -la
 
       - name: Commit files
         run: |
