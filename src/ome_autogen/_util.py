@@ -47,7 +47,7 @@ def get_appinfo(schema: Path | str = SCHEMA_FILE) -> AppInfo:
     xsdata doesn't try to do anything with it. But we want to use it to
     provide better enum and plural names
     """
-    tree = ET.parse(schema)  # noqa: S314
+    tree = ET.parse(schema)
     plurals: dict[str, str] = {}
     enums: defaultdict[str, dict[str, EnumInfo]] = defaultdict(dict)
     in_name = ""
