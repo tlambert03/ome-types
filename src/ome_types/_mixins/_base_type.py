@@ -152,14 +152,19 @@ class OMEType(BaseModel):
         raise AttributeError(f"{cls_name} object has no attribute {key!r}")
 
     def to_xml(self, **kwargs: Any) -> str:
-        """Serialize this object to XML."""
+        """Serialize this object to XML.
+
+        See docstring of [`ome_types.to_xml`][] for kwargs.
+        """
         from ome_types._conversion import to_xml
 
         return to_xml(self, **kwargs)
 
     @classmethod
-    def from_xml(cls: Type[T], xml: Union[Path, str]) -> T:
+    def from_xml(cls: Type[T], xml: Union[Path, str], **kwargs: Any) -> T:
         """Read an ome-types class from XML.
+
+        See docstring of [`ome_types.from_xml`][] for kwargs.
 
         Note: this will return an instance of whatever the top node is in the XML.
         so technically, the return type here could be incorrect.  But when used
@@ -168,7 +173,7 @@ class OMEType(BaseModel):
         """
         from ome_types._conversion import from_xml
 
-        return cast(T, from_xml(xml))
+        return cast(T, from_xml(xml, **kwargs))
 
 
 class _RawRepr:

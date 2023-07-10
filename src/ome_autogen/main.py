@@ -70,7 +70,7 @@ def _fix_formatting(package_dir: str, ruff_ignore: list[str] = RUFF_IGNORE) -> N
         f"--line-length={BLACK_LINE_LENGTH}",
         f"--target-version={BLACK_TARGET_VERSION}",
     ]
-    if BLACK_SKIP_TRAILING_COMMA:
+    if BLACK_SKIP_TRAILING_COMMA:  # pragma: no cover
         black.append("--skip-magic-trailing-comma")
     black.extend([str(x) for x in Path(package_dir).rglob("*.py")])
     subprocess.check_call(black)  # noqa S

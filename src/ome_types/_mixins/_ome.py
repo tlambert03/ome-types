@@ -36,7 +36,11 @@ class OMEMixin:
         self._link_refs()
 
     @classmethod
-    def from_tiff(cls, path: Path | str) -> OME:
+    def from_tiff(cls, path: Path | str, **kwargs: Any) -> OME:
+        """Return an OME object from the metadata in a TIFF file.
+
+        See docstring of [`ome_types.from_tiff`][] for kwargs.
+        """
         from ome_types._conversion import from_tiff
 
         return from_tiff(path)

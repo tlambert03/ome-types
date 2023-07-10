@@ -16,7 +16,7 @@ VALIDATE = [False]
 
 @pytest.mark.parametrize("validate", VALIDATE)
 def test_from_valid_xml(valid_xml: Path, validate: bool) -> None:
-    ome = from_xml(valid_xml, validate=validate)
+    ome = model.OME.from_xml(valid_xml, validate=validate)  # class method for coverage
     assert ome
     assert repr(ome)
 
@@ -40,6 +40,8 @@ def test_from_tiff(validate: bool) -> None:
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
     assert ome.images[0].pixels.channels[0].samples_per_pixel == 1
+
+    assert ome == model.OME.from_tiff(_path)  # class method for coverage
 
 
 def test_no_id() -> None:

@@ -8,7 +8,10 @@ try:
 except PackageNotFoundError:  # pragma: no cover
     __version__ = "unknown"
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from ome_types.units import ureg  # noqa: TCH004
 
 from ome_types import model
 from ome_types._conversion import from_tiff, from_xml, to_dict, to_xml
