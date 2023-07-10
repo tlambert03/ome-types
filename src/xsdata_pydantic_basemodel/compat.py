@@ -35,7 +35,7 @@ class AnyElement(BaseModel):
     qname: Optional[str] = Field(default=None)
     text: Optional[str] = Field(default=None)
     tail: Optional[str] = Field(default=None)
-    children: List[object] = Field(
+    children: List["AnyElement"] = Field(
         default_factory=list, metadata={"type": XmlType.WILDCARD}
     )
     attributes: Dict[str, str] = Field(

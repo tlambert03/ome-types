@@ -1,8 +1,21 @@
 import warnings
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
 from textwrap import indent
-from typing import Any, ClassVar, Dict, Optional, Sequence, Set, Tuple
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from pydantic import BaseModel, validator
 
@@ -13,6 +26,7 @@ try:
 except ImportError:
     add_quantity_properties = lambda cls: None  # noqa: E731
 
+T = TypeVar("T", bound="OMEType")
 # Default value to support automatic numbering for id field values.
 AUTO_SEQUENCE = "__auto_sequence__"
 
@@ -76,11 +90,13 @@ class OMEType(BaseModel):
     _v = validator("id", pre=True, always=True, check_fields=False)(validate_id)
 
     def __init__(self, **data: Any) -> None:
+        warn_extra = data.pop("warn_extra", True)
         field_names = set(self.__fields__.keys())
         _move_deprecated_fields(data, field_names)
         super().__init__(**data)
         kwargs = set(data.keys())
-        if kwargs - field_names:
+        extra = kwargs - field_names
+        if extra and warn_extra:
             warnings.warn(
                 f"Unrecognized fields for type {type(self)}: {kwargs - field_names}",
                 stacklevel=2,
@@ -134,6 +150,30 @@ class OMEType(BaseModel):
             )
             return getattr(self, new_key)
         raise AttributeError(f"{cls_name} object has no attribute {key!r}")
+
+    def to_xml(self, **kwargs: Any) -> str:
+        """Serialize this object to XML.
+
+        See docstring of [`ome_types.to_xml`][] for kwargs.
+        """
+        from ome_types._conversion import to_xml
+
+        return to_xml(self, **kwargs)
+
+    @classmethod
+    def from_xml(cls: Type[T], xml: Union[Path, str], **kwargs: Any) -> T:
+        """Read an ome-types class from XML.
+
+        See docstring of [`ome_types.from_xml`][] for kwargs.
+
+        Note: this will return an instance of whatever the top node is in the XML.
+        so technically, the return type here could be incorrect.  But when used
+        properly (`Image.from_xml()`, `Pixels.from_xml()`, etc.) on an unusual xml
+        document it can provide additional typing information.
+        """
+        from ome_types._conversion import from_xml
+
+        return cast(T, from_xml(xml, **kwargs))
 
 
 class _RawRepr:

@@ -1,4 +1,3 @@
-# pragma: no cover
-from ome_autogen.main import build_model
+from ome_autogen.main import build_model  # pragma: no cover
 
-build_model()
+build_model()  # pragma: no cover

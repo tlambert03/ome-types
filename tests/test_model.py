@@ -6,8 +6,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ome_types import from_tiff, from_xml, model
+from ome_types import from_tiff, from_xml, model, to_xml
 from ome_types._conversion import _get_ome_type
+from ome_types.validation import OME_URI
 
 DATA = Path(__file__).parent / "data"
 VALIDATE = [False]
@@ -15,7 +16,7 @@ VALIDATE = [False]
 
 @pytest.mark.parametrize("validate", VALIDATE)
 def test_from_valid_xml(valid_xml: Path, validate: bool) -> None:
-    ome = from_xml(valid_xml, validate=validate)
+    ome = model.OME.from_xml(valid_xml, validate=validate)  # class method for coverage
     assert ome
     assert repr(ome)
 
@@ -39,6 +40,8 @@ def test_from_tiff(validate: bool) -> None:
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
     assert ome.images[0].pixels.channels[0].samples_per_pixel == 1
+
+    assert ome == model.OME.from_tiff(_path)  # class method for coverage
 
 
 def test_no_id() -> None:
@@ -73,17 +76,19 @@ def test_with_ome_ns() -> None:
 
 
 def test_get_ome_type() -> None:
-    URI_OME = "http://www.openmicroscopy.org/Schemas/OME/2016-06"
-
-    t = _get_ome_type(f'<Image xmlns="{URI_OME}" />')
+    t = _get_ome_type(f'<Image xmlns="{OME_URI}" />')
     assert t is model.Image
 
     with pytest.raises(ValueError):
         _get_ome_type("<Image />")
 
     # this can be used to instantiate XML with a non OME root type:
-    project = from_xml(f'<Project xmlns="{URI_OME}" />')
-    assert isinstance(project, model.Project)
+    obj = from_xml(f'<Project xmlns="{OME_URI}" />')
+    assert isinstance(obj, model.Project)
+    obj = from_xml(
+        f'<XMLAnnotation xmlns="{OME_URI}"><Value><Data></Data></Value></XMLAnnotation>'
+    )
+    assert isinstance(obj, model.XMLAnnotation)
 
 
 def test_datetimes() -> None:
@@ -155,3 +160,15 @@ def test_colors() -> None:
 
     assert model.Shape().fill_color is None
     assert model.Shape().stroke_color is None
+
+
+def test_xml_annotation() -> None:
+    from xsdata_pydantic_basemodel.compat import AnyElement
+
+    raw_xml = '<Data><Params A="1" B="2" C="3"/></Data>'
+    xml_ann = model.XMLAnnotation(description="Some description", value=raw_xml)
+    assert xml_ann.description == "Some description"
+    assert isinstance(xml_ann.value, model.XMLAnnotation.Value)
+    assert isinstance(xml_ann.value.any_elements[0], AnyElement)
+
+    assert raw_xml in to_xml(xml_ann, indent=0)

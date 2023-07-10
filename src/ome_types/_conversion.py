@@ -107,8 +107,14 @@ def from_xml(
     validate: bool | None = None,
     parser: Any = None,
     parser_kwargs: ParserKwargs | None = None,
-) -> OME:
+) -> OME:  #  Not totally true, see note below
     """Generate an OME object from an XML document.
+
+    NOTE: Technically, this can return any ome-types instance, (not just OME) but it's
+    by far the most common type that will come out of this function, and the type
+    annotation will be more useful to most users. For those who pass in an xml document
+    that isn't just a root <OME> tag, they can cast the result to the correct type
+    themselves.
 
     Parameters
     ----------
@@ -127,7 +133,7 @@ def from_xml(
     Returns
     -------
     OME
-        The OME object parsed from the XML document.
+        The OME object parsed from the XML document. (See NOTE above.)
     """
     if parser is not None:  # pragma: no cover
         warnings.warn(
@@ -144,10 +150,7 @@ def from_xml(
     if isinstance(xml, Path):
         xml = str(xml)
 
-    # this cast is a lie... but it's by far the most common type that will
-    # come out of this function, and will be more useful to most users.
-    # For those who pass in an xml document that isn't just a root <OME> tag,
-    # they can cast the result to the correct type themselves.
+    # this cast is a lie... see NOTE above.
     OME_type = cast("type[OME]", _get_ome_type(xml))
 
     parser_ = XmlParser(**(parser_kwargs or {}))
@@ -159,7 +162,7 @@ def from_xml(
 
 
 def to_xml(
-    ome: OME,
+    ome: OMEType,
     *,
     # exclude_defaults takes precedence over exclude_unset
     # if a value equals the default, it will be excluded
@@ -173,6 +176,36 @@ def to_xml(
     canonicalize: bool = False,
     validate: bool = False,
 ) -> str:
+    """Generate an XML document from an OME object.
+
+    Parameters
+    ----------
+    ome : OMEType
+        Instance of an ome-types model class.
+    exclude_defaults : bool, optional
+        Whether to exclude attributes that are set to their default value,
+        by default False.
+    exclude_unset : bool, optional
+        Whether to exclude attributes that are not explicitly set,
+        by default True.
+    indent : int, optional
+        Number of spaces to indent the XML document, by default 2.
+    include_namespace : bool | None, optional
+        Whether to include the OME namespace in the root element.  If `None`, will
+        be set to the value of `canonicalize`, by default None.
+    include_schema_location : bool, optional
+        Whether to include the schema location in the root element, by default True.
+    canonicalize : bool, optional
+        Whether to canonicalize the XML output, by default False.
+    validate : bool, optional
+        Whether to validate the XML document against the OME schema, after rendering.
+        (In most cases, this will be redundant and unnecessary.)
+
+    Returns
+    -------
+    str
+        The XML document as a string.
+    """
     config = SerializerConfig(
         pretty_print=(indent > 0) and not canonicalize,  # canonicalize does it for us
         pretty_print_indent=" " * indent,

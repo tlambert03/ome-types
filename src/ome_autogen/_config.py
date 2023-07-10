@@ -7,14 +7,16 @@ from xsdata.utils import text
 from ome_autogen._generator import OmeGenerator
 from ome_autogen._util import camel_to_snake
 
+KindedTypes = "(Shape|ManufacturerSpec|Annotation)"
+
+
 MIXIN_MODULE = "ome_types._mixins"
 MIXINS: list[tuple[str, str, bool]] = [
     (".*", f"{MIXIN_MODULE}._base_type.OMEType", False),  # base type on every class
     ("OME", f"{MIXIN_MODULE}._ome.OMEMixin", True),
     ("Instrument", f"{MIXIN_MODULE}._instrument.InstrumentMixin", False),
     ("Reference", f"{MIXIN_MODULE}._reference.ReferenceMixin", True),
-    ("BinData", f"{MIXIN_MODULE}._bin_data.BinDataMixin", True),
-    ("Pixels", f"{MIXIN_MODULE}._pixels.PixelsMixin", True),
+    (KindedTypes, f"{MIXIN_MODULE}._kinded.KindMixin", True),
 ]
 
 ALLOW_RESERVED_NAMES = {"type", "Type", "Union"}
