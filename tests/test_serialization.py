@@ -28,15 +28,6 @@ SKIP_ROUNDTRIP = {
     "xmlannotation-multi-value",
     "xmlannotation-svg",
 }
-SKIP_DICT_ROUNDTRIP = SKIP_ROUNDTRIP.union(
-    {
-        # "timestampannotation",
-        # "timestampannotation-posix-only",
-        # "transformations-upgrade",
-        # "transformations-downgrade",
-        "xmlannotation-body-space",
-    }
-)
 
 
 def true_stem(p: Path) -> str:
@@ -73,33 +64,14 @@ def test_serialization(valid_xml: Path) -> None:
     assert ome == deserialized
 
 
-def test_roundtrip_inverse(valid_xml: Path, tmp_path: Path) -> None:
-    """both variants have been touched by the model, here..."""
+def test_dict_roundtrip(valid_xml: Path) -> None:
+    # Test round-trip through to_dict and from_dict
     ome1 = from_xml(valid_xml)
-
-    # FIXME:
-    # there is a small difference in the XML output when using xml instead of lxml
-    # that makes the text of an xml annotation in `xmlannotation-multi-value` be
-    # 'B\n          ' instead of 'B'.
-    # we should investigate this and fix it, but here we just use indent=0 to avoid it.
-    xml = to_xml(ome1, indent=0)
-    out = tmp_path / "test.xml"
-    out.write_bytes(xml.encode())
-    ome2 = from_xml(out)
-
-    assert ome1 == ome2
-
-
-def test_to_dict(valid_xml: Path) -> None:
-    ome1 = from_xml(valid_xml)
-    d = to_dict(ome1)
-    ome2 = OME(**d)
-    if true_stem(valid_xml) not in SKIP_DICT_ROUNDTRIP:
-        assert ome1 == ome2
+    assert ome1 == OME(**to_dict(ome1))
 
 
 @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
-def test_roundtrip(valid_xml: Path) -> None:
+def test_xml_roundtrip(valid_xml: Path) -> None:
     """Ensure we can losslessly round-trip XML through the model and back."""
     if true_stem(valid_xml) in SKIP_ROUNDTRIP:
         pytest.xfail("known issues with canonicalization")
@@ -113,6 +85,26 @@ def test_roundtrip(valid_xml: Path) -> None:
         Path("original.xml").write_text(original)
         Path("rewritten.xml").write_text(new)
         raise AssertionError
+
+
+def test_xml_roundtrip_inverse(valid_xml: Path, tmp_path: Path) -> None:
+    """when xml->OME1->xml->OME2,  assert OME1 == OME2.
+
+    both variants have been touched by the model, here.
+    """
+    ome1 = from_xml(valid_xml)
+
+    # FIXME:
+    # there is a small difference in the XML output when using xml instead of lxml
+    # that makes the text of an xml annotation in `xmlannotation-multi-value` be
+    # 'B\n          ' instead of 'B'.
+    # we should investigate this and fix it, but here we just use indent=0 to avoid it.
+    xml = to_xml(ome1, indent=0)
+    out = tmp_path / "test.xml"
+    out.write_bytes(xml.encode())
+    ome2 = from_xml(out)
+
+    assert ome1 == ome2
 
 
 # ########## Canonicalization utils for testing ##########

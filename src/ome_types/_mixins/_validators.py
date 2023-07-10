@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict
 
 if TYPE_CHECKING:
     from ome_types.model import BinData, Pixels, XMLAnnotation
+    from xsdata_pydantic_basemodel.compat import AnyElement
 
 
 # @root_validator(pre=True)
@@ -26,11 +27,21 @@ def bin_data_root_validator(cls: "BinData", values: dict) -> Dict[str, Any]:
 
 # @validator("any_elements", each_item=True)
 def any_elements_validator(cls: "XMLAnnotation.Value", v: Any) -> object:
+    # This validator is used because XMLAnnotation.Value.any_elements is
+    # annotated as List[object]. So pydantic won't coerce dicts to AnyElement
+    # automatically (which is important when constructing OME objects from dicts)
     if isinstance(v, dict):
-        from xsdata_pydantic_basemodel.compat import AnyElement
-
-        return AnyElement(**v)
+        return _cast_to_any_element(v)
     return v
+
+
+def _cast_to_any_element(v: dict) -> "AnyElement":
+    # this needs to be delayed until runtime because of circular imports
+    from xsdata_pydantic_basemodel.compat import AnyElement
+
+    if "children" in v:
+        v["children"] = [_cast_to_any_element(c) for c in v["children"]]
+    return AnyElement(**v)
 
 
 # @root_validator(pre=True)

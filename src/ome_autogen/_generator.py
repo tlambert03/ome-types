@@ -32,11 +32,11 @@ ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
     ),
     (
         lambda c: c.name == "Value",
-        "\n_v = validator('any_elements', each_item=True)(any_elements_validator)",
+        "\n\n_v = validator('any_elements', each_item=True)(any_elements_validator)",
     ),
     (
         lambda c: c.name == "Pixels",
-        "\n_v = root_validator(pre=True)(pixels_root_validator)",
+        "\n\n_v = root_validator(pre=True)(pixels_root_validator)",
     ),
 ]
 
