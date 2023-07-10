@@ -26,7 +26,7 @@ jobs:
         run: |
           pwd
           ls -la
-          shopt -s extglob dotglob
+          shopt -s extglob
           rm -rf !("dist"|"*.git")
           ls -la
           unzip -o dist/*.whl -d .
