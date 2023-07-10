@@ -1,44 +1,43 @@
-name: update built branch
+name: Build built branch
 
 on:
   push:
     branches:
-      - "main"
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout main branch
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          path: ome-types
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
 
       - name: Build wheel
         run: |
-          cd ome-types
           python -m pip install --upgrade pip build
           python -m build --wheel
-          unzip -q dist/*.whl -d ./unzipped
-          mv ./unzipped/ome_types/ ..
-          cd ..
-          rm -rf ./ome-types
 
-      - name: Commit changes
+      - name: Replace working tree with wheel
         run: |
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
+          shopt -s extglob
+          rm -rf !("dist"|"*.git")
+          unzip -o dist/*.whl -d .
+          rm -rf dist *.dist-info .github* .gitignore .r* .p*
 
+      - name: Commit files
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add .
-          git commit -m 'Commit from GitHub Actions (built_branch.yml)'
+          git commit -am "Built wheel"
 
-      - name: Push
+      - name: Push to built branch
         uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: built
           force: true
