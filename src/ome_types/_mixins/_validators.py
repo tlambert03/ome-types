@@ -6,7 +6,7 @@ import warnings
 from typing import TYPE_CHECKING, Any, Dict
 
 if TYPE_CHECKING:
-    from ome_types.model import BinData, Pixels, XMLAnnotation
+    from ome_types.model import BinData, Pixels, XMLAnnotation  # type: ignore
     from xsdata_pydantic_basemodel.compat import AnyElement
 
 
