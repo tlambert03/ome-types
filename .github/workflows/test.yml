@@ -42,7 +42,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # we can't actually build source code on python3.7
+      # we can't actually do the codegen on python3.7
+      # (there's an issue with jinja template ordering)
+      # so we build wheel before installing python 3.7
       - name: Build Wheel
         if: matrix.python-version == '3.7'
         run: |
@@ -54,13 +56,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
+      - name: Install (3.7)
         if: matrix.python-version == '3.7'
         run: |
           whl=$(ls dist/*.whl)
           python -m pip install "${whl}[test,dev]"
 
-      - name: Install dependencies
+      - name: Install
         if: matrix.python-version != '3.7'
         run: |
           python -m pip install -U pip
