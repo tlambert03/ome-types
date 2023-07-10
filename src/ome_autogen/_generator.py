@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, NamedTuple, cast
+from typing import TYPE_CHECKING, Callable, Iterator, NamedTuple, cast
 
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
@@ -21,6 +21,24 @@ if TYPE_CHECKING:
 # from ome_types._mixins._base_type import AUTO_SEQUENCE
 # avoiding import to avoid build-time dependency on the ome-types package
 AUTO_SEQUENCE = "__auto_sequence__"
+
+# Methods and/or validators to add to generated classes
+# (predicate, method) where predicate returns True if the method should be added
+# to the given class.
+ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
+    (
+        lambda c: c.name == "BinData",
+        "\n\n_v = root_validator(pre=True)(bin_data_root_validator)",
+    ),
+    (
+        lambda c: c.name == "Value",
+        "\n_v = validator('any_elements', each_item=True)(any_elements_validator)",
+    ),
+    (
+        lambda c: c.name == "Pixels",
+        "\n_v = root_validator(pre=True)(pixels_root_validator)",
+    ),
+]
 
 
 class Override(NamedTuple):
@@ -55,6 +73,17 @@ IMPORT_PATTERNS = {
     for o in CLASS_OVERRIDES
     if o.module_name
 }
+IMPORT_PATTERNS.update(
+    {
+        "ome_types._mixins._util": {"new_uuid": ["default_factory=new_uuid"]},
+        "datetime": {"datetime": ["datetime"]},
+        "ome_types._mixins._validators": {
+            "any_elements_validator": ["any_elements_validator"],
+            "bin_data_root_validator": ["bin_data_root_validator"],
+            "pixels_root_validator": ["pixels_root_validator"],
+        },
+    }
+)
 
 
 class OmeGenerator(DataclassGenerator):
@@ -99,7 +128,8 @@ class OmeFilters(PydanticBaseFilters):
         # add our own templates dir to the search path
         tpl_dir = Path(__file__).parent.joinpath("templates")
         cast("FileSystemLoader", env.loader).searchpath.insert(0, str(tpl_dir))
-        return super().register(env)
+        super().register(env)
+        env.filters.update({"methods": self.methods})
 
     def __init__(self, config: GeneratorConfig):
         super().__init__(config)
@@ -190,9 +220,13 @@ class OmeFilters(PydanticBaseFilters):
     @classmethod
     def build_import_patterns(cls) -> dict[str, dict]:
         patterns = super().build_import_patterns()
+        patterns.setdefault("pydantic", {}).update(
+            {
+                "validator": ["validator("],
+                "root_validator": ["root_validator("],
+            }
+        )
         patterns.update(IMPORT_PATTERNS)
-        patterns["ome_types._mixins._util"] = {"new_uuid": ["default_factory=new_uuid"]}
-        patterns["datetime"] = {"datetime": ["datetime"]}
         return {key: patterns[key] for key in sorted(patterns)}
 
     def field_default_value(self, attr: Attr, ns_map: dict | None = None) -> str:
@@ -221,3 +255,9 @@ class OmeFilters(PydanticBaseFilters):
             # use the enum names found in appinfo/xsdfu/enum
             return self.appinfo.enums[class_name][name].enum
         return super().constant_name(name, class_name)
+
+    def methods(self, obj: Class) -> list[str]:
+        for predicate, code in ADDED_METHODS:
+            if predicate(obj):
+                return [code]
+        return []

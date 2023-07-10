@@ -76,11 +76,13 @@ class OMEType(BaseModel):
     _v = validator("id", pre=True, always=True, check_fields=False)(validate_id)
 
     def __init__(self, **data: Any) -> None:
+        warn_extra = data.pop("warn_extra", True)
         field_names = set(self.__fields__.keys())
         _move_deprecated_fields(data, field_names)
         super().__init__(**data)
         kwargs = set(data.keys())
-        if kwargs - field_names:
+        extra = kwargs - field_names
+        if extra and warn_extra:
             warnings.warn(
                 f"Unrecognized fields for type {type(self)}: {kwargs - field_names}",
                 stacklevel=2,

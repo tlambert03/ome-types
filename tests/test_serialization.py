@@ -30,10 +30,10 @@ SKIP_ROUNDTRIP = {
 }
 SKIP_DICT_ROUNDTRIP = SKIP_ROUNDTRIP.union(
     {
-        "timestampannotation",
-        "timestampannotation-posix-only",
-        "transformations-upgrade",
-        "transformations-downgrade",
+        # "timestampannotation",
+        # "timestampannotation-posix-only",
+        # "transformations-upgrade",
+        # "transformations-downgrade",
         "xmlannotation-body-space",
     }
 )
