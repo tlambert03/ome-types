@@ -162,7 +162,7 @@ def from_xml(
 
 
 def to_xml(
-    ome: OME,
+    ome: OMEType,
     *,
     # exclude_defaults takes precedence over exclude_unset
     # if a value equals the default, it will be excluded

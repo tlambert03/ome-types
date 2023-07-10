@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 import weakref
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from ome_types._mixins._base_type import OMEType
 from ome_types._mixins._ids import CONVERTED_IDS
@@ -36,21 +36,10 @@ class OMEMixin:
         self._link_refs()
 
     @classmethod
-    def from_xml(cls, xml: Path | str) -> OME:
-        from ome_types._conversion import from_xml
-
-        return from_xml(xml)
-
-    @classmethod
     def from_tiff(cls, path: Path | str) -> OME:
         from ome_types._conversion import from_tiff
 
         return from_tiff(path)
-
-    def to_xml(self, **kwargs: Any) -> str:
-        from ome_types._conversion import to_xml
-
-        return to_xml(cast("OME", self), **kwargs)
 
 
 def collect_ids(value: Any) -> dict[str, OMEType]:

@@ -24,7 +24,8 @@ AUTO_SEQUENCE = "__auto_sequence__"
 
 # Methods and/or validators to add to generated classes
 # (predicate, method) where predicate returns True if the method should be added
-# to the given class.
+# to the given class.  Note: imports for these methods are added in
+# IMPORT_PATTERNS below.
 ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
     (
         lambda c: c.name == "BinData",
@@ -37,6 +38,10 @@ ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
     (
         lambda c: c.name == "Pixels",
         "\n\n_v = root_validator(pre=True)(pixels_root_validator)",
+    ),
+    (
+        lambda c: c.name == "XMLAnnotation",
+        "\n\n_v = validator('value', pre=True)(xml_value_validator)",
     ),
 ]
 
@@ -81,6 +86,7 @@ IMPORT_PATTERNS.update(
             "any_elements_validator": ["any_elements_validator"],
             "bin_data_root_validator": ["bin_data_root_validator"],
             "pixels_root_validator": ["pixels_root_validator"],
+            "xml_value_validator": ["xml_value_validator"],
         },
     }
 )
