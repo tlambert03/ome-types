@@ -58,11 +58,12 @@ def xml_value_validator(cls: "XMLAnnotation", v: Any) -> "XMLAnnotation.Value":
     if isinstance(v, str):
         # FIXME: this is a hack to support passing a string to XMLAnnotation.value
         # there must be a more direct way to do this...
+        # (the type ignores here are because the model might not be built yet)
         from ome_types._conversion import OME_2016_06_URI
-        from ome_types.model import XMLAnnotation
+        from ome_types.model import XMLAnnotation  # type: ignore
         from xsdata_pydantic_basemodel.bindings import XmlParser
 
         template = '<XMLAnnotation xmlns="{}"><Value>{}</Value></XMLAnnotation>'
         xml = template.format(OME_2016_06_URI, v)
-        return XmlParser().from_string(xml, XMLAnnotation).value
+        return XmlParser().from_string(xml, XMLAnnotation).value  # type: ignore
     return v
