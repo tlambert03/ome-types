@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import contextlib
+from contextlib import nullcontext
 from typing import TYPE_CHECKING, Callable, ContextManager
 
 import pytest
-from black import nullcontext
 
 from ome_types import _conversion, validate_xml
 
