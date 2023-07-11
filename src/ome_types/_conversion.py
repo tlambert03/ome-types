@@ -8,7 +8,7 @@ from contextlib import nullcontext, suppress
 from functools import lru_cache
 from pathlib import Path
 from struct import Struct
-from typing import TYPE_CHECKING, Any, BinaryIO, ContextManager, Literal, cast, overload
+from typing import TYPE_CHECKING, cast, overload
 
 from pydantic import BaseModel
 from xsdata.formats.dataclass.parsers.config import ParserConfig
@@ -26,10 +26,11 @@ except ImportError:  # pragma: no cover
 
 
 if TYPE_CHECKING:
-    from typing import TypedDict
+    from typing import Any, BinaryIO, ContextManager, TypedDict
 
     import xmlschema
     from lxml.etree import _XSLTResultTree
+    from typing_extensions import Literal
     from xsdata.formats.dataclass.parsers.mixins import XmlHandler
 
     from ome_types._mixins._base_type import OMEType

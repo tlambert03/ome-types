@@ -210,7 +210,7 @@ def test_source_types(source_type: str, single_xml: Path) -> None:
     elif source_type == "str_path":
         xml = str(single_xml)
     elif source_type == "str":
-        xml = single_xml.read_text()
+        xml = single_xml.read_text(encoding="utf-8")
     elif source_type == "bytes":
         xml = single_xml.read_bytes()
     elif source_type == "stream":
