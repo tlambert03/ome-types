@@ -61,6 +61,7 @@ test = [
   "lxml",
   "pytest",
   "pytest-cov",
+  "pytest-codspeed",
   "xmlschema",
   "pytest-mypy-plugins",
 ]
@@ -147,12 +148,6 @@ ignore = [
   "typesafety/**/*",
 ]
 
-
-[tool.isort]
-profile = "black"
-line_length = 88
-float_to_top = true
-skip_glob = ["*examples/*", "*vendored*"]
 
 [tool.black]
 target-version = ['py38']
