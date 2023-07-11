@@ -8,8 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types._conversion import _get_root_ome_type
-from ome_types.validation import OME_URI
+from ome_types._conversion import OME_2016_06_URI, _get_root_ome_type
 
 DATA = Path(__file__).parent / "data"
 VALIDATE = [False]
@@ -77,11 +76,11 @@ def test_with_ome_ns() -> None:
 
 
 def test_get_root_ome_type() -> None:
-    xml = io.BytesIO(f'<Image xmlns="{OME_URI}" />'.encode())
+    xml = io.BytesIO(f'<Image xmlns="{OME_2016_06_URI}" />'.encode())
     t = _get_root_ome_type(xml)
     assert t is model.Image
 
-    xml = io.BytesIO(f'<ome:Image xmlns:ome="{OME_URI}" />'.encode())
+    xml = io.BytesIO(f'<ome:Image xmlns:ome="{OME_2016_06_URI}" />'.encode())
     t = _get_root_ome_type(xml)
     assert t is model.Image
 
@@ -89,10 +88,11 @@ def test_get_root_ome_type() -> None:
         _get_root_ome_type(io.BytesIO(b"<Imdgage />"))
 
     # this can be used to instantiate XML with a non OME root type:
-    obj = from_xml(f'<Project xmlns="{OME_URI}" />')
+    obj = from_xml(f'<Project xmlns="{OME_2016_06_URI}" />')
     assert isinstance(obj, model.Project)
     obj = from_xml(
-        f'<XMLAnnotation xmlns="{OME_URI}"><Value><Data></Data></Value></XMLAnnotation>'
+        f'<XMLAnnotation xmlns="{OME_2016_06_URI}"><Value><Data>'
+        "</Data></Value></XMLAnnotation>"
     )
     assert isinstance(obj, model.XMLAnnotation)
 

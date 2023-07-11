@@ -12,8 +12,8 @@ from xml.etree import ElementTree as ET
 import pytest
 
 from ome_types import from_xml, to_dict, to_xml
+from ome_types._conversion import OME_2016_06_NS, OME_2016_06_URI, OME_2016_06_XSD
 from ome_types.model import OME, Channel, Image, Pixels
-from ome_types.validation import OME_2016_06_XSD, OME_NS, OME_URI
 
 if TYPE_CHECKING:
     import xmlschema
@@ -114,14 +114,14 @@ def test_xml_roundtrip_inverse(valid_xml: Path, tmp_path: Path) -> None:
 
 
 def _canonicalize(xml: str | bytes, pretty: bool = False) -> str:
-    ET.register_namespace("ome", OME_URI)
+    ET.register_namespace("ome", OME_2016_06_URI)
 
     # The only reason we're using xmlschema at this point is because
     # it converts floats properly CutIn="550" -> CutIn="550.0" based on the schema
     # once that is fixed, we can remove xmlschema entirely
     schema = _get_schema()
     decoded = schema.decode(xml)
-    root = cast(ET.Element, schema.encode(decoded, path=f"{OME_NS}OME"))
+    root = cast(ET.Element, schema.encode(decoded, path=f"{OME_2016_06_NS}OME"))
 
     # Strip extra whitespace in the schemaLocation value.
     SCHEMA_LOCATION = "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"
@@ -145,8 +145,8 @@ def _get_schema() -> xmlschema.XMLSchemaBase:
     schema = xmlschema.XMLSchema(OME_2016_06_XSD)
     # FIXME Hack to work around xmlschema poor support for keyrefs to
     # substitution groups.  This can be removed, if decode(validation='skip') is used.
-    ls_sgs = schema.maps.substitution_groups[f"{OME_NS}LightSourceGroup"]
-    ls_id_maps = schema.maps.identities[f"{OME_NS}LightSourceIDKey"]
+    ls_sgs = schema.maps.substitution_groups[f"{OME_2016_06_NS}LightSourceGroup"]
+    ls_id_maps = schema.maps.identities[f"{OME_2016_06_NS}LightSourceIDKey"]
     ls_id_maps.elements = {e: None for e in ls_sgs}
     return schema
 

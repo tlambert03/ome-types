@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 DATA = Path(__file__).parent / "data"
 ALL_XML = set(DATA.glob("*.ome.xml"))
 INVALID = {DATA / "invalid_xml_annotation.ome.xml", DATA / "bad.ome.xml"}
+OLD_SCHEMA = {DATA / "seq0000xy01c1.ome.xml", DATA / "2008_instrument.ome.xml"}
 
 
 def _true_stem(p: Path) -> str:
@@ -28,6 +29,8 @@ def any_xml(request: pytest.FixtureRequest) -> Path:
 
 @pytest.fixture(params=sorted(ALL_XML - INVALID), ids=_true_stem)
 def valid_xml(request: pytest.FixtureRequest) -> Path:
+    if request.param in OLD_SCHEMA:
+        pytest.importorskip("lxml", reason="lxml needed for old schema")
     return request.param
 
 
