@@ -14,9 +14,8 @@ if TYPE_CHECKING:
     from ome_types.units import ureg  # noqa: TCH004
 
 from ome_types import model
-from ome_types._conversion import from_tiff, from_xml, to_dict, to_xml
+from ome_types._conversion import from_tiff, from_xml, to_dict, to_xml, validate_xml
 from ome_types.model import OME
-from ome_types.validation import validate_xml
 
 __all__ = [
     "__version__",
