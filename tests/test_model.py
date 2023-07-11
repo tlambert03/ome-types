@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import io
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -41,7 +42,8 @@ def test_from_tiff(validate: bool) -> None:
     assert ome.images[0].pixels.size_x == 6
     assert ome.images[0].pixels.channels[0].samples_per_pixel == 1
 
-    assert ome == model.OME.from_tiff(_path)  # class method for coverage
+    with open(_path, "rb") as fh:
+        assert model.OME.from_tiff(fh) == ome  # class method for coverage
 
 
 def test_no_id() -> None:
@@ -180,19 +182,39 @@ def test_xml_annotation() -> None:
     assert raw_xml in to_xml(xml_ann, indent=0)
 
 
+XML = """
+<OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">
+<Image ID="Image:0">
+    <AcquisitionDate>2020-09-08T17:26:16.769000000</AcquisitionDate>
+    <Pixels DimensionOrder="XYCTZ" Type="uint8" SizeC="1" SizeT="1"
+            SizeX="18" SizeY="24" SizeZ="5">
+    </Pixels>
+</Image>
+</OME>
+"""
+
+
 def test_bad_date() -> None:
     """Test that dates with too many microseconds are handled gracefully."""
 
-    XML = """
-    <OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">
-    <Image ID="Image:0">
-        <AcquisitionDate>2020-09-08T17:26:16.769000000</AcquisitionDate>
-        <Pixels DimensionOrder="XYCTZ" Type="uint8" SizeC="1" SizeT="1"
-                SizeX="18" SizeY="24" SizeZ="5">
-        </Pixels>
-    </Image>
-    </OME>
-    """
-
     obj = from_xml(XML)
     assert obj.images[0].acquisition_date.microsecond == 769000  # type: ignore
+
+
+@pytest.mark.parametrize(
+    "source_type", ["path", "str_path", "str", "bytes", "stream", "handle"]
+)
+def test_source_types(source_type: str, single_xml: Path) -> None:
+    if source_type == "path":
+        xml: Any = single_xml
+    elif source_type == "str_path":
+        xml = str(single_xml)
+    elif source_type == "str":
+        xml = single_xml.read_text()
+    elif source_type == "bytes":
+        xml = single_xml.read_bytes()
+    elif source_type == "stream":
+        xml = io.BytesIO(single_xml.read_bytes())
+    elif source_type == "handle":
+        xml = open(single_xml, "rb")
+    assert isinstance(from_xml(xml), model.OME)

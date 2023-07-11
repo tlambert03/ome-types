@@ -1,9 +1,9 @@
 import warnings
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 from textwrap import indent
 from typing import (
+    TYPE_CHECKING,
     Any,
     ClassVar,
     Dict,
@@ -13,7 +13,6 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
-    Union,
     cast,
 )
 
@@ -25,6 +24,10 @@ try:
     from ome_types.units import add_quantity_properties
 except ImportError:
     add_quantity_properties = lambda cls: None  # noqa: E731
+
+if TYPE_CHECKING:
+    from ome_types._conversion import XMLSource
+
 
 T = TypeVar("T", bound="OMEType")
 # Default value to support automatic numbering for id field values.
@@ -161,7 +164,7 @@ class OMEType(BaseModel):
         return to_xml(self, **kwargs)
 
     @classmethod
-    def from_xml(cls: Type[T], xml: Union[Path, str], **kwargs: Any) -> T:
+    def from_xml(cls: Type[T], xml: "XMLSource", **kwargs: Any) -> T:
         """Read an ome-types class from XML.
 
         See docstring of [`ome_types.from_xml`][] for kwargs.

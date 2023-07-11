@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from xsdata_pydantic_basemodel.bindings import XmlContext
 
     XMLSource = Path | str | bytes | io.BytesIO
-    FileLike = str | io.BytesIO
+    FileLike = str | io.BufferedIOBase
     ElementOrTree = ET._Element | ET._ElementTree
 
     class ParserKwargs(TypedDict, total=False):
@@ -187,7 +187,7 @@ def tiff2xml(path: Path | str | BinaryIO) -> bytes:
             raise ValueError(f"No OME metadata found in file: {path}")
 
     if desc[-1] == 0:
-        desc = desc[:-1]
+        desc = desc[:-1]  # pragma: no cover
     return desc
 
 
@@ -445,7 +445,7 @@ def ensure_2016(
 
         return tree if as_tree else io.BytesIO(ET.tostring(tree, encoding="utf-8"))
 
-    raise ValueError(f"Unsupported document namespace {ns!r}")
+    raise ValueError(f"Unsupported document namespace {ns!r}")  # pragma: no cover
 
 
 def _normalize(source: XMLSource) -> FileLike:
@@ -469,8 +469,9 @@ def _normalize(source: XMLSource) -> FileLike:
         return io.BytesIO(source.encode())
     elif isinstance(source, bytes):
         return io.BytesIO(source)
-    elif isinstance(source, io.BytesIO):
+    elif isinstance(source, io.BufferedIOBase):
         return source
+    raise TypeError(f"Unsupported source type {type(source)!r}")  # pragma: no cover
 
 
 def _apply_xslt(root: ElementOrTree, xslt_path: str | Path) -> _XSLTResultTree:
