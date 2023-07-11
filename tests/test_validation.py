@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import contextlib
-from typing import TYPE_CHECKING, Callable
+from contextlib import nullcontext
+from typing import TYPE_CHECKING, Callable, ContextManager
 
 import pytest
 
-from ome_types import validate_xml, validation
+from ome_types import _conversion, validate_xml
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -14,17 +15,26 @@ VALIDATORS: dict[str, Callable] = {}
 with contextlib.suppress(ImportError):
     import lxml  # noqa: F401
 
-    VALIDATORS["lxml"] = validation.validate_xml_with_lxml
+    VALIDATORS["lxml"] = _conversion.validate_xml_with_lxml
 
 with contextlib.suppress(ImportError):
     import xmlschema  # noqa: F401
 
-    VALIDATORS["xmlschema"] = validation.validate_xml_with_xmlschema
+    VALIDATORS["xmlschema"] = _conversion.validate_xml_with_xmlschema
 
 
+REQUIRES_TRANSFORM = {"seq0000xy01c1.ome.xml", "2008_instrument.ome.xml"}
+
+
+@pytest.mark.filterwarnings("ignore:unclosed file")
 @pytest.mark.parametrize("backend", VALIDATORS)
 def test_validation_good(valid_xml: Path, backend: str) -> None:
-    VALIDATORS[backend](valid_xml)
+    if valid_xml.name in REQUIRES_TRANSFORM:
+        ctx: ContextManager = pytest.warns(match="Transformed source from")
+    else:
+        ctx = nullcontext()
+    with ctx:
+        VALIDATORS[backend](valid_xml)
 
 
 def test_validation_anybackend(single_xml: Path) -> None:
@@ -37,5 +47,5 @@ def test_validation_anybackend(single_xml: Path) -> None:
 
 @pytest.mark.parametrize("backend", VALIDATORS)
 def test_validation_raises(invalid_xml: Path, backend: str) -> None:
-    with pytest.raises(validation.ValidationError):
+    with pytest.raises(_conversion.ValidationError):
         VALIDATORS[backend](invalid_xml)
