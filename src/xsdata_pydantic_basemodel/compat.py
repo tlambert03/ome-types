@@ -1,8 +1,3 @@
-try:
-    from lxml import etree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET  # type: ignore
-
 from dataclasses import MISSING, field
 from typing import (
     Any,
@@ -16,6 +11,7 @@ from typing import (
     TypeVar,
     cast,
 )
+from xml.etree.ElementTree import QName
 
 from pydantic import BaseModel, validators
 from pydantic.fields import Field, ModelField, Undefined
@@ -48,14 +44,6 @@ class AnyElement(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-
-    def to_etree_element(self) -> ET._Element:
-        elem = ET.Element(self.qname or "", self.attributes)
-        elem.text = self.text
-        elem.tail = self.tail
-        for child in self.children:
-            elem.append(child.to_etree_element())
-        return elem
 
 
 class DerivedElement(BaseModel, Generic[T]):
@@ -148,7 +136,7 @@ if hasattr(validators, "_VALIDATORS"):
             (XmlTime, make_validators(XmlTime, XmlTime.from_string)),
             (XmlDuration, make_validators(XmlDuration, XmlDuration)),
             (XmlPeriod, make_validators(XmlPeriod, XmlPeriod)),
-            (ET.QName, make_validators(ET.QName, ET.QName)),
+            (QName, make_validators(QName, QName)),
         ]
     )
 else:
