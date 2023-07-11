@@ -6,7 +6,12 @@ import warnings
 from typing import TYPE_CHECKING, Any, Dict
 
 if TYPE_CHECKING:
-    from ome_types.model import BinData, Pixels, XMLAnnotation  # type: ignore
+    from ome_types.model import (  # type: ignore
+        BinData,
+        Pixels,
+        PixelType,
+        XMLAnnotation,
+    )
     from xsdata_pydantic_basemodel.compat import AnyElement
 
 
@@ -67,3 +72,15 @@ def xml_value_validator(cls: "XMLAnnotation", v: Any) -> "XMLAnnotation.Value":
         xml = template.format(OME_2016_06_URI, v)
         return XmlParser().from_string(xml, XMLAnnotation).value  # type: ignore
     return v
+
+
+def pixel_type_to_numpy_dtype(self: "PixelType") -> str:
+    """Get a numpy dtype string for this pixel type."""
+    m = {
+        "float": "float32",
+        "double": "float64",
+        "complex": "complex64",
+        "double-complex": "complex128",
+        "bit": "bool",  # ?
+    }
+    return m.get(self.value, self.value)

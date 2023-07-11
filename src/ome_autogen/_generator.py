@@ -43,6 +43,10 @@ ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
         lambda c: c.name == "XMLAnnotation",
         "\n\n_v = validator('value', pre=True)(xml_value_validator)",
     ),
+    (
+        lambda c: c.name == "PixelType",
+        "\n\nnumpy_dtype = property(pixel_type_to_numpy_dtype)",
+    ),
 ]
 
 
@@ -87,6 +91,7 @@ IMPORT_PATTERNS.update(
             "bin_data_root_validator": ["bin_data_root_validator"],
             "pixels_root_validator": ["pixels_root_validator"],
             "xml_value_validator": ["xml_value_validator"],
+            "pixel_type_to_numpy_dtype": ["pixel_type_to_numpy_dtype"],
         },
     }
 )
