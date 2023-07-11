@@ -1,0 +1,588 @@
+{
+  "AffineTransform": {
+    "a00": "float",
+    "a01": "float",
+    "a02": "float",
+    "a10": "float",
+    "a11": "float",
+    "a12": "float"
+  },
+  "Annotation": {
+    "annotation_refs": "List[AnnotationRef]",
+    "annotator": "Optional[ConstrainedStrValue]",
+    "description": "Optional[str]",
+    "id": "ConstrainedStrValue",
+    "namespace": "Optional[str]"
+  },
+  "AnnotationRef": {},
+  "Arc": {
+    "type": "Optional[Arc_Type]"
+  },
+  "BasicAnnotation": {},
+  "BinData": {
+    "big_endian": "bool",
+    "compression": "BinData_Compression",
+    "length": "ConstrainedIntValue",
+    "value": "bytes"
+  },
+  "BinaryFile": {
+    "bin_data": "Optional[BinData]",
+    "external": "Optional[External]",
+    "file_name": "str",
+    "mime_type": "Optional[str]",
+    "size": "ConstrainedIntValue"
+  },
+  "BinaryOnly": {
+    "metadata_file": "str",
+    "uuid": "ConstrainedStrValue"
+  },
+  "BooleanAnnotation": {
+    "value": "bool"
+  },
+  "Channel": {
+    "acquisition_mode": "Optional[Channel_AcquisitionMode]",
+    "annotation_refs": "List[AnnotationRef]",
+    "color": "Color",
+    "contrast_method": "Optional[Channel_ContrastMethod]",
+    "detector_settings": "Optional[DetectorSettings]",
+    "emission_wavelength": "Optional[ConstrainedFloatValue]",
+    "emission_wavelength_unit": "UnitsLength",
+    "excitation_wavelength": "Optional[ConstrainedFloatValue]",
+    "excitation_wavelength_unit": "UnitsLength",
+    "filter_set_ref": "Optional[FilterSetRef]",
+    "fluor": "Optional[str]",
+    "id": "ConstrainedStrValue",
+    "illumination_type": "Optional[Channel_IlluminationType]",
+    "light_path": "Optional[LightPath]",
+    "light_source_settings": "Optional[LightSourceSettings]",
+    "name": "Optional[str]",
+    "nd_filter": "Optional[float]",
+    "pinhole_size": "Optional[float]",
+    "pinhole_size_unit": "UnitsLength",
+    "pockel_cell_setting": "Optional[int]",
+    "samples_per_pixel": "Optional[ConstrainedIntValue]"
+  },
+  "ChannelRef": {},
+  "CommentAnnotation": {
+    "value": "str"
+  },
+  "Dataset": {
+    "annotation_refs": "List[AnnotationRef]",
+    "description": "Optional[str]",
+    "experimenter_group_ref": "Optional[ExperimenterGroupRef]",
+    "experimenter_ref": "Optional[ExperimenterRef]",
+    "id": "ConstrainedStrValue",
+    "image_refs": "List[ImageRef]",
+    "name": "Optional[str]"
+  },
+  "DatasetRef": {},
+  "Detector": {
+    "amplification_gain": "Optional[float]",
+    "annotation_refs": "List[AnnotationRef]",
+    "gain": "Optional[float]",
+    "id": "ConstrainedStrValue",
+    "offset": "Optional[float]",
+    "type": "Optional[Detector_Type]",
+    "voltage": "Optional[float]",
+    "voltage_unit": "UnitsElectricPotential",
+    "zoom": "Optional[float]"
+  },
+  "DetectorSettings": {
+    "binning": "Optional[Binning]",
+    "gain": "Optional[float]",
+    "integration": "Optional[ConstrainedIntValue]",
+    "offset": "Optional[float]",
+    "read_out_rate": "Optional[float]",
+    "read_out_rate_unit": "UnitsFrequency",
+    "voltage": "Optional[float]",
+    "voltage_unit": "UnitsElectricPotential",
+    "zoom": "Optional[float]"
+  },
+  "Dichroic": {
+    "annotation_refs": "List[AnnotationRef]",
+    "id": "ConstrainedStrValue"
+  },
+  "DichroicRef": {},
+  "DoubleAnnotation": {
+    "value": "float"
+  },
+  "Ellipse": {
+    "radius_x": "float",
+    "radius_y": "float",
+    "x": "float",
+    "y": "float"
+  },
+  "Experiment": {
+    "description": "Optional[str]",
+    "experimenter_ref": "Optional[ExperimenterRef]",
+    "id": "ConstrainedStrValue",
+    "microbeam_manipulations": "List[MicrobeamManipulation]",
+    "type": "List[Experiment_value]"
+  },
+  "ExperimentRef": {},
+  "Experimenter": {
+    "annotation_refs": "List[AnnotationRef]",
+    "email": "Optional[str]",
+    "first_name": "Optional[str]",
+    "id": "ConstrainedStrValue",
+    "institution": "Optional[str]",
+    "last_name": "Optional[str]",
+    "middle_name": "Optional[str]",
+    "user_name": "Optional[str]"
+  },
+  "ExperimenterGroup": {
+    "annotation_refs": "List[AnnotationRef]",
+    "description": "Optional[str]",
+    "experimenter_refs": "List[ExperimenterRef]",
+    "id": "ConstrainedStrValue",
+    "leaders": "List[Leader]",
+    "name": "Optional[str]"
+  },
+  "ExperimenterGroupRef": {},
+  "ExperimenterRef": {},
+  "External": {
+    "compression": "External_Compression",
+    "href": "str",
+    "sha1": "bytes"
+  },
+  "Filament": {
+    "type": "Optional[Filament_Type]"
+  },
+  "FileAnnotation": {
+    "binary_file": "BinaryFile"
+  },
+  "Filter": {
+    "annotation_refs": "List[AnnotationRef]",
+    "filter_wheel": "Optional[str]",
+    "id": "ConstrainedStrValue",
+    "transmittance_range": "Optional[TransmittanceRange]",
+    "type": "Optional[Filter_Type]"
+  },
+  "FilterRef": {},
+  "FilterSet": {
+    "dichroic_ref": "Optional[DichroicRef]",
+    "emission_filters": "List[FilterRef]",
+    "excitation_filters": "List[FilterRef]",
+    "id": "ConstrainedStrValue"
+  },
+  "FilterSetRef": {},
+  "Folder": {
+    "annotation_refs": "List[AnnotationRef]",
+    "description": "Optional[str]",
+    "folder_refs": "List[FolderRef]",
+    "id": "ConstrainedStrValue",
+    "image_refs": "List[ImageRef]",
+    "name": "Optional[str]",
+    "roi_refs": "List[ROIRef]"
+  },
+  "FolderRef": {},
+  "GenericExcitationSource": {
+    "map": "Optional[Map]"
+  },
+  "Image": {
+    "acquisition_date": "Optional[datetime]",
+    "annotation_refs": "List[AnnotationRef]",
+    "description": "Optional[str]",
+    "experiment_ref": "Optional[ExperimentRef]",
+    "experimenter_group_ref": "Optional[ExperimenterGroupRef]",
+    "experimenter_ref": "Optional[ExperimenterRef]",
+    "id": "ConstrainedStrValue",
+    "imaging_environment": "Optional[ImagingEnvironment]",
+    "instrument_ref": "Optional[InstrumentRef]",
+    "microbeam_manipulation_refs": "List[MicrobeamManipulationRef]",
+    "name": "Optional[str]",
+    "objective_settings": "Optional[ObjectiveSettings]",
+    "pixels": "Pixels",
+    "roi_refs": "List[ROIRef]",
+    "stage_label": "Optional[StageLabel]"
+  },
+  "ImageRef": {},
+  "ImagingEnvironment": {
+    "air_pressure": "Optional[float]",
+    "air_pressure_unit": "UnitsPressure",
+    "co2_percent": "Optional[ConstrainedFloatValue]",
+    "humidity": "Optional[ConstrainedFloatValue]",
+    "map": "Optional[Map]",
+    "temperature": "Optional[float]",
+    "temperature_unit": "UnitsTemperature"
+  },
+  "Instrument": {
+    "annotation_refs": "List[AnnotationRef]",
+    "arcs": "List[Arc]",
+    "detectors": "List[Detector]",
+    "dichroics": "List[Dichroic]",
+    "filaments": "List[Filament]",
+    "filter_sets": "List[FilterSet]",
+    "filters": "List[Filter]",
+    "generic_excitation_sources": "List[GenericExcitationSource]",
+    "id": "ConstrainedStrValue",
+    "lasers": "List[Laser]",
+    "light_emitting_diodes": "List[LightEmittingDiode]",
+    "microscope": "Optional[Microscope]",
+    "objectives": "List[Objective]"
+  },
+  "InstrumentRef": {},
+  "Label": {
+    "x": "float",
+    "y": "float"
+  },
+  "Laser": {
+    "frequency_multiplication": "Optional[ConstrainedIntValue]",
+    "laser_medium": "Optional[Laser_LaserMedium]",
+    "pockel_cell": "Optional[bool]",
+    "pulse": "Optional[Laser_Pulse]",
+    "pump": "Optional[Pump]",
+    "repetition_rate": "Optional[float]",
+    "repetition_rate_unit": "UnitsFrequency",
+    "tuneable": "Optional[bool]",
+    "type": "Optional[Laser_Type]",
+    "wavelength": "Optional[ConstrainedFloatValue]",
+    "wavelength_unit": "UnitsLength"
+  },
+  "Leader": {},
+  "LightEmittingDiode": {},
+  "LightPath": {
+    "annotation_refs": "List[AnnotationRef]",
+    "dichroic_ref": "Optional[DichroicRef]",
+    "emission_filters": "List[FilterRef]",
+    "excitation_filters": "List[FilterRef]"
+  },
+  "LightSource": {
+    "annotation_refs": "List[AnnotationRef]",
+    "id": "ConstrainedStrValue",
+    "power": "Optional[float]",
+    "power_unit": "UnitsPower"
+  },
+  "LightSourceSettings": {
+    "attenuation": "Optional[ConstrainedFloatValue]",
+    "wavelength": "Optional[ConstrainedFloatValue]",
+    "wavelength_unit": "UnitsLength"
+  },
+  "Line": {
+    "marker_end": "Optional[Marker]",
+    "marker_start": "Optional[Marker]",
+    "x1": "float",
+    "x2": "float",
+    "y1": "float",
+    "y2": "float"
+  },
+  "ListAnnotation": {},
+  "LongAnnotation": {
+    "value": "int"
+  },
+  "M": {
+    "k": "Optional[str]",
+    "value": "str"
+  },
+  "ManufacturerSpec": {
+    "lot_number": "Optional[str]",
+    "manufacturer": "Optional[str]",
+    "model": "Optional[str]",
+    "serial_number": "Optional[str]"
+  },
+  "Map": {
+    "ms": "List[M]"
+  },
+  "MapAnnotation": {
+    "value": "Map"
+  },
+  "Mask": {
+    "bin_data": "BinData",
+    "height": "float",
+    "width": "float",
+    "x": "float",
+    "y": "float"
+  },
+  "MetadataOnly": {},
+  "MicrobeamManipulation": {
+    "description": "Optional[str]",
+    "experimenter_ref": "ExperimenterRef",
+    "id": "ConstrainedStrValue",
+    "light_source_settings_combinations": "List[LightSourceSettings]",
+    "roi_refs": "List[ROIRef]",
+    "type": "List[MicrobeamManipulation_value]"
+  },
+  "MicrobeamManipulationRef": {},
+  "Microscope": {
+    "type": "Optional[Microscope_Type]"
+  },
+  "NumericAnnotation": {},
+  "OME": {
+    "binary_only": "Optional[BinaryOnly]",
+    "creator": "Optional[str]",
+    "datasets": "List[Dataset]",
+    "experimenter_groups": "List[ExperimenterGroup]",
+    "experimenters": "List[Experimenter]",
+    "experiments": "List[Experiment]",
+    "folders": "List[Folder]",
+    "images": "List[Image]",
+    "instruments": "List[Instrument]",
+    "plates": "List[Plate]",
+    "projects": "List[Project]",
+    "rights": "Optional[Rights]",
+    "rois": "List[ROI]",
+    "screens": "List[Screen]",
+    "structured_annotations": "StructuredAnnotationList",
+    "uuid": "Optional[ConstrainedStrValue]"
+  },
+  "Objective": {
+    "annotation_refs": "List[AnnotationRef]",
+    "calibrated_magnification": "Optional[float]",
+    "correction": "Optional[Objective_Correction]",
+    "id": "ConstrainedStrValue",
+    "immersion": "Optional[Objective_Immersion]",
+    "iris": "Optional[bool]",
+    "lens_na": "Optional[float]",
+    "nominal_magnification": "Optional[float]",
+    "working_distance": "Optional[float]",
+    "working_distance_unit": "UnitsLength"
+  },
+  "ObjectiveSettings": {
+    "correction_collar": "Optional[float]",
+    "medium": "Optional[ObjectiveSettings_Medium]",
+    "refractive_index": "Optional[float]"
+  },
+  "Pixels": {
+    "big_endian": "Optional[bool]",
+    "bin_data_blocks": "List[BinData]",
+    "channels": "List[Channel]",
+    "dimension_order": "Pixels_DimensionOrder",
+    "id": "ConstrainedStrValue",
+    "interleaved": "Optional[bool]",
+    "metadata_only": "Optional[MetadataOnly]",
+    "physical_size_x": "Optional[ConstrainedFloatValue]",
+    "physical_size_x_unit": "UnitsLength",
+    "physical_size_y": "Optional[ConstrainedFloatValue]",
+    "physical_size_y_unit": "UnitsLength",
+    "physical_size_z": "Optional[ConstrainedFloatValue]",
+    "physical_size_z_unit": "UnitsLength",
+    "planes": "List[Plane]",
+    "significant_bits": "Optional[ConstrainedIntValue]",
+    "size_c": "ConstrainedIntValue",
+    "size_t": "ConstrainedIntValue",
+    "size_x": "ConstrainedIntValue",
+    "size_y": "ConstrainedIntValue",
+    "size_z": "ConstrainedIntValue",
+    "tiff_data_blocks": "List[TiffData]",
+    "time_increment": "Optional[float]",
+    "time_increment_unit": "UnitsTime",
+    "type": "PixelType"
+  },
+  "Plane": {
+    "annotation_refs": "List[AnnotationRef]",
+    "delta_t": "Optional[float]",
+    "delta_t_unit": "UnitsTime",
+    "exposure_time": "Optional[float]",
+    "exposure_time_unit": "UnitsTime",
+    "hash_sha1": "Optional[bytes]",
+    "position_x": "Optional[float]",
+    "position_x_unit": "UnitsLength",
+    "position_y": "Optional[float]",
+    "position_y_unit": "UnitsLength",
+    "position_z": "Optional[float]",
+    "position_z_unit": "UnitsLength",
+    "the_c": "ConstrainedIntValue",
+    "the_t": "ConstrainedIntValue",
+    "the_z": "ConstrainedIntValue"
+  },
+  "Plate": {
+    "annotation_refs": "List[AnnotationRef]",
+    "column_naming_convention": "Optional[NamingConvention]",
+    "columns": "Optional[ConstrainedIntValue]",
+    "description": "Optional[str]",
+    "external_identifier": "Optional[str]",
+    "field_index": "Optional[ConstrainedIntValue]",
+    "id": "ConstrainedStrValue",
+    "name": "Optional[str]",
+    "plate_acquisitions": "List[PlateAcquisition]",
+    "row_naming_convention": "Optional[NamingConvention]",
+    "rows": "Optional[ConstrainedIntValue]",
+    "status": "Optional[str]",
+    "well_origin_x": "Optional[float]",
+    "well_origin_x_unit": "UnitsLength",
+    "well_origin_y": "Optional[float]",
+    "well_origin_y_unit": "UnitsLength",
+    "wells": "List[Well]"
+  },
+  "PlateAcquisition": {
+    "annotation_refs": "List[AnnotationRef]",
+    "description": "Optional[str]",
+    "end_time": "Optional[datetime]",
+    "id": "ConstrainedStrValue",
+    "maximum_field_count": "Optional[ConstrainedIntValue]",
+    "name": "Optional[str]",
+    "start_time": "Optional[datetime]",
+    "well_sample_refs": "List[WellSampleRef]"
+  },
+  "Point": {
+    "x": "float",
+    "y": "float"
+  },
+  "Polygon": {
+    "points": "str"
+  },
+  "Polyline": {
+    "marker_end": "Optional[Marker]",
+    "marker_start": "Optional[Marker]",
+    "points": "str"
+  },
+  "Project": {
+    "annotation_refs": "List[AnnotationRef]",
+    "dataset_refs": "List[DatasetRef]",
+    "description": "Optional[str]",
+    "experimenter_group_ref": "Optional[ExperimenterGroupRef]",
+    "experimenter_ref": "Optional[ExperimenterRef]",
+    "id": "ConstrainedStrValue",
+    "name": "Optional[str]"
+  },
+  "ProjectRef": {},
+  "Pump": {},
+  "ROI": {
+    "annotation_refs": "List[AnnotationRef]",
+    "description": "Optional[str]",
+    "id": "ConstrainedStrValue",
+    "name": "Optional[str]",
+    "union": "ShapeUnion"
+  },
+  "ROIRef": {},
+  "Reagent": {
+    "annotation_refs": "List[AnnotationRef]",
+    "description": "Optional[str]",
+    "id": "ConstrainedStrValue",
+    "name": "Optional[str]",
+    "reagent_identifier": "Optional[str]"
+  },
+  "ReagentRef": {},
+  "Rectangle": {
+    "height": "float",
+    "width": "float",
+    "x": "float",
+    "y": "float"
+  },
+  "Reference": {},
+  "Rights": {
+    "rights_held": "Optional[str]",
+    "rights_holder": "Optional[str]"
+  },
+  "Screen": {
+    "annotation_refs": "List[AnnotationRef]",
+    "description": "Optional[str]",
+    "id": "ConstrainedStrValue",
+    "name": "Optional[str]",
+    "plate_refs": "List[PlateRef]",
+    "protocol_description": "Optional[str]",
+    "protocol_identifier": "Optional[str]",
+    "reagent_set_description": "Optional[str]",
+    "reagent_set_identifier": "Optional[str]",
+    "reagents": "List[Reagent]",
+    "type": "Optional[str]"
+  },
+  "Settings": {},
+  "Shape": {
+    "annotation_refs": "List[AnnotationRef]",
+    "fill_color": "Optional[Color]",
+    "fill_rule": "Optional[Shape_FillRule]",
+    "font_family": "Optional[Shape_FontFamily]",
+    "font_size": "Optional[ConstrainedIntValue]",
+    "font_size_unit": "UnitsLength",
+    "font_style": "Optional[Shape_FontStyle]",
+    "id": "ConstrainedStrValue",
+    "locked": "Optional[bool]",
+    "stroke_color": "Optional[Color]",
+    "stroke_dash_array": "Optional[str]",
+    "stroke_width": "Optional[float]",
+    "stroke_width_unit": "UnitsLength",
+    "text": "Optional[str]",
+    "the_c": "Optional[ConstrainedIntValue]",
+    "the_t": "Optional[ConstrainedIntValue]",
+    "the_z": "Optional[ConstrainedIntValue]",
+    "transform": "Optional[AffineTransform]"
+  },
+  "ShapeUnion": {},
+  "StageLabel": {
+    "name": "str",
+    "x": "Optional[float]",
+    "x_unit": "UnitsLength",
+    "y": "Optional[float]",
+    "y_unit": "UnitsLength",
+    "z": "Optional[float]",
+    "z_unit": "UnitsLength"
+  },
+  "StructuredAnnotationList": {},
+  "StructuredAnnotations": {
+    "boolean_annotations": "List[BooleanAnnotation]",
+    "comment_annotations": "List[CommentAnnotation]",
+    "double_annotations": "List[DoubleAnnotation]",
+    "file_annotations": "List[FileAnnotation]",
+    "list_annotations": "List[ListAnnotation]",
+    "long_annotations": "List[LongAnnotation]",
+    "map_annotations": "List[MapAnnotation]",
+    "tag_annotations": "List[TagAnnotation]",
+    "term_annotations": "List[TermAnnotation]",
+    "timestamp_annotations": "List[TimestampAnnotation]",
+    "xml_annotations": "List[XMLAnnotation]"
+  },
+  "TagAnnotation": {
+    "value": "str"
+  },
+  "TermAnnotation": {
+    "value": "str"
+  },
+  "TextAnnotation": {},
+  "TiffData": {
+    "first_c": "ConstrainedIntValue",
+    "first_t": "ConstrainedIntValue",
+    "first_z": "ConstrainedIntValue",
+    "ifd": "ConstrainedIntValue",
+    "plane_count": "Optional[ConstrainedIntValue]",
+    "uuid": "Optional[UUID]"
+  },
+  "TimestampAnnotation": {
+    "value": "datetime"
+  },
+  "TransmittanceRange": {
+    "cut_in": "Optional[ConstrainedFloatValue]",
+    "cut_in_tolerance": "Optional[ConstrainedFloatValue]",
+    "cut_in_tolerance_unit": "UnitsLength",
+    "cut_in_unit": "UnitsLength",
+    "cut_out": "Optional[ConstrainedFloatValue]",
+    "cut_out_tolerance": "Optional[ConstrainedFloatValue]",
+    "cut_out_tolerance_unit": "UnitsLength",
+    "cut_out_unit": "UnitsLength",
+    "transmittance": "Optional[ConstrainedFloatValue]"
+  },
+  "TypeAnnotation": {},
+  "UUID": {
+    "file_name": "Optional[str]",
+    "value": "ConstrainedStrValue"
+  },
+  "Value": {
+    "any_elements": "List[object]"
+  },
+  "Well": {
+    "annotation_refs": "List[AnnotationRef]",
+    "color": "Color",
+    "column": "ConstrainedIntValue",
+    "external_description": "Optional[str]",
+    "external_identifier": "Optional[str]",
+    "id": "ConstrainedStrValue",
+    "reagent_ref": "Optional[ReagentRef]",
+    "row": "ConstrainedIntValue",
+    "type": "Optional[str]",
+    "well_samples": "List[WellSample]"
+  },
+  "WellSample": {
+    "id": "ConstrainedStrValue",
+    "image_ref": "Optional[ImageRef]",
+    "index": "ConstrainedIntValue",
+    "position_x": "Optional[float]",
+    "position_x_unit": "UnitsLength",
+    "position_y": "Optional[float]",
+    "position_y_unit": "UnitsLength",
+    "timepoint": "Optional[datetime]"
+  },
+  "WellSampleRef": {},
+  "XMLAnnotation": {
+    "value": "Value"
+  }
+}
