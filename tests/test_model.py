@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import datetime
+import io
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types._conversion import _get_ome_type
+from ome_types._conversion import _get_root_ome_type
 from ome_types.validation import OME_URI
 
 DATA = Path(__file__).parent / "data"
@@ -75,12 +76,17 @@ def test_with_ome_ns() -> None:
     assert from_xml(DATA / "ome_ns.ome.xml").experimenters
 
 
-def test_get_ome_type() -> None:
-    t = _get_ome_type(f'<Image xmlns="{OME_URI}" />')
+def test_get_root_ome_type() -> None:
+    xml = io.BytesIO(f'<Image xmlns="{OME_URI}" />'.encode())
+    t = _get_root_ome_type(xml)
     assert t is model.Image
 
-    with pytest.raises(ValueError):
-        _get_ome_type("<Image />")
+    xml = io.BytesIO(f'<ome:Image xmlns:ome="{OME_URI}" />'.encode())
+    t = _get_root_ome_type(xml)
+    assert t is model.Image
+
+    with pytest.raises(ValueError, match="Unknown root element"):
+        _get_root_ome_type(io.BytesIO(b"<Imdgage />"))
 
     # this can be used to instantiate XML with a non OME root type:
     obj = from_xml(f'<Project xmlns="{OME_URI}" />')

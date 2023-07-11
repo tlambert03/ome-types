@@ -27,6 +27,9 @@ SKIP_ROUNDTRIP = {
     "spim",
     "xmlannotation-multi-value",
     "xmlannotation-svg",
+    # we don't roundtrip older versions of the schema
+    "2008_instrument",
+    "seq0000xy01c1",
 }
 
 
