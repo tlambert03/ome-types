@@ -122,7 +122,7 @@ ignore = [
   "D416",   # Section name should end with a colon
   "C901",   # Function is too complex
   "RUF009", # Do not perform function calls in default arguments
-  "S314",   # Use defusedxml package
+  "S3",     # xml security
 ]
 exclude = ['src/_ome_autogen.py']
 

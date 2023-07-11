@@ -26,10 +26,11 @@ with contextlib.suppress(ImportError):
 REQUIRES_TRANSFORM = {"seq0000xy01c1.ome.xml", "2008_instrument.ome.xml"}
 
 
+@pytest.mark.filterwarnings("ignore:unclosed file")
 @pytest.mark.parametrize("backend", VALIDATORS)
 def test_validation_good(valid_xml: Path, backend: str) -> None:
     if valid_xml.name in REQUIRES_TRANSFORM:
-        ctx: ContextManager = pytest.warns(match="Transformed source")
+        ctx: ContextManager = pytest.warns(match="Transformed source from")
     else:
         ctx = nullcontext()
     with ctx:

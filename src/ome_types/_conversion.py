@@ -8,7 +8,7 @@ from contextlib import nullcontext, suppress
 from functools import lru_cache
 from pathlib import Path
 from struct import Struct
-from typing import TYPE_CHECKING, Any, BinaryIO, ContextManager, cast
+from typing import TYPE_CHECKING, Any, BinaryIO, ContextManager, Literal, cast, overload
 
 from pydantic import BaseModel
 from xsdata.formats.dataclass.parsers.config import ParserConfig
@@ -103,13 +103,14 @@ def from_xml(
             stacklevel=2,
         )
 
-    xml_2016 = ensure_2016(source, warn_on_transform=warn_on_transform)
-
     if validate:
-        validate_xml(xml_2016)
+        xml_2016 = validate_xml(source, warn_on_transform=warn_on_transform)
+    else:
+        xml_2016 = ensure_2016(
+            source, warn_on_transform=warn_on_transform, as_tree=True
+        )
 
     OME_type = _get_root_ome_type(xml_2016)
-
     parser = XmlParser(**(parser_kwargs or {}))
     return parser.parse(xml_2016, OME_type)
 
@@ -139,6 +140,18 @@ def from_tiff(
     """
     xml = tiff2xml(path)
     return from_xml(xml, validate=validate, parser_kwargs=parser_kwargs)
+
+
+TIFF_TYPES: dict[bytes, tuple[Struct, Struct, int, Struct]] = {
+    b"II*\0": (Struct("<I"), Struct("<H"), 12, Struct("<H")),
+    b"MM\0*": (Struct(">I"), Struct(">H"), 12, Struct(">H")),
+    b"II+\0": (Struct("<Q"), Struct("<Q"), 20, Struct("<H")),
+    b"MM\0+": (Struct(">Q"), Struct(">Q"), 20, Struct(">H")),
+}
+
+
+def _unpack(fh: BinaryIO, strct: Struct) -> int:
+    return strct.unpack(fh.read(strct.size))[0]
 
 
 def tiff2xml(path: Path | str | BinaryIO) -> bytes:
@@ -176,18 +189,6 @@ def tiff2xml(path: Path | str | BinaryIO) -> bytes:
     if desc[-1] == 0:
         desc = desc[:-1]
     return desc
-
-
-TIFF_TYPES: dict[bytes, tuple[Struct, Struct, int, Struct]] = {
-    b"II*\0": (Struct("<I"), Struct("<H"), 12, Struct("<H")),
-    b"MM\0*": (Struct(">I"), Struct(">H"), 12, Struct(">H")),
-    b"II+\0": (Struct("<Q"), Struct("<Q"), 20, Struct("<H")),
-    b"MM\0+": (Struct(">Q"), Struct(">Q"), 20, Struct(">H")),
-}
-
-
-def _unpack(fh: BinaryIO, strct: Struct) -> int:
-    return strct.unpack(fh.read(strct.size))[0]
 
 
 # ------------------------
@@ -291,7 +292,7 @@ def _canonicalize(xml: str, indent: str) -> str:
     from xml.dom import minidom
 
     xml_out = ET.canonicalize(xml, strip_text=True)
-    return minidom.parseString(xml_out).toprettyxml(indent=indent)  # noqa: S318
+    return minidom.parseString(xml_out).toprettyxml(indent=indent)
 
 
 # ------------------------
@@ -301,16 +302,18 @@ class ValidationError(ValueError):
     ...
 
 
-def validate_xml(xml: XMLSource, schema: Path | str | None = None) -> None:
+def validate_xml(
+    xml: XMLSource, schema: Path | str | None = None, *, warn_on_transform: bool = True
+) -> ET._ElementTree:
     """Validate XML against an XML Schema.
 
     By default, will validate against the OME 2016-06 schema.
     """
     with suppress(ImportError):
-        return validate_xml_with_lxml(xml, schema)
+        return validate_xml_with_lxml(xml, schema, warn_on_transform)
 
     with suppress(ImportError):  # pragma: no cover
-        return validate_xml_with_xmlschema(xml, schema)
+        return validate_xml_with_xmlschema(xml, schema, warn_on_transform)
 
     raise ImportError(  # pragma: no cover
         "Validation requires either `lxml` or `xmlschema`. "
@@ -318,43 +321,36 @@ def validate_xml(xml: XMLSource, schema: Path | str | None = None) -> None:
     ) from None
 
 
-def validate_xml_with_lxml(xml: XMLSource, schema: Path | str | None = None) -> None:
+def validate_xml_with_lxml(
+    xml: XMLSource, schema: Path | str | None = None, warn_on_transform: bool = True
+) -> ET._ElementTree:
     """Validate XML against an XML Schema using lxml."""
     from lxml import etree
 
-    xml = ensure_2016(xml, warn_on_transform=True)
-    if hasattr(xml, "seek"):
-        xml.seek(0)
-    tree = etree.parse(schema or OME_2016_06_XSD)  # noqa: S320
-    xmlschema = etree.XMLSchema(tree)
+    tree = ensure_2016(xml, warn_on_transform=warn_on_transform, as_tree=True)
+    xmlschema = etree.XMLSchema(etree.parse(schema or OME_2016_06_XSD))
 
-    if isinstance(xml, (str, bytes)) and not os.path.isfile(xml):
-        xml = io.BytesIO(xml.encode("utf-8") if isinstance(xml, str) else xml)
-        doc = etree.parse(xml)  # noqa: S320
-    else:
-        doc = etree.parse(xml)  # noqa: S320
-
-    if not xmlschema.validate(doc):
+    if not xmlschema.validate(tree):
         msg = f"Validation of {str(xml)[:20]!r} failed:"
         for error in xmlschema.error_log:
             msg += f"\n  - line {error.line}: {error.message}"
         raise ValidationError(msg)
+    return tree
 
 
 def validate_xml_with_xmlschema(
-    xml: XMLSource, schema: Path | str | None = None
-) -> None:
+    xml: XMLSource, schema: Path | str | None = None, warn_on_transform: bool = True
+) -> ET._ElementTree:
     """Validate XML against an XML Schema using xmlschema."""
     from xmlschema.exceptions import XMLSchemaException
 
-    xml = ensure_2016(xml, warn_on_transform=True)
-    if hasattr(xml, "seek"):
-        xml.seek(0)
+    tree = ensure_2016(xml, warn_on_transform=warn_on_transform, as_tree=True)
     xmlschema = _get_XMLSchema(schema or OME_2016_06_XSD)
     try:
-        xmlschema.validate(xml)
+        xmlschema.validate(tree)  # type: ignore[arg-type]
     except XMLSchemaException as e:
         raise ValidationError(str(e)) from None
+    return tree
 
 
 @lru_cache(maxsize=None)
@@ -378,17 +374,61 @@ TRANSFORMS = {
 }
 
 
-def ensure_2016(source: XMLSource, warn_on_transform: bool = False) -> FileLike:
-    """Return a filename or BytesIO object with OME-XML in the 2016-06 namespace.
+@overload
+def ensure_2016(
+    source: XMLSource, *, warn_on_transform: bool = ..., as_tree: Literal[True]
+) -> ET._ElementTree:
+    ...
+
+
+@overload
+def ensure_2016(
+    source: XMLSource, *, warn_on_transform: bool = ..., as_tree: Literal[False] = ...
+) -> FileLike:
+    ...
+
+
+def ensure_2016(
+    source: XMLSource, *, warn_on_transform: bool = False, as_tree: bool = False
+) -> FileLike | ET._ElementTree:
+    """Ensure source is OME-2016-06 XML.
 
     If the source is not OME-2016-06 XML, it will be transformed sequentially using
     XSLT transforms in the `transforms` directory, until it is in the 2016-06 namespace.
-    NOTE: this requires lxml to be installed.
+    NOTE: this requires lxml to be installed and will raise an ImportError if it is not.
+
+    Parameters
+    ----------
+    source : Path | str | bytes | io.BytesIO
+        Path to an XML file, string or bytes containing XML, or a file-like object.
+    warn_on_transform : bool
+        Whether to warn if a transformation was applied to bring the document to
+        OME-2016-06.
+    as_tree : bool
+        Whether to return an ElementTree or a FileLike object.
+
+    Returns
+    -------
+    FileLike | ET._ElementTree
+        If `as_tree` is `True`, an ElementTree, otherwise a FileLike object representing
+        transformed OME 2016 XML.
+
+
+    Raises
+    ------
+    ValueError
+        If the source is an unrecognized XML namespace.
+    ImportError
+        If lxml is not installed and a transformation is required.
     """
     normed_source = _normalize(source)
     ns_in = _get_ns_file(normed_source)
 
     if ns_in == OME_2016_06_URI:
+        if as_tree:
+            if hasattr(normed_source, "seek"):
+                normed_source.seek(0)
+            return ET.parse(normed_source)
         return normed_source
 
     if ns_in in TRANSFORMS:
@@ -397,14 +437,13 @@ def ensure_2016(source: XMLSource, warn_on_transform: bool = False) -> FileLike:
         while ns in TRANSFORMS:
             tree = _apply_xslt(tree, TRANSFORMS[ns])
             ns = _get_ns_elem(tree)
-
-        out = ET.tostring(tree, encoding="utf-8")
         if warn_on_transform:
             warnings.warn(
                 f"Transformed source from {ns_in!r} to {OME_2016_06_URI!r}",
                 stacklevel=2,
             )
-        return io.BytesIO(out)
+
+        return tree if as_tree else io.BytesIO(ET.tostring(tree, encoding="utf-8"))
 
     raise ValueError(f"Unsupported document namespace {ns!r}")
 
@@ -467,14 +506,16 @@ def _get_ns_file(source: FileLike) -> str:
     return _get_ns_elem(root)  # type: ignore[arg-type]
 
 
-def _get_root_ome_type(xml: FileLike) -> type[OMEType]:
+def _get_root_ome_type(xml: FileLike | ET._ElementTree) -> type[OMEType]:
     """Resolve a ome_types.model class for the root element of an OME XML document."""
     from ome_types import model
 
-    if hasattr(xml, "seek"):
-        xml.seek(0)
-
-    _, root = next(ET.iterparse(xml, events=("start",)))
+    if hasattr(xml, "getroot"):
+        root = xml.getroot()
+    else:
+        if hasattr(xml, "seek"):
+            xml.seek(0)
+        _, root = next(ET.iterparse(xml, events=("start",)))
     localname = cast("ET._Element", root).tag.rsplit("}", 1)[-1]
 
     if hasattr(xml, "seek"):
