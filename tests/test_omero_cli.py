@@ -75,8 +75,8 @@ def conn() -> BlitzGateway:
     "datatype, id",
     [
         ("Dataset", 21157),
-        # ("Project", 5414),
-        # ("Image", 1110952),
+        ("Project", 5414),
+        ("Image", 1110952),
     ],
 )
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")

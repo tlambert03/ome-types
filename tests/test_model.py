@@ -228,6 +228,7 @@ def test_numpy_pixel_types() -> None:
 
 
 def test_update_unset(pixels: model.Pixels) -> None:
+    """Make sure objects appended to mutable sequences are included in the xml."""
     ome = model.OME()
     pixels.channels.extend([model.Channel(), model.Channel()])
     img = model.Image(pixels=pixels)
@@ -236,7 +237,7 @@ def test_update_unset(pixels: model.Pixels) -> None:
     ome.images.append(img)
     ome.structured_annotations.append(model.CommentAnnotation(value="test"))
 
-    xml = ome.to_xml()
+    xml = ome.to_xml(exclude_unset=True)
     assert "Pixels" in xml
     assert "Channel" in xml
     assert "Image" in xml
