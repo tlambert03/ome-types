@@ -220,7 +220,7 @@ def to_dict(source: OME | XMLSource) -> dict[str, Any]:
 
 
 def to_xml(
-    ome: OMEType,
+    obj: OMEType,
     *,
     # exclude_defaults takes precedence over exclude_unset
     # if a value equals the default, it will be excluded
@@ -238,7 +238,7 @@ def to_xml(
 
     Parameters
     ----------
-    ome : OMEType
+    obj : OMEType
         Instance of an ome-types model class.
     exclude_defaults : bool, optional
         Whether to exclude attributes that are set to their default value,
@@ -279,8 +279,16 @@ def to_xml(
     if include_namespace is None:
         include_namespace = canonicalize
 
+    if exclude_unset:
+        # if we're excluding unset attributes, we need to be very careful that the
+        # __fields_set__ attribute is accurate, otherwise we'll exclude attributes
+        # this is tricky for things like mutable sequences that pydantic doesn't
+        # know about. this method recurses the object and updates the __fields_set__
+        # attribute if the field is not equal to its default value
+        obj._update_set_fields()
+
     ns_map = {"ome" if include_namespace else None: OME_2016_06_URI}
-    xml = serializer.render(ome, ns_map=ns_map)
+    xml = serializer.render(obj, ns_map=ns_map)
 
     if canonicalize:
         xml = _canonicalize(xml, indent=" " * indent)

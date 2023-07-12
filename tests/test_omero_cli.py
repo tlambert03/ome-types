@@ -73,7 +73,11 @@ def conn() -> BlitzGateway:
 @pytest.mark.skipif("OMERO_USER" not in os.environ, reason="OMERO_USER not set")
 @pytest.mark.parametrize(
     "datatype, id",
-    [("Dataset", 21157), ("Project", 5414), ("Image", 1110952)],
+    [
+        ("Dataset", 21157),
+        ("Project", 5414),
+        ("Image", 1110952),
+    ],
 )
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_populate_xml(
@@ -96,4 +100,5 @@ def test_populate_xml(
     )
     assert isinstance(ome, OME)
     assert dest.exists()
-    assert isinstance(OME.from_xml(str(dest)), OME)
+    ome2 = OME.from_xml(dest)
+    assert ome2 == ome

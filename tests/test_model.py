@@ -225,3 +225,22 @@ def test_numpy_pixel_types() -> None:
 
     for m in model.PixelType:
         numpy.dtype(m.numpy_dtype)
+
+
+def test_update_unset(pixels: model.Pixels) -> None:
+    """Make sure objects appended to mutable sequences are included in the xml."""
+    ome = model.OME()
+    pixels.channels.extend([model.Channel(), model.Channel()])
+    img = model.Image(pixels=pixels)
+    ome.projects.append(model.Project())
+    ome.datasets.append(model.Dataset())
+    ome.images.append(img)
+    ome.structured_annotations.append(model.CommentAnnotation(value="test"))
+
+    xml = ome.to_xml(exclude_unset=True)
+    assert "Pixels" in xml
+    assert "Channel" in xml
+    assert "Image" in xml
+    assert "CommentAnnotation" in xml
+
+    assert from_xml(xml) == ome
