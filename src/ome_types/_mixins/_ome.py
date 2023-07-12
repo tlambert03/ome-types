@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 import weakref
-from typing import TYPE_CHECKING, Any, BinaryIO
+from typing import TYPE_CHECKING, Any, BinaryIO, Sequence
 
 from ome_types._mixins._base_type import OMEType
 from ome_types._mixins._ids import CONVERTED_IDS
@@ -55,17 +55,17 @@ def collect_ids(value: Any) -> dict[str, OMEType]:
     from ome_types.model import Reference
 
     ids: dict[str, OMEType] = {}
-    if isinstance(value, list):
+    if isinstance(value, Sequence) and not isinstance(value, str):
         for v in value:
             ids.update(collect_ids(v))
     elif isinstance(value, OMEType):
-        for f in value.__fields__:
-            if f == "id" and not isinstance(value, Reference):
+        for fname in value.__fields__:
+            if fname == "id" and not isinstance(value, Reference):
                 # We don't need to recurse on the id string, so just record it
                 # and move on.
                 ids[value.id] = value
             else:
-                ids.update(collect_ids(getattr(value, f)))
+                ids.update(collect_ids(getattr(value, fname)))
     # Do nothing for uninteresting types.
     return ids
 
