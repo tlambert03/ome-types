@@ -16,6 +16,14 @@ DATA = Path(__file__).parent / "data"
 ALL_XML = set(DATA.glob("*.ome.xml"))
 INVALID = {DATA / "invalid_xml_annotation.ome.xml", DATA / "bad.ome.xml"}
 OLD_SCHEMA = {DATA / "seq0000xy01c1.ome.xml", DATA / "2008_instrument.ome.xml"}
+WITH_XML_ANNOTATIONS = {
+    DATA / "ome_ns.ome.xml",
+    DATA / "OverViewScan.ome.xml",
+    DATA / "spim.ome.xml",
+    DATA / "xmlannotation-svg.ome.xml",
+    DATA / "xmlannotation-multi-value.ome.xml",
+    DATA / "xmlannotation-body-space.ome.xml",
+}
 
 
 def _true_stem(p: Path) -> str:
@@ -36,6 +44,11 @@ def valid_xml(request: pytest.FixtureRequest) -> Path:
 
 @pytest.fixture(params=sorted(INVALID), ids=_true_stem)
 def invalid_xml(request: pytest.FixtureRequest) -> Path:
+    return request.param
+
+
+@pytest.fixture(params=sorted(WITH_XML_ANNOTATIONS), ids=_true_stem)
+def with_xml_annotations(request: pytest.FixtureRequest) -> Path:
     return request.param
 
 

@@ -225,3 +225,19 @@ def test_numpy_pixel_types() -> None:
 
     for m in model.PixelType:
         numpy.dtype(m.numpy_dtype)
+
+
+def test_xml_annotations_to_etree(with_xml_annotations: Path) -> None:
+    from xsdata_pydantic_basemodel.compat import AnyElement
+
+    try:
+        from lxml.etree import _Element as Elem
+    except ImportError:
+        from xml.etree.ElementTree import Element as Elem  # type: ignore
+
+    ome = from_xml(with_xml_annotations)
+    for anno in ome.structured_annotations:
+        if isinstance(anno, model.XMLAnnotation):
+            for elem in anno.value.any_elements:
+                assert isinstance(elem, AnyElement)
+                assert isinstance(elem.to_etree_element(), Elem)
