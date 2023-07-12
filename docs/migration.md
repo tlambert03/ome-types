@@ -65,11 +65,11 @@ your code to the new version.
 ### [`Instrument`][ome_types.model.Instrument]
 
 - **`light_source_group`** - name removed
-- **`generic_excitation_sources`** - name added
-- **`light_emitting_diodes`** - name added
-- **`filaments`** - name added
 - **`arcs`** - name added
+- **`filaments`** - name added
+- **`generic_excitation_sources`** - name added
 - **`lasers`** - name added
+- **`light_emitting_diodes`** - name added
 - **`annotation_ref`** - name changed to `annotation_refs`
 
 ### `XMLAnnotation.Value`
@@ -79,16 +79,18 @@ your code to the new version.
 ### [`Annotation`][ome_types.model.Annotation]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
+- **`annotator`** - type changed from `Optional[ExperimenterID]` to `Optional[ConstrainedStrValue]`
 
 ### [`Channel`][ome_types.model.Channel]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
-
-### [`LightPath`][ome_types.model.LightPath]
-
-- **`annotation_ref`** - name changed to `annotation_refs`
-- **`emission_filter_ref`** - name changed to `emission_filters`
-- **`excitation_filter_ref`** - name changed to `excitation_filters`
+- **`acquisition_mode`** - type changed from `Optional[AcquisitionMode]` to `Optional[Channel_AcquisitionMode]`
+- **`color`** - type changed from `Optional[Color]` to `Color`
+- **`contrast_method`** - type changed from `Optional[ContrastMethod]` to `Optional[Channel_ContrastMethod]`
+- **`emission_wavelength_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`excitation_wavelength_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`illumination_type`** - type changed from `Optional[IlluminationType]` to `Optional[Channel_IlluminationType]`
+- **`pinhole_size_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
 
 ### [`Dataset`][ome_types.model.Dataset]
 
@@ -98,15 +100,12 @@ your code to the new version.
 ### [`Detector`][ome_types.model.Detector]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
+- **`type`** - type changed from `Optional[Type]` to `Optional[Detector_Type]`
+- **`voltage_unit`** - type changed from `Optional[UnitsElectricPotential]` to `UnitsElectricPotential`
 
 ### [`Dichroic`][ome_types.model.Dichroic]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
-
-### [`MicrobeamManipulation`][ome_types.model.MicrobeamManipulation]
-
-- **`light_source_settings`** - name changed to `light_source_settings_combinations`
-- **`roi_ref`** - name changed to `roi_refs`
 
 ### [`Experimenter`][ome_types.model.Experimenter]
 
@@ -121,6 +120,7 @@ your code to the new version.
 ### [`Filter`][ome_types.model.Filter]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
+- **`type`** - type changed from `Optional[Type]` to `Optional[Filter_Type]`
 
 ### [`FilterSet`][ome_types.model.FilterSet]
 
@@ -134,64 +134,216 @@ your code to the new version.
 - **`image_ref`** - name changed to `image_refs`
 - **`roi_ref`** - name changed to `roi_refs`
 
-### [`Map`][ome_types.model.Map]
-
-- **`m`** - name changed to `ms`
-
 ### [`Image`][ome_types.model.Image]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
 - **`microbeam_manipulation_ref`** - name changed to `microbeam_manipulation_refs`
 - **`roi_ref`** - name changed to `roi_refs`
 
-### [`Pixels`][ome_types.model.Pixels]
-
-- **`bin_data`** - name changed to `bin_data_blocks`
-
-### [`Plane`][ome_types.model.Plane]
+### [`LightPath`][ome_types.model.LightPath]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
-
-### [`Objective`][ome_types.model.Objective]
-
-- **`annotation_ref`** - name changed to `annotation_refs`
+- **`emission_filter_ref`** - name changed to `emission_filters`
+- **`excitation_filter_ref`** - name changed to `excitation_filters`
 
 ### [`LightSource`][ome_types.model.LightSource]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
+- **`power_unit`** - type changed from `Optional[UnitsPower]` to `UnitsPower`
 
-### [`Project`][ome_types.model.Project]
+### [`Map`][ome_types.model.Map]
+
+- **`m`** - name changed to `ms`
+
+### [`MicrobeamManipulation`][ome_types.model.MicrobeamManipulation]
+
+- **`light_source_settings`** - name changed to `light_source_settings_combinations`
+- **`roi_ref`** - name changed to `roi_refs`
+- **`type`** - type changed from `List[Type]` to `List[MicrobeamManipulation_value]`
+
+### [`Objective`][ome_types.model.Objective]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
-- **`dataset_ref`** - name changed to `dataset_refs`
+- **`correction`** - type changed from `Optional[Correction]` to `Optional[Objective_Correction]`
+- **`immersion`** - type changed from `Optional[Immersion]` to `Optional[Objective_Immersion]`
+- **`working_distance_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+
+### [`Pixels`][ome_types.model.Pixels]
+
+- **`bin_data`** - name changed to `bin_data_blocks`
+- **`dimension_order`** - type changed from `DimensionOrder` to `Pixels_DimensionOrder`
+- **`metadata_only`** - type changed from `bool` to `Optional[MetadataOnly]`
+- **`physical_size_x_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`physical_size_y_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`physical_size_z_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`time_increment_unit`** - type changed from `Optional[UnitsTime]` to `UnitsTime`
+
+### [`Plane`][ome_types.model.Plane]
+
+- **`annotation_ref`** - name changed to `annotation_refs`
+- **`delta_t_unit`** - type changed from `Optional[UnitsTime]` to `UnitsTime`
+- **`exposure_time_unit`** - type changed from `Optional[UnitsTime]` to `UnitsTime`
+- **`hash_sha1`** - type changed from `Optional[Hex40]` to `Optional[bytes]`
+- **`position_x_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`position_y_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`position_z_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
 
 ### [`Plate`][ome_types.model.Plate]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
-
-### [`Well`][ome_types.model.Well]
-
-- **`annotation_ref`** - name changed to `annotation_refs`
+- **`well_origin_x_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`well_origin_y_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
 
 ### [`PlateAcquisition`][ome_types.model.PlateAcquisition]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
 - **`well_sample_ref`** - name changed to `well_sample_refs`
 
-### [`Screen`][ome_types.model.Screen]
+### [`Project`][ome_types.model.Project]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
-- **`plate_ref`** - name changed to `plate_refs`
+- **`dataset_ref`** - name changed to `dataset_refs`
+
+### [`ROI`][ome_types.model.ROI]
+
+- **`annotation_ref`** - name changed to `annotation_refs`
+- **`union`** - type changed from `List[Union[Rectangle, Mask, Point, Ellipse, Line, Polyline, Polygon, Label]]` to `ShapeUnion`
 
 ### [`Reagent`][ome_types.model.Reagent]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
 
-### [`ROI`][ome_types.model.ROI]
+### [`Screen`][ome_types.model.Screen]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
+- **`plate_ref`** - name changed to `plate_refs`
 
 ### [`Shape`][ome_types.model.Shape]
 
 - **`annotation_ref`** - name changed to `annotation_refs`
+- **`fill_rule`** - type changed from `Optional[FillRule]` to `Optional[Shape_FillRule]`
+- **`font_family`** - type changed from `Optional[FontFamily]` to `Optional[Shape_FontFamily]`
+- **`font_size_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`font_style`** - type changed from `Optional[FontStyle]` to `Optional[Shape_FontStyle]`
+- **`stroke_width_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+
+### [`Well`][ome_types.model.Well]
+
+- **`annotation_ref`** - name changed to `annotation_refs`
+- **`color`** - type changed from `Optional[Color]` to `Color`
+
+### [`Arc`][ome_types.model.Arc]
+
+- **`type`** - type changed from `Optional[Type]` to `Optional[Arc_Type]`
+
+### [`BinData`][ome_types.model.BinData]
+
+- **`compression`** - type changed from `Optional[Compression]` to `BinData_Compression`
+- **`length`** - type changed from `int` to `ConstrainedIntValue`
+- **`value`** - type changed from `str` to `bytes`
+
+### [`BinaryFile`][ome_types.model.BinaryFile]
+
+- **`size`** - type changed from `NonNegativeLong` to `ConstrainedIntValue`
+
+### `OME.BinaryOnly`
+
+- **`uuid`** - type changed from `UniversallyUniqueIdentifier` to `ConstrainedStrValue`
+
+### [`DetectorSettings`][ome_types.model.DetectorSettings]
+
+- **`read_out_rate_unit`** - type changed from `Optional[UnitsFrequency]` to `UnitsFrequency`
+- **`voltage_unit`** - type changed from `Optional[UnitsElectricPotential]` to `UnitsElectricPotential`
+
+### [`Experiment`][ome_types.model.Experiment]
+
+- **`type`** - type changed from `List[Type]` to `List[Experiment_value]`
+
+### [`External`][ome_types.model.External]
+
+- **`compression`** - type changed from `Optional[Compression]` to `External_Compression`
+- **`sha1`** - type changed from `Hex40` to `bytes`
+
+### [`Filament`][ome_types.model.Filament]
+
+- **`type`** - type changed from `Optional[Type]` to `Optional[Filament_Type]`
+
+### [`ImagingEnvironment`][ome_types.model.ImagingEnvironment]
+
+- **`air_pressure_unit`** - type changed from `Optional[UnitsPressure]` to `UnitsPressure`
+- **`co2_percent`** - type changed from `Optional[PercentFraction]` to `Optional[ConstrainedFloatValue]`
+- **`humidity`** - type changed from `Optional[PercentFraction]` to `Optional[ConstrainedFloatValue]`
+- **`temperature_unit`** - type changed from `Optional[UnitsTemperature]` to `UnitsTemperature`
+
+### [`Laser`][ome_types.model.Laser]
+
+- **`laser_medium`** - type changed from `Optional[LaserMedium]` to `Optional[Laser_LaserMedium]`
+- **`pulse`** - type changed from `Optional[Pulse]` to `Optional[Laser_Pulse]`
+- **`repetition_rate_unit`** - type changed from `Optional[UnitsFrequency]` to `UnitsFrequency`
+- **`type`** - type changed from `Optional[Type]` to `Optional[Laser_Type]`
+- **`wavelength_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+
+### [`LightSourceSettings`][ome_types.model.LightSourceSettings]
+
+- **`attenuation`** - type changed from `Optional[PercentFraction]` to `Optional[ConstrainedFloatValue]`
+- **`wavelength_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+
+### `Map.M`
+
+- **`k`** - type changed from `str` to `Optional[str]`
+
+### [`Microscope`][ome_types.model.Microscope]
+
+- **`type`** - type changed from `Optional[Type]` to `Optional[Microscope_Type]`
+
+### [`OME`][ome_types.model.OME]
+
+- **`structured_annotations`** - type changed from `List[Annotation]` to `StructuredAnnotationList`
+- **`uuid`** - type changed from `Optional[UniversallyUniqueIdentifier]` to `Optional[ConstrainedStrValue]`
+
+### [`ObjectiveSettings`][ome_types.model.ObjectiveSettings]
+
+- **`medium`** - type changed from `Optional[Medium]` to `Optional[ObjectiveSettings_Medium]`
+
+### [`StageLabel`][ome_types.model.StageLabel]
+
+- **`x_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`y_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`z_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+
+### [`StructuredAnnotations`][ome_types.model.StructuredAnnotations]
+
+- **`boolean_annotations`** - type changed from `Optional[BooleanAnnotation]` to `List[BooleanAnnotation]`
+- **`comment_annotations`** - type changed from `Optional[CommentAnnotation]` to `List[CommentAnnotation]`
+- **`double_annotations`** - type changed from `Optional[DoubleAnnotation]` to `List[DoubleAnnotation]`
+- **`file_annotations`** - type changed from `Optional[FileAnnotation]` to `List[FileAnnotation]`
+- **`list_annotations`** - type changed from `Optional[ListAnnotation]` to `List[ListAnnotation]`
+- **`long_annotations`** - type changed from `Optional[LongAnnotation]` to `List[LongAnnotation]`
+- **`map_annotations`** - type changed from `Optional[MapAnnotation]` to `List[MapAnnotation]`
+- **`tag_annotations`** - type changed from `Optional[TagAnnotation]` to `List[TagAnnotation]`
+- **`term_annotations`** - type changed from `Optional[TermAnnotation]` to `List[TermAnnotation]`
+- **`timestamp_annotations`** - type changed from `Optional[TimestampAnnotation]` to `List[TimestampAnnotation]`
+- **`xml_annotations`** - type changed from `Optional[XMLAnnotation]` to `List[XMLAnnotation]`
+
+### [`TransmittanceRange`][ome_types.model.TransmittanceRange]
+
+- **`cut_in_tolerance_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`cut_in_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`cut_out_tolerance_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`cut_out_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`transmittance`** - type changed from `Optional[PercentFraction]` to `Optional[ConstrainedFloatValue]`
+
+### `TiffData.UUID`
+
+- **`file_name`** - type changed from `str` to `Optional[str]`
+- **`value`** - type changed from `UniversallyUniqueIdentifier` to `ConstrainedStrValue`
+
+### [`WellSample`][ome_types.model.WellSample]
+
+- **`position_x_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+- **`position_y_unit`** - type changed from `Optional[UnitsLength]` to `UnitsLength`
+
+### [`XMLAnnotation`][ome_types.model.XMLAnnotation]
+
+- **`value`** - type changed from `Element` to `Value`
 <!-- END_GENERATED_MARKDOWN -->

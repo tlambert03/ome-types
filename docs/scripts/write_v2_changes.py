@@ -126,7 +126,7 @@ def dump_fields() -> None:
 
 def get_diffs(pth1: Path = V1) -> tuple[list, list, dict, dict]:
     data1 = json.loads(pth1.read_text())
-    data2 = get_fields(ome_types.model)
+    data2 = json.loads(json.dumps(get_fields(ome_types.model), sort_keys=True))
     diff = DeepDiff(data1, data2, ignore_order=True)
 
     removed = list(diff["dictionary_item_removed"])
@@ -138,7 +138,7 @@ def get_diffs(pth1: Path = V1) -> tuple[list, list, dict, dict]:
         if max_ratio > 85:
             keys_changed[key] = added.pop(ratios.index(max(ratios)))
             removed.remove(key)
-    return removed, added, keys_changed, diff.get("values_changed", {})
+    return removed, added, keys_changed, diff["values_changed"]
 
 
 def _cls_field(key: str) -> tuple[str, str | None]:
@@ -182,7 +182,6 @@ def gather_classes() -> tuple[dict, dict]:
             or ("NonNegativeFloat" in old and "ConstrainedFloatValue" in new)
         ):
             continue
-
         cls_dict = class_changes.setdefault(cls_name, {})
         cls_dict[field_name] = {"type": "type_changed", "from": old, "to": new}
 
@@ -243,6 +242,7 @@ def markdown_changes(heading_level: int = 2) -> str:
 
 
 if __name__ == "__main__":
+    # dump_fields()
     migration = DOCS / "migration.md"
     current_text = migration.read_text()
     START = "<!-- START_GENERATED_MARKDOWN -->"
