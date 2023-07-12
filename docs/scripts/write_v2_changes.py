@@ -207,7 +207,7 @@ def markdown_changes(heading_level: int = 2) -> str:
         lines.append(f"- `{removed}`")
 
     lines.extend(["", f"{hd1} Class Field Changes", ""])
-    for cls_name, cls_changes in class_changes.items():
+    for cls_name, cls_changes in sorted(class_changes.items()):
         # special casing, but don't care to make it more general
         if cls_name == "Value":
             link = "`XMLAnnotation.Value`"
@@ -221,6 +221,8 @@ def markdown_changes(heading_level: int = 2) -> str:
             link = f"[`{cls_name}`][ome_types.model.{cls_name}]"
         lines.append(f"{hd2} {link}\n")
         for field_name, field_changes in cls_changes.items():
+            if field_name is None:
+                continue
             change_type = field_changes["type"]
             if change_type == "name_removed":
                 lines.append(f"- **`{field_name}`** - name removed")
