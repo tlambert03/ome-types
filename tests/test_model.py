@@ -218,3 +218,10 @@ def test_source_types(source_type: str, single_xml: Path) -> None:
     elif source_type == "handle":
         xml = open(single_xml, "rb")
     assert isinstance(from_xml(xml), model.OME)
+
+
+def test_numpy_pixel_types() -> None:
+    numpy = pytest.importorskip("numpy")
+
+    for m in model.PixelType:
+        numpy.dtype(m.numpy_dtype)
