@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 import weakref
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, BinaryIO
 
 from ome_types._mixins._base_type import OMEType
 from ome_types._mixins._ids import CONVERTED_IDS
@@ -36,7 +36,7 @@ class OMEMixin:
         self._link_refs()
 
     @classmethod
-    def from_tiff(cls, path: Path | str, **kwargs: Any) -> OME:
+    def from_tiff(cls, path: Path | str | BinaryIO, **kwargs: Any) -> OME:
         """Return an OME object from the metadata in a TIFF file.
 
         See docstring of [`ome_types.from_tiff`][] for kwargs.

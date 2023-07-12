@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import datetime
+import io
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types._conversion import _get_ome_type
-from ome_types.validation import OME_URI
+from ome_types._conversion import OME_2016_06_URI, _get_root_ome_type
 
 DATA = Path(__file__).parent / "data"
 VALIDATE = [False]
@@ -41,7 +42,8 @@ def test_from_tiff(validate: bool) -> None:
     assert ome.images[0].pixels.size_x == 6
     assert ome.images[0].pixels.channels[0].samples_per_pixel == 1
 
-    assert ome == model.OME.from_tiff(_path)  # class method for coverage
+    with open(_path, "rb") as fh:
+        assert model.OME.from_tiff(fh) == ome  # class method for coverage
 
 
 def test_no_id() -> None:
@@ -75,18 +77,24 @@ def test_with_ome_ns() -> None:
     assert from_xml(DATA / "ome_ns.ome.xml").experimenters
 
 
-def test_get_ome_type() -> None:
-    t = _get_ome_type(f'<Image xmlns="{OME_URI}" />')
+def test_get_root_ome_type() -> None:
+    xml = io.BytesIO(f'<Image xmlns="{OME_2016_06_URI}" />'.encode())
+    t = _get_root_ome_type(xml)
     assert t is model.Image
 
-    with pytest.raises(ValueError):
-        _get_ome_type("<Image />")
+    xml = io.BytesIO(f'<ome:Image xmlns:ome="{OME_2016_06_URI}" />'.encode())
+    t = _get_root_ome_type(xml)
+    assert t is model.Image
+
+    with pytest.raises(ValueError, match="Unknown root element"):
+        _get_root_ome_type(io.BytesIO(b"<Imdgage />"))
 
     # this can be used to instantiate XML with a non OME root type:
-    obj = from_xml(f'<Project xmlns="{OME_URI}" />')
+    obj = from_xml(f'<Project xmlns="{OME_2016_06_URI}" />')
     assert isinstance(obj, model.Project)
     obj = from_xml(
-        f'<XMLAnnotation xmlns="{OME_URI}"><Value><Data></Data></Value></XMLAnnotation>'
+        f'<XMLAnnotation xmlns="{OME_2016_06_URI}"><Value><Data>'
+        "</Data></Value></XMLAnnotation>"
     )
     assert isinstance(obj, model.XMLAnnotation)
 
@@ -174,19 +182,46 @@ def test_xml_annotation() -> None:
     assert raw_xml in to_xml(xml_ann, indent=0)
 
 
+XML = """
+<OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">
+<Image ID="Image:0">
+    <AcquisitionDate>2020-09-08T17:26:16.769000000</AcquisitionDate>
+    <Pixels DimensionOrder="XYCTZ" Type="uint8" SizeC="1" SizeT="1"
+            SizeX="18" SizeY="24" SizeZ="5">
+    </Pixels>
+</Image>
+</OME>
+"""
+
+
 def test_bad_date() -> None:
     """Test that dates with too many microseconds are handled gracefully."""
 
-    XML = """
-    <OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">
-    <Image ID="Image:0">
-        <AcquisitionDate>2020-09-08T17:26:16.769000000</AcquisitionDate>
-        <Pixels DimensionOrder="XYCTZ" Type="uint8" SizeC="1" SizeT="1"
-                SizeX="18" SizeY="24" SizeZ="5">
-        </Pixels>
-    </Image>
-    </OME>
-    """
-
     obj = from_xml(XML)
     assert obj.images[0].acquisition_date.microsecond == 769000  # type: ignore
+
+
+@pytest.mark.parametrize(
+    "source_type", ["path", "str_path", "str", "bytes", "stream", "handle"]
+)
+def test_source_types(source_type: str, single_xml: Path) -> None:
+    if source_type == "path":
+        xml: Any = single_xml
+    elif source_type == "str_path":
+        xml = str(single_xml)
+    elif source_type == "str":
+        xml = single_xml.read_text(encoding="utf-8")
+    elif source_type == "bytes":
+        xml = single_xml.read_bytes()
+    elif source_type == "stream":
+        xml = io.BytesIO(single_xml.read_bytes())
+    elif source_type == "handle":
+        xml = open(single_xml, "rb")
+    assert isinstance(from_xml(xml), model.OME)
+
+
+def test_numpy_pixel_types() -> None:
+    numpy = pytest.importorskip("numpy")
+
+    for m in model.PixelType:
+        numpy.dtype(m.numpy_dtype)

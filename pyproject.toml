@@ -57,12 +57,14 @@ dev = [
 ]
 docs = ["mkdocs-material", "mkdocstrings-python"]
 test = [
-  "pint",
   "lxml",
-  "pytest",
+  "numpy",
+  "pint",
+  "pytest-codspeed",
   "pytest-cov",
-  "xmlschema",
   "pytest-mypy-plugins",
+  "pytest",
+  "xmlschema",
 ]
 
 # https://hatch.pypa.io/latest/plugins/build-hook/custom/
@@ -121,6 +123,7 @@ ignore = [
   "D416",   # Section name should end with a colon
   "C901",   # Function is too complex
   "RUF009", # Do not perform function calls in default arguments
+  "S3",     # xml security
 ]
 exclude = ['src/_ome_autogen.py']
 
@@ -147,12 +150,6 @@ ignore = [
   "typesafety/**/*",
 ]
 
-
-[tool.isort]
-profile = "black"
-line_length = 88
-float_to_top = true
-skip_glob = ["*examples/*", "*vendored*"]
 
 [tool.black]
 target-version = ['py38']
