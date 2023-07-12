@@ -10,7 +10,6 @@ Version](https://img.shields.io/pypi/pyversions/ome-types.svg)](https://python.o
 [![codecov](https://codecov.io/gh/tlambert03/ome-types/branch/main/graph/badge.svg?token=GocY9y8A32)](https://codecov.io/gh/tlambert03/ome-types)
 [![Benchmarks](https://img.shields.io/badge/⏱-codspeed-%23FF7B53)](https://codspeed.io/tlambert03/ome-types)
 
-
 ## A pure-python implementation of the OME data model
 
 `ome_types` provides a set of python dataclasses and utility functions for
@@ -38,8 +37,13 @@ pip install ome-types
 With all optional dependencies:
 
 ```shell
-# lxml => if you want to use lxml as the XML parser
-# pint => if you want to use object.<field>_quantity properties
+# lxml => if you ...
+#           - want to use lxml as the XML parser
+#           - want to validate XML against the ome.xsd schema
+#           - want to use XML documents older than the 2016-06 schema
+# pint      => if you want to use object.<field>_quantity properties
+# xmlschema => if you want to validate XML but DON'T want lxml
+
 pip install ome-types[lxml,pint]
 ```
 
@@ -237,7 +241,6 @@ clone this repository and run:
 python -m src.ome_autogen
 ```
 
-
 The documentation and types for the full model can be in the [API Reference](https://ome-types.readthedocs.io/en/latest/ome_types.model.html)
 
 ## Contributing
@@ -250,7 +253,7 @@ cd ome-types
 pip install -e .[test,dev]
 ```
 
-We use `pre-commit` to run various code-quality checks  during continuous
+We use `pre-commit` to run various code-quality checks during continuous
 integration. If you'd like to make sure that your code will pass these checks
 before you commit your code, you should install `pre-commit` after cloning this
 repository:
