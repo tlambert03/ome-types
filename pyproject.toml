@@ -57,13 +57,14 @@ dev = [
 ]
 docs = ["mkdocs-material", "mkdocstrings-python"]
 test = [
-  "pint",
   "lxml",
-  "pytest",
-  "pytest-cov",
+  "numpy",
+  "pint",
   "pytest-codspeed",
-  "xmlschema",
+  "pytest-cov",
   "pytest-mypy-plugins",
+  "pytest",
+  "xmlschema",
 ]
 
 # https://hatch.pypa.io/latest/plugins/build-hook/custom/
