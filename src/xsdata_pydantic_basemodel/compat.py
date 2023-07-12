@@ -49,7 +49,7 @@ class AnyElement(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    def to_etree_element(self) -> ET._Element:
+    def to_etree_element(self) -> "ET._Element":
         elem = ET.Element(self.qname or "", self.attributes)
         elem.text = self.text
         elem.tail = self.tail
