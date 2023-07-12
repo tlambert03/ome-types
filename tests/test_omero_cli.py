@@ -80,7 +80,6 @@ def conn() -> BlitzGateway:
     ],
 )
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-@pytest.mark.filterwarnings("ignore:Reference to unknown ID:")
 def test_populate_xml(
     data_dir: Path,
     datatype: str,
