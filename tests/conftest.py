@@ -158,7 +158,20 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 @pytest.fixture
-def full_ome_object() -> model.OME:
+def pixels() -> model.Pixels:
+    return model.Pixels(
+        size_c=1,
+        size_t=1,
+        size_z=10,
+        size_x=100,
+        size_y=100,
+        dimension_order="XYZCT",
+        type="uint8",
+    )
+
+
+@pytest.fixture
+def full_ome_object(pixels: model.Pixels) -> model.OME:
     """Mostly used for the omero test, a fully populated OME object."""
     comment_ann = model.CommentAnnotation(value="test comment", id="Annotation:-123")
     comment2 = model.CommentAnnotation(value="test comment", id="Annotation:-1233")
@@ -178,15 +191,7 @@ def full_ome_object() -> model.OME:
     img = model.Image(
         id="Image:0",
         name="MyImage",
-        pixels=model.Pixels(
-            size_c=1,
-            size_t=1,
-            size_z=10,
-            size_x=100,
-            size_y=100,
-            dimension_order="XYZCT",
-            type="uint8",
-        ),
+        pixels=pixels,
         roi_refs=[model.ROIRef(id=roi.id)],
     )
     well = model.Well(

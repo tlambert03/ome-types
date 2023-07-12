@@ -7,6 +7,7 @@ from typing import (
     Any,
     ClassVar,
     Dict,
+    MutableSequence,
     Optional,
     Sequence,
     Set,
@@ -177,6 +178,27 @@ class OMEType(BaseModel):
         from ome_types._conversion import from_xml
 
         return cast(T, from_xml(xml, **kwargs))
+
+    def _update_set_fields(self) -> None:
+        """Update set fields with populated mutable sequences.
+
+        Because pydantic isn't aware of mutations to sequences, it can't tell when
+        a field has been "set" by mutating a sequence.  This method updates the
+        self.__fields_set__ attribute to reflect that.  We assume that if an attribute
+        is not None, and is not equal to the default value, then it has been set.
+        """
+        for field_name, field in self.__fields__.items():
+            current = getattr(self, field_name)
+            if not current:
+                continue
+            if current != field.get_default():
+                self.__fields_set__.add(field_name)
+            if isinstance(current, OMEType):
+                current._update_set_fields()
+            if isinstance(current, MutableSequence):
+                for item in current:
+                    if isinstance(item, OMEType):
+                        item._update_set_fields()
 
 
 class _RawRepr:
