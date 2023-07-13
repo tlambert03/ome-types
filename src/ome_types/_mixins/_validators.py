@@ -3,7 +3,7 @@
 that logic is in the `methods` method in ome_autogen/_generator.py
 """
 import warnings
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Sequence
 
 if TYPE_CHECKING:
     from ome_types.model import (  # type: ignore
@@ -45,17 +45,17 @@ def pixels_root_validator(cls: "Pixels", value: dict) -> dict:
     return value
 
 
-# @validator("any_elements", each_item=True)
-def any_elements_validator(cls: "XMLAnnotation.Value", v: Any) -> "AnyElement":
+# @validator("any_elements")
+def any_elements_validator(cls: "XMLAnnotation.Value", v: list[Any]) -> "AnyElement":
     # This validator is used because XMLAnnotation.Value.any_elements is
     # annotated as List[object]. So pydantic won't coerce dicts to AnyElement
     # automatically (which is important when constructing OME objects from dicts)
-    if isinstance(v, dict):
-        # this needs to be delayed until runtime because of circular imports
-        from xsdata_pydantic_basemodel.compat import AnyElement
+    if not isinstance(v, Sequence):
+        raise ValueError(f"any_elements must be a sequence, not {type(v)}")
+    # this needs to be delayed until runtime because of circular imports
+    from xsdata_pydantic_basemodel.compat import AnyElement
 
-        return AnyElement(**v)
-    return v
+    return [AnyElement(**v) if isinstance(v, dict) else v for v in v]
 
 
 # @validator('value', pre=True)

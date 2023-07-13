@@ -130,6 +130,8 @@ class OMEType(BaseModel):
         """Repr with only set values, and truncated sequences."""
         args = []
         for k, v in model_dump(self, exclude_defaults=True).items():
+            if k == "kind":
+                continue
             if isinstance(v, Sequence) and not isinstance(v, str):
                 if v == []:  # skip empty lists
                     continue
