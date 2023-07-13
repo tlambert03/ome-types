@@ -11,6 +11,11 @@ if PYDANTIC2:
     from pydantic import functional_validators, model_validator
     from pydantic.fields import FieldInfo
 
+    try:
+        from pydantic_extra_types.color import Color as Color
+    except ImportError:
+        from pydantic.color import Color as Color
+
     def model_fields(obj: BaseModel | type[BaseModel]) -> dict[str, FieldInfo]:
         return obj.model_fields
 
@@ -36,6 +41,7 @@ if PYDANTIC2:
         return obj.model_dump(**kwargs)
 
 else:
+    from pydantic.color import Color as Color  # type: ignore [no-redef]
     from pydantic.fields import ModelField, root_validator, validator  # type: ignore
 
     def model_fields(  # type: ignore
