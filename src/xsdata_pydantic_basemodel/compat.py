@@ -1,29 +1,38 @@
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, Type, TypeVar
+
 try:
     from lxml import etree as ET
 except ImportError:
     import xml.etree.ElementTree as ET  # type: ignore
 
-from dataclasses import MISSING, field
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    cast,
-)
-
 from pydantic import BaseModel, validators
-from pydantic.fields import Field, ModelField, Undefined
 from xsdata.formats.dataclass.compat import Dataclasses, class_types
 from xsdata.formats.dataclass.models.elements import XmlType
 from xsdata.models.datatype import XmlDate, XmlDateTime, XmlDuration, XmlPeriod, XmlTime
 
+from xsdata_pydantic_basemodel._pydantic_compat import (
+    PYDANTIC2,
+    Field,
+    dataclass_fields,
+    model_config,
+    update_forward_refs,
+)
+
 T = TypeVar("T", bound=object)
+
+
+# don't switch to exclude ... it makes it hard to add fields to the
+# schema without breaking backwards compatibility
+_config = model_config(arbitrary_types_allowed=True)
+
+
+class _BaseModel(BaseModel):
+    """Base model for all types."""
+
+    if PYDANTIC2:
+        model_config = _config
+    else:
+        Config = _config  # type: ignore
 
 
 class AnyElement(BaseModel):
@@ -46,8 +55,10 @@ class AnyElement(BaseModel):
         default_factory=dict, metadata={"type": XmlType.ATTRIBUTES}
     )
 
-    class Config:
-        arbitrary_types_allowed = True
+    if PYDANTIC2:
+        model_config = _config
+    else:
+        Config = _config  # type: ignore
 
     def to_etree_element(self) -> "ET._Element":
         elem = ET.Element(self.qname or "", self.attributes)
@@ -72,8 +83,10 @@ class DerivedElement(BaseModel, Generic[T]):
     value: T
     type: Optional[str] = None
 
-    class Config:
-        arbitrary_types_allowed = True
+    if PYDANTIC2:
+        model_config = _config
+    else:
+        Config = _config  # type: ignore
 
 
 class PydanticBaseModel(Dataclasses):
@@ -88,40 +101,13 @@ class PydanticBaseModel(Dataclasses):
     def is_model(self, obj: Any) -> bool:
         clazz = obj if isinstance(obj, type) else type(obj)
         if issubclass(clazz, BaseModel):
-            clazz.update_forward_refs()
+            update_forward_refs(clazz)
             return True
 
         return False
 
     def get_fields(self, obj: Any) -> Tuple[Any, ...]:
-        _fields = cast("BaseModel", obj).__fields__.values()
-        return tuple(_pydantic_field_to_dataclass_field(field) for field in _fields)
-
-
-def _pydantic_field_to_dataclass_field(pydantic_field: ModelField) -> Any:
-    if pydantic_field.default_factory is not None:
-        default_factory: Any = pydantic_field.default_factory
-        default = MISSING
-    else:
-        default_factory = MISSING
-        default = (
-            MISSING
-            if pydantic_field.default in (Undefined, Ellipsis)
-            else pydantic_field.default
-        )
-
-    dataclass_field = field(  # type: ignore
-        default=default,
-        default_factory=default_factory,
-        # init=True,
-        # hash=None,
-        # compare=True,
-        metadata=pydantic_field.field_info.extra.get("metadata", {}),
-        # kw_only=MISSING,
-    )
-    dataclass_field.name = pydantic_field.name
-    dataclass_field.type = pydantic_field.type_
-    return dataclass_field
+        return tuple(dataclass_fields(obj))
 
 
 class_types.register("pydantic-basemodel", PydanticBaseModel())
@@ -140,22 +126,30 @@ def make_validators(tp: Type, factory: Callable) -> List[Callable]:
     return [validator]
 
 
-if hasattr(validators, "_VALIDATORS"):
-    validators._VALIDATORS.extend(
-        [
-            (XmlDate, make_validators(XmlDate, XmlDate.from_string)),
-            (XmlDateTime, make_validators(XmlDateTime, XmlDateTime.from_string)),
-            (XmlTime, make_validators(XmlTime, XmlTime.from_string)),
-            (XmlDuration, make_validators(XmlDuration, XmlDuration)),
-            (XmlPeriod, make_validators(XmlPeriod, XmlPeriod)),
-            (ET.QName, make_validators(ET.QName, ET.QName)),
-        ]
-    )
-else:
-    import warnings
+_validators = {
+    XmlDate: make_validators(XmlDate, XmlDate.from_string),
+    XmlDateTime: make_validators(XmlDateTime, XmlDateTime.from_string),
+    XmlTime: make_validators(XmlTime, XmlTime.from_string),
+    XmlDuration: make_validators(XmlDuration, XmlDuration),
+    XmlPeriod: make_validators(XmlPeriod, XmlPeriod),
+    ET.QName: make_validators(ET.QName, ET.QName),
+}
 
-    warnings.warn(
-        "Could not find pydantic.validators._VALIDATORS."
-        "xsdata-pydantic-basemodel may be incompatible with your pydantic version.",
-        stacklevel=2,
-    )
+if not PYDANTIC2:
+    validators._VALIDATORS.extend(list(_validators.items()))
+else:
+    from pydantic import BaseModel
+    from pydantic_core import core_schema as cs
+
+    def _make_get_core_schema(validator: Callable) -> Callable:
+        def get_core_schema(*args: Any) -> cs.PlainValidatorFunctionSchema:
+            return cs.general_plain_validator_function(validator)
+
+        return get_core_schema
+
+    for type_, val in _validators.items():
+        get_schema = _make_get_core_schema(val[0])
+        try:
+            type_.__get_pydantic_core_schema__ = get_schema  # type: ignore
+        except TypeError as e:
+            print(e)

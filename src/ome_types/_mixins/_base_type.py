@@ -7,7 +7,6 @@ from typing import (
     Any,
     ClassVar,
     Dict,
-    MutableSequence,
     Optional,
     Sequence,
     Set,
@@ -17,9 +16,17 @@ from typing import (
     cast,
 )
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 
 from ome_types._mixins._ids import validate_id
+from ome_types._pydantic_compat import (
+    PYDANTIC2,
+    field_type,
+    field_validator,
+    model_dump,
+    model_fields,
+    update_set_fields,
+)
 
 try:
     from ome_types.units import add_quantity_properties
@@ -68,6 +75,13 @@ def _move_deprecated_fields(data: Dict[str, Any], field_names: Set[str]) -> None
             data[DEPRECATED_NAMES[key]] = data.pop(key)
 
 
+CONFIG = {
+    "arbitrary_types_allowed": True,
+    "validate_assignment": True,
+    "validate_default": True,
+}
+
+
 class OMEType(BaseModel):
     """The base class that all OME Types inherit from.
 
@@ -81,21 +95,20 @@ class OMEType(BaseModel):
 
     # pydantic BaseModel configuration.
     # see: https://pydantic-docs.helpmanual.io/usage/model_config/
-    class Config:
-        arbitrary_types_allowed = False
-        validate_assignment = True
-        underscore_attrs_are_private = True
-        use_enum_values = False
-        validate_all = True
+
+    if PYDANTIC2:
+        model_config = CONFIG
+    else:
+        Config = type("Config", (), CONFIG)
 
     # allow use with weakref
     __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
-    _v = validator("id", pre=True, always=True, check_fields=False)(validate_id)
+    _vid = field_validator("id", mode="before", check_fields=False)(validate_id)
 
     def __init__(self, **data: Any) -> None:
         warn_extra = data.pop("warn_extra", True)
-        field_names = set(self.__fields__.keys())
+        field_names = set(model_fields(self))
         _move_deprecated_fields(data, field_names)
         super().__init__(**data)
         kwargs = set(data.keys())
@@ -116,14 +129,15 @@ class OMEType(BaseModel):
     def __repr_args__(self) -> Sequence[Tuple[Optional[str], Any]]:
         """Repr with only set values, and truncated sequences."""
         args = []
-        for k, v in self._iter(exclude_defaults=True):
+        for k, v in model_dump(self, exclude_defaults=True).items():
             if isinstance(v, Sequence) and not isinstance(v, str):
                 if v == []:  # skip empty lists
                     continue
                 # if this is a sequence with a long repr, just show the length
                 # and type
                 if len(repr(v).split(",")) > 5:
-                    type_name = self.__fields__[k].type_.__name__
+                    ftype = field_type(model_fields(self)[k])
+                    type_name = getattr(field_type, "__name__", str(ftype))
                     v = _RawRepr(f"[<{len(v)} {type_name}>]")
             elif isinstance(v, Enum):
                 v = v.value
@@ -153,7 +167,8 @@ class OMEType(BaseModel):
                 stacklevel=2,
             )
             return getattr(self, new_key)
-        raise AttributeError(f"{cls_name} object has no attribute {key!r}")
+
+        return super().__getattr__(key)  # type: ignore
 
     def to_xml(self, **kwargs: Any) -> str:
         """Serialize this object to XML.
@@ -187,18 +202,7 @@ class OMEType(BaseModel):
         self.__fields_set__ attribute to reflect that.  We assume that if an attribute
         is not None, and is not equal to the default value, then it has been set.
         """
-        for field_name, field in self.__fields__.items():
-            current = getattr(self, field_name)
-            if not current:
-                continue
-            if current != field.get_default():
-                self.__fields_set__.add(field_name)
-            if isinstance(current, OMEType):
-                current._update_set_fields()
-            if isinstance(current, MutableSequence):
-                for item in current:
-                    if isinstance(item, OMEType):
-                        item._update_set_fields()
+        update_set_fields(self)
 
 
 class _RawRepr:

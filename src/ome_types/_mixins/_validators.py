@@ -31,18 +31,18 @@ def bin_data_root_validator(cls: "BinData", values: dict) -> Dict[str, Any]:
 
 
 # @root_validator(pre=True)
-def pixels_root_validator(cls: "Pixels", values: dict) -> dict:
-    if "metadata_only" in values:
-        if isinstance(values["metadata_only"], bool):
-            if not values["metadata_only"]:
-                values.pop("metadata_only")
+def pixels_root_validator(cls: "Pixels", value: dict) -> dict:
+    if "metadata_only" in value:
+        if isinstance(value["metadata_only"], bool):
+            if not value["metadata_only"]:
+                value.pop("metadata_only")
             else:
                 # type ignore in case the autogeneration hasn't been built
                 from ome_types.model import MetadataOnly  # type: ignore
 
-                values["metadata_only"] = MetadataOnly()
+                value["metadata_only"] = MetadataOnly()
 
-    return values
+    return value
 
 
 # @validator("any_elements", each_item=True)

@@ -2,10 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from xsdata.codegen.models import Attr, Class
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
+from xsdata.models.config import GeneratorConfig, OutputFormat
 from xsdata.utils.collections import unique_sequence
 from xsdata.utils.text import stop_words
+
+from xsdata_pydantic_basemodel._pydantic_compat import PYDANTIC2
 
 if TYPE_CHECKING:
     from xsdata.codegen.models import Attr, Class
@@ -71,11 +75,14 @@ class PydanticBaseFilters(Filters):
             ("min_exclusive", "gt"),
             ("max_inclusive", "le"),
             ("max_exclusive", "lt"),
-            ("min_occurs", "min_items"),
-            ("max_occurs", "max_items"),
-            ("pattern", "regex"),
+            ("min_occurs", "min_length" if PYDANTIC2 else "min_items"),
+            ("max_occurs", "max_length" if PYDANTIC2 else "max_items"),
+            ("pattern", "pattern" if PYDANTIC2 else "regex"),
             ("min_length", "min_length"),
             ("max_length", "max_length"),
         ]:
             if from_ in metadata:
                 kwargs[to_] = getitem(from_)
+
+        if PYDANTIC2 and "metadata" in kwargs:
+            kwargs["json_schema_extra"] = kwargs.pop("metadata")

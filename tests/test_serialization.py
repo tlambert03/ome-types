@@ -70,7 +70,8 @@ def test_serialization(valid_xml: Path) -> None:
 def test_dict_roundtrip(valid_xml: Path) -> None:
     # Test round-trip through to_dict and from_dict
     ome1 = from_xml(valid_xml)
-    assert ome1 == OME(**to_dict(ome1))
+    ome2 = OME(**to_dict(ome1))
+    assert ome1 == ome2
 
 
 @pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")

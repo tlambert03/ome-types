@@ -6,10 +6,10 @@ from typing import Any, Sequence
 
 import pytest
 from pydantic import BaseModel
-from pydantic.typing import display_as_type
 
 import ome_types
 from ome_types import model
+from ome_types._pydantic_compat import PYDANTIC2
 
 TESTS = Path(__file__).parent
 KNOWN_CHANGES: dict[str, list[tuple[str, str | None]]] = {
@@ -109,6 +109,8 @@ def _assert_names_match(
 
 
 def _get_fields(cls: type[BaseModel]) -> dict[str, Any]:
+    from pydantic.typing import display_as_type
+
     fields = {}
     for name, field in cls.__fields__.items():
         if name.startswith("_"):
@@ -120,6 +122,7 @@ def _get_fields(cls: type[BaseModel]) -> dict[str, Any]:
     return fields
 
 
+@pytest.mark.skipif(PYDANTIC2, reason="no need to check pydantic 2")
 def test_names() -> None:
     with (TESTS / "data" / "old_model.json").open() as f:
         old_names = json.load(f)

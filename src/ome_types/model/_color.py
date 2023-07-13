@@ -1,7 +1,11 @@
 from contextlib import suppress
 from typing import Tuple, Union
 
-from pydantic import color
+try:
+    from pydantic_extra_types.color import Color as PydanticColor
+except ImportError:
+    from pydantic.color import Color as PydanticColor  # type: ignore [no-redef]
+
 
 __all__ = ["Color"]
 
@@ -9,7 +13,7 @@ RGBA = Tuple[int, int, int, float]
 ColorType = Union[Tuple[int, int, int], RGBA, str, int]
 
 
-class Color(color.Color):
+class Color(PydanticColor):
     """A Pydantic Color subclass that converts to and from OME int32 types."""
 
     def __init__(self, val: ColorType = -1) -> None:

@@ -29,19 +29,19 @@ AUTO_SEQUENCE = "__auto_sequence__"
 ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
     (
         lambda c: c.name == "BinData",
-        "\n\n_v = root_validator(pre=True)(bin_data_root_validator)",
+        "\n\n_vbindata = model_validator(mode='before')(bin_data_root_validator)",
     ),
     (
         lambda c: c.name == "Value",
-        "\n\n_v = validator('any_elements', each_item=True)(any_elements_validator)",
+        "\n\n_vany = field_validator('any_elements')(any_elements_validator)",
     ),
     (
         lambda c: c.name == "Pixels",
-        "\n\n_v = root_validator(pre=True)(pixels_root_validator)",
+        "\n\n_vpix = model_validator(mode='before')(pixels_root_validator)",
     ),
     (
         lambda c: c.name == "XMLAnnotation",
-        "\n\n_v = validator('value', pre=True)(xml_value_validator)",
+        "\n\n_vval = field_validator('value', mode='before')(xml_value_validator)",
     ),
     (
         lambda c: c.name == "PixelType",
@@ -86,6 +86,10 @@ IMPORT_PATTERNS.update(
     {
         "ome_types._mixins._util": {"new_uuid": ["default_factory=new_uuid"]},
         "datetime": {"datetime": ["datetime"]},
+        "ome_types._pydantic_compat": {
+            "model_validator": ["model_validator("],
+            "field_validator": ["field_validator("],
+        },
         "ome_types._mixins._validators": {
             "any_elements_validator": ["any_elements_validator"],
             "bin_data_root_validator": ["bin_data_root_validator"],
@@ -234,7 +238,6 @@ class OmeFilters(PydanticBaseFilters):
         patterns.setdefault("pydantic", {}).update(
             {
                 "validator": ["validator("],
-                "root_validator": ["root_validator("],
             }
         )
         patterns.update(IMPORT_PATTERNS)

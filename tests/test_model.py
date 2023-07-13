@@ -60,10 +60,10 @@ def test_no_id() -> None:
 
 def test_required_missing() -> None:
     """Test subclasses with non-default arguments still work."""
-    with pytest.raises(ValidationError, match="value\n  field required"):
+    with pytest.raises(ValidationError, match="required"):
         model.BooleanAnnotation()  # type: ignore
 
-    with pytest.raises(ValidationError, match="x\n  field required"):
+    with pytest.raises(ValidationError, match="required"):
         model.Label()  # type: ignore
 
 

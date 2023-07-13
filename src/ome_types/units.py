@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from ome_types._pydantic_compat import model_fields
+
 try:
     import pint
 except ImportError:  # pragma: no cover
@@ -48,6 +50,7 @@ def add_quantity_properties(cls: type[BaseModel]) -> None:
     X_quantity property, where X is the name of the field.  It returns a pint object.
     """
     _QUANTITY_FIELD = "{}_quantity"
-    for field in cls.__fields__:
-        if _UNIT_FIELD.format(field) in cls.__fields__:
+    field_names = set(model_fields(cls))
+    for field in field_names:
+        if _UNIT_FIELD.format(field) in field_names:
             setattr(cls, _QUANTITY_FIELD.format(field), _quantity_property(field))
