@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import MISSING, field
-from typing import Any, Callable, Iterator, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
+
+if TYPE_CHECKING:
+    from typing import Iterator, Literal
+
 
 from pydantic import BaseModel, __version__
 
