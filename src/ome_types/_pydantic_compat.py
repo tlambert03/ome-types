@@ -7,6 +7,8 @@ from pydantic import BaseModel
 
 PYDANTIC2 = pydantic.version.VERSION.startswith("2")
 
+__all__ = ["model_validator", "field_validator"]
+
 if PYDANTIC2:
     from pydantic import functional_validators, model_validator
     from pydantic.fields import FieldInfo
