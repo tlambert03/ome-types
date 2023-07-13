@@ -71,8 +71,8 @@ if PYDANTIC2:
                 if isinstance(v, _ShapeCls):
                     items.append(v)
                 elif isinstance(v, dict):
-                    # NOTE: this is here to preserve the v1 behavior of passing a dict like
-                    # {"kind": "label", "x": 0, "y": 0}
+                    # NOTE: this is here to preserve the v1 behavior of passing a dict
+                    # like {"kind": "label", "x": 0, "y": 0}
                     # to create a label rather than a point
                     if "kind" in v:
                         kind = v.pop("kind").lower()
@@ -98,7 +98,7 @@ if PYDANTIC2:
 
 else:
 
-    class ShapeUnion(OMEType, UserSequence[ShapeType]):  # type: ignore[misc]
+    class ShapeUnion(OMEType, UserSequence[ShapeType]):  # type: ignore
         """A mutable sequence of [`ome_types.model.Shape`][].
 
         Members of this sequence must be one of the following types:

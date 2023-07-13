@@ -34,6 +34,8 @@ except ImportError:
     add_quantity_properties = lambda cls: None  # noqa: E731
 
 if TYPE_CHECKING:
+    from pydantic import ConfigDict
+
     from ome_types._conversion import XMLSource
 
 
@@ -75,7 +77,7 @@ def _move_deprecated_fields(data: Dict[str, Any], field_names: Set[str]) -> None
             data[DEPRECATED_NAMES[key]] = data.pop(key)
 
 
-CONFIG = {
+CONFIG: "ConfigDict" = {
     "arbitrary_types_allowed": True,
     "validate_assignment": True,
     "validate_default": True,
@@ -99,7 +101,7 @@ class OMEType(BaseModel):
     if PYDANTIC2:
         model_config = CONFIG
     else:
-        Config = type("Config", (), CONFIG)
+        Config = type("Config", (), CONFIG)  # type: ignore
 
     # allow use with weakref
     __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore

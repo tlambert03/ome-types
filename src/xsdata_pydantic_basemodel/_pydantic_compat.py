@@ -28,10 +28,10 @@ if PYDANTIC2:
     def validator(*args: Any, **kwargs: Any) -> Callable[[Callable], Callable]:
         return field_validator(*args, **kwargs)
 
-    def Field(*args, **kwargs) -> _Field:
+    def Field(*args: Any, **kwargs: Any) -> Any:
         if "metadata" in kwargs:
             kwargs["json_schema_extra"] = kwargs.pop("metadata")
-        return _Field(*args, **kwargs)
+        return _Field(*args, **kwargs)  # type: ignore
 
     def update_forward_refs(cls: type[M]) -> None:
         try:
@@ -42,7 +42,7 @@ if PYDANTIC2:
     def iter_fields(obj: type[M]) -> Iterator[tuple[str, FieldInfo]]:
         yield from obj.model_fields.items()
 
-    def _get_metadata(pydantic_field):
+    def _get_metadata(pydantic_field: FieldInfo) -> dict[str, Any]:
         if pydantic_field.json_schema_extra:
             metadata = pydantic_field.json_schema_extra
         else:
@@ -57,26 +57,26 @@ if PYDANTIC2:
 
 else:
     from pydantic.fields import Field as Field
-    from pydantic.fields import ModelField
-    from pydantic.fields import Undefined as Undefined
+    from pydantic.fields import ModelField  # type: ignore
+    from pydantic.fields import Undefined as Undefined  # type: ignore
 
     def update_forward_refs(cls: type[M]) -> None:
         cls.update_forward_refs()
 
-    def iter_fields(obj: type[M]) -> Iterator[tuple[str, ModelField]]:
-        yield from obj.__fields__.items()
+    def iter_fields(obj: type[M]) -> Iterator[tuple[str, ModelField]]:  # type: ignore
+        yield from obj.__fields__.items()  # type: ignore
 
     def model_config(**kwargs: Any) -> dict | type:
         return type("Config", (), kwargs)
 
-    def _get_metadata(pydantic_field):
+    def _get_metadata(pydantic_field) -> dict:  # type: ignore
         return pydantic_field.field_info.extra.get("metadata", {})
 
     def fields_set(obj: BaseModel) -> set[str]:
         return obj.__fields_set__
 
 
-def _get_defaults(pydantic_field) -> tuple[Any, Any]:
+def _get_defaults(pydantic_field: FieldInfo) -> tuple[Any, Any]:
     if pydantic_field.default_factory is not None:
         default_factory: Any = pydantic_field.default_factory
         default = MISSING

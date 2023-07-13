@@ -3,7 +3,7 @@
 that logic is in the `methods` method in ome_autogen/_generator.py
 """
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, Sequence
+from typing import TYPE_CHECKING, Any, Dict, List, Sequence
 
 if TYPE_CHECKING:
     from ome_types.model import (  # type: ignore
@@ -46,7 +46,9 @@ def pixels_root_validator(cls: "Pixels", value: dict) -> dict:
 
 
 # @validator("any_elements")
-def any_elements_validator(cls: "XMLAnnotation.Value", v: list[Any]) -> "AnyElement":
+def any_elements_validator(
+    cls: "XMLAnnotation.Value", v: List[Any]
+) -> List["AnyElement"]:
     # This validator is used because XMLAnnotation.Value.any_elements is
     # annotated as List[object]. So pydantic won't coerce dicts to AnyElement
     # automatically (which is important when constructing OME objects from dicts)

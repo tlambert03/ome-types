@@ -30,7 +30,7 @@ class _BaseModel(BaseModel):
     """Base model for all types."""
 
     if PYDANTIC2:
-        model_config = _config
+        model_config = _config  # type: ignore
     else:
         Config = _config  # type: ignore
 
@@ -56,7 +56,7 @@ class AnyElement(BaseModel):
     )
 
     if PYDANTIC2:
-        model_config = _config
+        model_config = _config  # type: ignore
     else:
         Config = _config  # type: ignore
 
@@ -84,7 +84,7 @@ class DerivedElement(BaseModel, Generic[T]):
     type: Optional[str] = None
 
     if PYDANTIC2:
-        model_config = _config
+        model_config = _config  # type: ignore
     else:
         Config = _config  # type: ignore
 

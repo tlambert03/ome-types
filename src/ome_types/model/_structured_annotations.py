@@ -102,7 +102,7 @@ if pydantic.version.VERSION.startswith("2"):
 
 else:
 
-    class StructuredAnnotationList(OMEType, UserSequence[Annotation]):  # type: ignore[misc]  # noqa: E501
+    class StructuredAnnotationList(OMEType, UserSequence[Annotation]):  # type: ignore  # noqa: E501
         """A mutable sequence of [`ome_types.model.Annotation`][].
 
         Members of this sequence must be one of the following types:

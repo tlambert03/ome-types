@@ -30,7 +30,7 @@ repos:
       - id: mypy
         exclude: ^tests|^docs|_napari_plugin|widgets
         additional_dependencies:
-          - pydantic<2
+          - pydantic>=2
           - xsdata
           - Pint
           - types-lxml; python_version > '3.8'

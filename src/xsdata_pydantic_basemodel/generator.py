@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from xsdata.codegen.models import Attr, Class
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
-from xsdata.models.config import GeneratorConfig, OutputFormat
 from xsdata.utils.collections import unique_sequence
 from xsdata.utils.text import stop_words
 

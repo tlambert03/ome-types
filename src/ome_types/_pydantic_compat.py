@@ -26,7 +26,7 @@ if PYDANTIC2:
     def field_validator(*args: Any, **kwargs: Any) -> Callable[[Callable], Callable]:
         return functional_validators.field_validator(*args, **kwargs)
 
-    def field_type(field: FieldInfo):
+    def field_type(field: FieldInfo) -> Any:
         return field.annotation
 
     def get_default(f: FieldInfo) -> Any:
@@ -36,22 +36,24 @@ if PYDANTIC2:
         return obj.model_dump(**kwargs)
 
 else:
-    from pydantic.fields import ModelField, root_validator, validator
+    from pydantic.fields import ModelField, root_validator, validator  # type: ignore
 
-    def model_fields(obj: BaseModel | type[BaseModel]) -> dict[str, ModelField]:
-        return obj.__fields__
+    def model_fields(  # type: ignore
+        obj: BaseModel | type[BaseModel],
+    ) -> dict[str, ModelField]:
+        return obj.__fields__  # type: ignore
 
-    def field_type(field: ModelField):
+    def field_type(field: ModelField) -> Any:  # type: ignore
         return field.type_
 
     def field_regex(obj: type[BaseModel], field_name: str) -> str | None:
-        field = obj.__fields__[field_name]
+        field = obj.__fields__[field_name]  # type: ignore
         return cast(str, field.field_info.regex)
 
     def fields_set(obj: BaseModel) -> set[str]:
         return obj.__fields_set__
 
-    def model_validator(**kwargs):
+    def model_validator(**kwargs: Any) -> Callable[[Callable], Callable]:  # type: ignore  # noqa
         if kwargs.get("mode") == "before":
             return root_validator(pre=True)
         return root_validator(pre=False)
@@ -61,7 +63,7 @@ else:
             return validator(pre=True)
         return validator()
 
-    def get_default(f: ModelField) -> Any:
+    def get_default(f: ModelField) -> Any:  # type: ignore
         return f.get_default()
 
     def model_dump(obj: BaseModel, **kwargs: Any) -> dict[str, Any]:
