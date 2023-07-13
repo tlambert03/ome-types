@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Callable, MutableSequence, cast
+from typing import TYPE_CHECKING, Any, Callable, MutableSequence, cast
 
 import pydantic.version
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from pydantic.fields import FieldInfo
 
 PYDANTIC2 = pydantic.version.VERSION.startswith("2")
 
@@ -11,7 +14,6 @@ __all__ = ["model_validator", "field_validator"]
 
 if PYDANTIC2:
     from pydantic import functional_validators, model_validator
-    from pydantic.fields import FieldInfo
 
     try:
         from pydantic_extra_types.color import Color as Color
@@ -31,6 +33,7 @@ if PYDANTIC2:
         return obj.model_fields_set
 
     def field_validator(*args: Any, **kwargs: Any) -> Callable[[Callable], Callable]:
+        kwargs.pop("always", None)
         return functional_validators.field_validator(*args, **kwargs)
 
     def field_type(field: FieldInfo) -> Any:
@@ -43,15 +46,15 @@ if PYDANTIC2:
         return obj.model_dump(**kwargs)
 
 else:
+    from pydantic import root_validator, validator  # type: ignore
     from pydantic.color import Color as Color  # type: ignore [no-redef]
-    from pydantic.fields import ModelField, root_validator, validator  # type: ignore
 
     def model_fields(  # type: ignore
         obj: BaseModel | type[BaseModel],
-    ) -> dict[str, ModelField]:
+    ) -> dict[str, Any]:
         return obj.__fields__  # type: ignore
 
-    def field_type(field: ModelField) -> Any:  # type: ignore
+    def field_type(field: Any) -> Any:  # type: ignore
         return field.type_
 
     def field_regex(obj: type[BaseModel], field_name: str) -> str | None:
@@ -62,16 +65,17 @@ else:
         return obj.__fields_set__
 
     def model_validator(**kwargs: Any) -> Callable[[Callable], Callable]:  # type: ignore  # noqa
-        if kwargs.get("mode") == "before":
-            return root_validator(pre=True)
-        return root_validator(pre=False)
+        if kwargs.pop("mode", None) == "before":
+            kwargs["pre"] = True
+        return root_validator(**kwargs)
 
-    def field_validator(**kwargs: Any) -> Callable[[Callable], Callable]:
-        if kwargs.get("mode") == "before":
-            return validator(pre=True)
-        return validator()
+    def field_validator(*fields: str, **kwargs: Any) -> Callable[[Callable], Callable]:  # type: ignore  # noqa
+        if kwargs.pop("mode", None) == "before":
+            kwargs["pre"] = True
+            return validator(*fields, **kwargs)
+        return validator(*fields, **kwargs)
 
-    def get_default(f: ModelField) -> Any:  # type: ignore
+    def get_default(f: Any) -> Any:  # type: ignore
         return f.get_default()
 
     def model_dump(obj: BaseModel, **kwargs: Any) -> dict[str, Any]:

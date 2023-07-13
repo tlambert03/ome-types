@@ -106,7 +106,9 @@ class OMEType(BaseModel):
     # allow use with weakref
     __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
-    _vid = field_validator("id", mode="before", check_fields=False)(validate_id)
+    _vid = field_validator("id", mode="before", always=True, check_fields=False)(
+        validate_id
+    )
 
     def __init__(self, **data: Any) -> None:
         warn_extra = data.pop("warn_extra", True)
