@@ -14,7 +14,11 @@ if TYPE_CHECKING:
 
 DATA = Path(__file__).parent / "data"
 ALL_XML = set(DATA.glob("*.ome.xml"))
-INVALID = {DATA / "invalid_xml_annotation.ome.xml", DATA / "bad.ome.xml"}
+INVALID = {
+    DATA / "invalid_xml_annotation.ome.xml",
+    DATA / "bad.ome.xml",
+    DATA / "MMStack.ome.xml",
+}
 OLD_SCHEMA = {DATA / "seq0000xy01c1.ome.xml", DATA / "2008_instrument.ome.xml"}
 WITH_XML_ANNOTATIONS = {
     DATA / "ome_ns.ome.xml",
