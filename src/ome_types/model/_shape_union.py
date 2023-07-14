@@ -63,7 +63,7 @@ if PYDANTIC2:
 
         @field_validator("root")
         def _validate_root(cls, value: ShapeType) -> ShapeType:
-            if not isinstance(value, Sequence):
+            if not isinstance(value, Sequence):  # pragma: no cover
                 raise ValueError(f"Value must be a sequence, not {type(value)}")
 
             items = []
@@ -82,7 +82,7 @@ if PYDANTIC2:
                             with suppress(ValidationError):
                                 items.append(cls_(warn_extra=False, **v))
                                 break
-                else:
+                else:  # pragma: no cover
                     raise ValueError(f"Invalid shape: {v}")  # pragma: no cover
             return items
 

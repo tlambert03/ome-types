@@ -72,7 +72,7 @@ if pydantic.version.VERSION.startswith("2"):
 
         @field_validator("root")
         def _validate_root(cls, v: List[object]) -> List[Annotation]:
-            if not isinstance(v, Sequence):
+            if not isinstance(v, Sequence):  # pragma: no cover
                 raise ValueError(f"Value must be a sequence, not {type(v)}")
             items: List[Annotation] = []
             for item in v:
@@ -86,7 +86,7 @@ if pydantic.version.VERSION.startswith("2"):
                             with suppress(ValidationError):
                                 items.append(cls_(**item))
                                 break
-                else:
+                else:  # pragma: no cover
                     raise ValueError(f"Invalid Annotation: {item} of type {type(item)}")
             return items
 
