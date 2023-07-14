@@ -60,6 +60,7 @@ def get_config(
             structure_style=cfg.StructureStyle.CLUSTERS,
             docstring_style=cfg.DocstringStyle.NUMPY,
             compound_fields=cfg.CompoundFields(enabled=compound_fields),
+            # whether to create models that work for both pydantic 1 and 2
             pydantic_cross_compatible=True,
         ),
         # Add our mixins
