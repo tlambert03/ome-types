@@ -10,7 +10,7 @@ from xsdata.formats.dataclass.compat import Dataclasses, class_types
 from xsdata.formats.dataclass.models.elements import XmlType
 from xsdata.models.datatype import XmlDate, XmlDateTime, XmlDuration, XmlPeriod, XmlTime
 
-from xsdata_pydantic_basemodel._pydantic_compat import (
+from xsdata_pydantic_basemodel.pydantic_compat import (
     PYDANTIC2,
     Field,
     dataclass_fields,

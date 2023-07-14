@@ -29,13 +29,17 @@ if PYDANTIC2:
     from pydantic.fields import FieldInfo
     from pydantic_core import PydanticUndefined as Undefined
 
-    def validator(*args: Any, **kwargs: Any) -> Callable[[Callable], Callable]:
-        return field_validator(*args, **kwargs)
-
     def Field(*args: Any, **kwargs: Any) -> Any:
         if "metadata" in kwargs:
             kwargs["json_schema_extra"] = kwargs.pop("metadata")
+        if "regex" in kwargs:
+            kwargs["pattern"] = kwargs.pop("regex")
+        if "min_items" in kwargs:
+            kwargs["min_length"] = kwargs.pop("min_items")
         return _Field(*args, **kwargs)  # type: ignore
+
+    def validator(*args: Any, **kwargs: Any) -> Callable[[Callable], Callable]:
+        return field_validator(*args, **kwargs)
 
     def update_forward_refs(cls: type[M]) -> None:
         try:
@@ -60,9 +64,14 @@ if PYDANTIC2:
         return obj.model_fields_set
 
 else:
-    from pydantic.fields import Field as Field
+    from pydantic.fields import Field as _Field
     from pydantic.fields import ModelField  # type: ignore
     from pydantic.fields import Undefined as Undefined  # type: ignore
+
+    def Field(*args: Any, **kwargs: Any) -> Any:
+        if "metadata" in kwargs:
+            kwargs["json_schema_extra"] = kwargs.pop("metadata")
+        return _Field(*args, **kwargs)  # type: ignore
 
     def update_forward_refs(cls: type[M]) -> None:
         cls.update_forward_refs()
@@ -74,7 +83,10 @@ else:
         return type("Config", (), kwargs)
 
     def _get_metadata(pydantic_field) -> dict:  # type: ignore
-        return pydantic_field.field_info.extra.get("metadata", {})
+        extra = pydantic_field.field_info.extra
+        if "json_schema_extra" in extra:
+            return extra["json_schema_extra"]
+        return extra.get("metadata", {})
 
     def fields_set(obj: BaseModel) -> set[str]:
         return obj.__fields_set__

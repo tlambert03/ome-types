@@ -11,7 +11,7 @@ from xsdata.models.enums import QNames
 from xsdata.utils import collections, namespaces
 from xsdata.utils.constants import EMPTY_MAP, return_input
 
-from xsdata_pydantic_basemodel._pydantic_compat import fields_set
+from xsdata_pydantic_basemodel.pydantic_compat import fields_set
 
 if TYPE_CHECKING:
     from pydantic import BaseModel

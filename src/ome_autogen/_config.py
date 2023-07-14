@@ -6,6 +6,7 @@ from xsdata.utils import text
 
 from ome_autogen._generator import OmeGenerator
 from ome_autogen._util import camel_to_snake
+from xsdata_pydantic_basemodel.config import GeneratorOutput
 
 KindedTypes = "(Shape|ManufacturerSpec|Annotation)"
 
@@ -51,7 +52,7 @@ def get_config(
 
     keep_case = cfg.NameConvention(cfg.NameCase.ORIGINAL, "type")
     return cfg.GeneratorConfig(
-        output=cfg.GeneratorOutput(
+        output=GeneratorOutput(
             package=package,
             # format.value lets us use our own generator
             # kw_only is important, it makes required fields actually be required
@@ -59,6 +60,7 @@ def get_config(
             structure_style=cfg.StructureStyle.CLUSTERS,
             docstring_style=cfg.DocstringStyle.NUMPY,
             compound_fields=cfg.CompoundFields(enabled=compound_fields),
+            pydantic_cross_compatible=True,
         ),
         # Add our mixins
         extensions=cfg.GeneratorExtensions(mixins),
