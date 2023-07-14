@@ -27,10 +27,8 @@ class PydanticBaseGenerator(DataclassGenerator):
 class PydanticBaseFilters(Filters):
     def __init__(self, config: GeneratorConfig):
         super().__init__(config)
-        self.cross_compatible = getattr(
-            config.output, "pydantic_cross_compatible", False
-        )
-        if self.cross_compatible:
+        self.pydantic_support = getattr(config.output, "pydantic_support", False)
+        if self.pydantic_support == "both":
             self.import_patterns["pydantic"].pop("Field")
             self.import_patterns["xsdata_pydantic_basemodel.pydantic_compat"] = {
                 "Field": {" = Field("}
@@ -77,7 +75,13 @@ class PydanticBaseFilters(Filters):
         # The choice to use v1 syntax for cross-compatible mode has to do with
         # https://docs.pydantic.dev/usage/schema/#unenforced-field-constraints
         # There were more fields in v1 than in v2, so "min_length" is degenerate in v2
-        use_v2 = PYDANTIC2 and not self.cross_compatible
+        if self.pydantic_support == "v2":
+            use_v2 = True
+        elif self.pydantic_support == "auto":
+            use_v2 = PYDANTIC2
+        else:  # v1 or both
+            use_v2 = False
+
         restriction_map = V2_RESTRICTION_MAP if use_v2 else V1_RESTRICTION_MAP
 
         metadata: dict = kwargs["metadata"]

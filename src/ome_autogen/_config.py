@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from xsdata.codegen.writer import CodeWriter
 from xsdata.models import config as cfg
 from xsdata.utils import text
@@ -8,20 +10,17 @@ from ome_autogen._generator import OmeGenerator
 from ome_autogen._util import camel_to_snake
 from xsdata_pydantic_basemodel.config import GeneratorOutput
 
-KindedTypes = "(Shape|ManufacturerSpec|Annotation)"
-
-
+PYDANTIC_SUPPORT = os.getenv("PYDANTIC_SUPPORT", "both")
+ALLOW_RESERVED_NAMES = {"type", "Type", "Union"}
+OME_FORMAT = "OME"
 MIXIN_MODULE = "ome_types._mixins"
 MIXINS: list[tuple[str, str, bool]] = [
     (".*", f"{MIXIN_MODULE}._base_type.OMEType", False),  # base type on every class
     ("OME", f"{MIXIN_MODULE}._ome.OMEMixin", True),
     ("Instrument", f"{MIXIN_MODULE}._instrument.InstrumentMixin", False),
     ("Reference", f"{MIXIN_MODULE}._reference.ReferenceMixin", True),
-    (KindedTypes, f"{MIXIN_MODULE}._kinded.KindMixin", True),
+    ("(Shape|ManufacturerSpec|Annotation)", f"{MIXIN_MODULE}._kinded.KindMixin", True),
 ]
-
-ALLOW_RESERVED_NAMES = {"type", "Type", "Union"}
-OME_FORMAT = "OME"
 
 
 def get_config(
@@ -61,7 +60,7 @@ def get_config(
             docstring_style=cfg.DocstringStyle.NUMPY,
             compound_fields=cfg.CompoundFields(enabled=compound_fields),
             # whether to create models that work for both pydantic 1 and 2
-            pydantic_cross_compatible=True,
+            pydantic_support=PYDANTIC_SUPPORT,  # type: ignore
         ),
         # Add our mixins
         extensions=cfg.GeneratorExtensions(mixins),
