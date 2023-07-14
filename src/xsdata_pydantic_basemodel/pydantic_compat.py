@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import MISSING, field
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
-from pydantic import BaseModel, __version__
+from pydantic import BaseModel, version
 
 if TYPE_CHECKING:
     from typing import Iterator, Literal
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 __all__ = ["Field"]
-PYDANTIC2 = __version__.startswith("2")
+PYDANTIC2 = version.VERSION.startswith("2")
 M = TypeVar("M", bound=BaseModel)
 C = TypeVar("C", bound=Callable[..., Any])
 
