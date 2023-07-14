@@ -7,6 +7,8 @@ from xsdata.formats.dataclass.generator import DataclassGenerator
 from xsdata.utils.collections import unique_sequence
 from xsdata.utils.text import stop_words
 
+from xsdata_pydantic_basemodel.pydantic_compat import PYDANTIC2
+
 if TYPE_CHECKING:
     from xsdata.codegen.models import Attr, Class
     from xsdata.models.config import GeneratorConfig, OutputFormat
@@ -23,16 +25,20 @@ class PydanticBaseGenerator(DataclassGenerator):
 
 
 class PydanticBaseFilters(Filters):
+    def __init__(self, config: GeneratorConfig):
+        super().__init__(config)
+        self.pydantic_support = getattr(config.output, "pydantic_support", False)
+        if self.pydantic_support == "both":
+            self.import_patterns["pydantic"].pop("Field")
+            self.import_patterns["xsdata_pydantic_basemodel.pydantic_compat"] = {
+                "Field": {" = Field("}
+            }
+
     @classmethod
     def build_import_patterns(cls) -> dict[str, dict]:
         patterns = Filters.build_import_patterns()
         patterns.update(
-            {
-                "pydantic": {
-                    "Field": [" = Field("],
-                    "BaseModel": ["BaseModel"],
-                }
-            }
+            {"pydantic": {"Field": [" = Field("], "BaseModel": ["BaseModel"]}}
         )
         return {key: patterns[key] for key in sorted(patterns)}
 
@@ -49,7 +55,7 @@ class PydanticBaseFilters(Filters):
 
     def format_arguments(self, kwargs: dict, indent: int = 0) -> str:
         # called by field_definition
-        self.move_metadata_to_pydantic_field(kwargs)
+        self.move_restrictions_to_pydantic_field(kwargs)
         return super().format_arguments(kwargs, indent)
 
     def class_bases(self, obj: Class, class_name: str) -> list[str]:
@@ -58,24 +64,63 @@ class PydanticBaseFilters(Filters):
         bases = super().class_bases(obj, class_name)
         return unique_sequence([*bases, "BaseModel"])
 
-    def move_metadata_to_pydantic_field(self, kwargs: dict, pop: bool = False) -> None:
+    def move_restrictions_to_pydantic_field(
+        self, kwargs: dict, pop: bool = False
+    ) -> None:
         """Move metadata from the metadata dict to the pydantic Field kwargs."""
         # XXX: can we pop them?  or does xsdata need them in the metadata dict as well?
         if "metadata" not in kwargs:  # pragma: no cover
             return
 
+        # The choice to use v1 syntax for cross-compatible mode has to do with
+        # https://docs.pydantic.dev/usage/schema/#unenforced-field-constraints
+        # There were more fields in v1 than in v2, so "min_length" is degenerate in v2
+        if self.pydantic_support == "v2":
+            use_v2 = True
+        elif self.pydantic_support == "auto":
+            use_v2 = PYDANTIC2
+        else:  # v1 or both
+            use_v2 = False
+
+        restriction_map = V2_RESTRICTION_MAP if use_v2 else V1_RESTRICTION_MAP
+
         metadata: dict = kwargs["metadata"]
         getitem = metadata.pop if pop else metadata.get
-        for from_, to_ in [
-            ("min_inclusive", "ge"),
-            ("min_exclusive", "gt"),
-            ("max_inclusive", "le"),
-            ("max_exclusive", "lt"),
-            ("min_occurs", "min_items"),
-            ("max_occurs", "max_items"),
-            ("pattern", "regex"),
-            ("min_length", "min_length"),
-            ("max_length", "max_length"),
-        ]:
+        for from_, to_ in restriction_map.items():
             if from_ in metadata:
                 kwargs[to_] = getitem(from_)
+
+        if use_v2 and "metadata" in kwargs:
+            kwargs["json_schema_extra"] = kwargs.pop("metadata")
+
+
+V1_RESTRICTION_MAP = {
+    "min_occurs": "min_items",  # semantics are different
+    "max_occurs": "max_items",  # semantics are different
+    "min_exclusive": "gt",
+    "min_inclusive": "ge",
+    "max_exclusive": "lt",
+    "max_inclusive": "le",
+    "min_length": "min_length",  # only applies to strings
+    "max_length": "max_length",  # only applies to strings
+    "pattern": "regex",
+    "fraction_digits": "decimal_places",
+    "total_digits": "max_digits",
+    # --- other restrictions that don't have a direct mapping ---
+    # "length": "...",
+    # "white_space": "...",
+    # "explicit_timezone": "...",
+    # "nillable": "...",
+    # "sequence": "...",
+    # "tokens": "...",
+    # "format": "...",
+    # "choice": "...",
+    # "group": "...",
+    # "path": "...",
+}
+V2_RESTRICTION_MAP = {
+    **V1_RESTRICTION_MAP,
+    "min_occurs": "min_length",  # semantics are different
+    "max_occurs": "max_length",  # semantics are different
+    "pattern": "pattern",
+}

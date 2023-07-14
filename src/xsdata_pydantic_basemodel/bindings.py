@@ -11,6 +11,8 @@ from xsdata.models.enums import QNames
 from xsdata.utils import collections, namespaces
 from xsdata.utils.constants import EMPTY_MAP, return_input
 
+from xsdata_pydantic_basemodel.pydantic_compat import fields_set
+
 if TYPE_CHECKING:
     from pydantic import BaseModel
     from xsdata.formats.dataclass.models.elements import XmlMeta
@@ -92,7 +94,7 @@ class XmlSerializer(serializers.XmlSerializer):
 
         for var, value in self.next_value(obj, meta):
             # XXX: reason 2 for overriding.
-            if ignore_unset and var.name not in obj.__fields_set__:
+            if ignore_unset and var.name not in fields_set(obj):
                 continue
             yield from self.write_value(value, var, namespace)
 
@@ -124,7 +126,7 @@ class XmlSerializer(serializers.XmlSerializer):
         :return:
         """
 
-        set_fields = obj.__fields_set__ if ignore_unset else set()
+        set_fields = fields_set(obj) if ignore_unset else set()
         vars_ = meta.get_attribute_vars()
         if attribute_sort_key is not None:
             vars_ = sorted(meta.get_attribute_vars(), key=attribute_sort_key)
@@ -141,7 +143,6 @@ class XmlSerializer(serializers.XmlSerializer):
                     or (ignore_unset and var.name not in set_fields)  # new
                 ):
                     continue
-
                 yield var.qname, cls.encode(value, var)
             else:
                 yield from getattr(obj, var.name, EMPTY_MAP).items()

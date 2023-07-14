@@ -5,6 +5,8 @@ import warnings
 from contextlib import suppress
 from typing import TYPE_CHECKING, Any, cast
 
+from ome_types._pydantic_compat import field_regex
+
 if TYPE_CHECKING:
     from pydantic import BaseModel
     from typing_extensions import Final
@@ -23,10 +25,8 @@ CONVERTED_IDS: dict[tuple[str, str], str] = {}
 def _get_id_name_and_pattern(cls: type[BaseModel]) -> tuple[str, str]:
     # let this raise if it doesn't exist...
     # this should only be used on classes that have an id field
-    id_field = cls.__fields__["id"]
-    id_pattern = cast(str, id_field.field_info.regex)
+    id_pattern = cast(str, field_regex(cls, "id"))
     id_name = id_pattern.split(":")[-3]
-
     return id_name, id_pattern
 
 

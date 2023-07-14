@@ -3,7 +3,7 @@
 that logic is in the `methods` method in ome_autogen/_generator.py
 """
 import warnings
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, List, Sequence
 
 if TYPE_CHECKING:
     from ome_types.model import (  # type: ignore
@@ -31,31 +31,33 @@ def bin_data_root_validator(cls: "BinData", values: dict) -> Dict[str, Any]:
 
 
 # @root_validator(pre=True)
-def pixels_root_validator(cls: "Pixels", values: dict) -> dict:
-    if "metadata_only" in values:
-        if isinstance(values["metadata_only"], bool):
-            if not values["metadata_only"]:
-                values.pop("metadata_only")
+def pixels_root_validator(cls: "Pixels", value: dict) -> dict:
+    if "metadata_only" in value:
+        if isinstance(value["metadata_only"], bool):
+            if not value["metadata_only"]:
+                value.pop("metadata_only")
             else:
                 # type ignore in case the autogeneration hasn't been built
                 from ome_types.model import MetadataOnly  # type: ignore
 
-                values["metadata_only"] = MetadataOnly()
+                value["metadata_only"] = MetadataOnly()
 
-    return values
+    return value
 
 
-# @validator("any_elements", each_item=True)
-def any_elements_validator(cls: "XMLAnnotation.Value", v: Any) -> "AnyElement":
+# @validator("any_elements")
+def any_elements_validator(
+    cls: "XMLAnnotation.Value", v: List[Any]
+) -> List["AnyElement"]:
     # This validator is used because XMLAnnotation.Value.any_elements is
     # annotated as List[object]. So pydantic won't coerce dicts to AnyElement
     # automatically (which is important when constructing OME objects from dicts)
-    if isinstance(v, dict):
-        # this needs to be delayed until runtime because of circular imports
-        from xsdata_pydantic_basemodel.compat import AnyElement
+    if not isinstance(v, Sequence):
+        raise ValueError(f"any_elements must be a sequence, not {type(v)}")
+    # this needs to be delayed until runtime because of circular imports
+    from xsdata_pydantic_basemodel.compat import AnyElement
 
-        return AnyElement(**v)
-    return v
+    return [AnyElement(**v) if isinstance(v, dict) else v for v in v]
 
 
 # @validator('value', pre=True)

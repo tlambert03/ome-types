@@ -48,6 +48,9 @@ def add_quantity_properties(cls: type[BaseModel]) -> None:
     X_quantity property, where X is the name of the field.  It returns a pint object.
     """
     _QUANTITY_FIELD = "{}_quantity"
-    for field in cls.__fields__:
-        if _UNIT_FIELD.format(field) in cls.__fields__:
+    # for some odd reason, cls.model_fields isn't always ready to go yet at this point
+    # only in pydantic2... so use __annotations__ instead
+    field_names = set(cls.__annotations__)
+    for field in field_names:
+        if _UNIT_FIELD.format(field) in field_names:
             setattr(cls, _QUANTITY_FIELD.format(field), _quantity_property(field))

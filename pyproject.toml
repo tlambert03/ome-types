@@ -29,7 +29,8 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-  "pydantic <2.0",
+  "pydantic",
+  "pydantic-extra-types",
   "xsdata >=23.5",                              # 23.6 necessary for codegen, but not for runtime
   "importlib_metadata; python_version < '3.8'",
 ]
