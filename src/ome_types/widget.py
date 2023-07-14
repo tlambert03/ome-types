@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import warnings
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from ome_types.model import OME
@@ -29,7 +30,7 @@ class OMETree(QTreeWidget):
 
     def __init__(
         self,
-        ome_dict: dict | None = None,
+        ome_meta: Path | OME | str | None | dict = None,
         viewer: napari.viewer.Viewer = None,
         parent: QWidget | None = None,
     ) -> None:
@@ -46,8 +47,10 @@ class OMETree(QTreeWidget):
         self.clear()
 
         self._current_path: str | None = None
-        if ome_dict:
-            self.update(ome_dict)
+        if ome_meta:
+            if isinstance(ome_meta, Path):
+                ome_meta = str(ome_meta)
+            self.update(ome_meta)
 
         if viewer is not None:
             viewer.layers.selection.events.active.connect(
