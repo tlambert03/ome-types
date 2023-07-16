@@ -67,6 +67,17 @@ def test_uncapitalized_ns() -> None:
     assert isinstance(ome, model.Detector)
 
 
-def test_weird_input():
+def test_weird_input() -> None:
     with pytest.raises(ValueError, match="Could not parse XML"):
         from_xml("ImageJmetadata")
+
+
+def test_must_be_binary(tmp_path: Path) -> None:
+    xml = tmp_path / "test.xml"
+    xml.write_text('<OME xmlns="http://www.openmicroscopy.org/Schemas/ome/2013-06" />')
+
+    with open(xml, "rb") as fh:
+        assert isinstance(from_xml(fh), model.OME)
+
+    with open(xml) as fh, pytest.raises(TypeError, match="must be opened in binary"):
+        from_xml(fh)  # type: ignore[arg-type]

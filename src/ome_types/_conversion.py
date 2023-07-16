@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from ome_types.model import OME
     from xsdata_pydantic_basemodel.bindings import XmlContext
 
-    XMLSource = Path | str | bytes | io.BytesIO
+    XMLSource = Path | str | bytes | BinaryIO
     FileLike = str | io.BufferedIOBase
     ElementOrTree = ET._Element | ET._ElementTree
 
@@ -503,9 +503,10 @@ def _normalize(source: XMLSource) -> FileLike:
     elif isinstance(source, bytes):
         return io.BytesIO(source)
     elif isinstance(source, io.BufferedIOBase):
-        if "b" not in source.mode:
-            raise ValueError("File must be opened in binary mode")
         return source
+
+    if hasattr(source, "mode") and "b" not in source.mode:
+        raise TypeError("File must be opened in binary mode")
     raise TypeError(f"Unsupported source type {type(source)!r}")  # pragma: no cover
 
 
