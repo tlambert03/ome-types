@@ -120,7 +120,7 @@ class OMEType(BaseModel):
         if extra and warn_extra:
             warnings.warn(
                 f"Unrecognized fields for type {type(self)}: {kwargs - field_names}",
-                stacklevel=2,
+                stacklevel=3,
             )
 
     def __init_subclass__(cls) -> None:
