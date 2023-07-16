@@ -56,6 +56,12 @@ def test_get_root_ome_type() -> None:
     assert isinstance(obj, model.XMLAnnotation)
 
 
-def test_unknown_ns():
+def test_unknown_ns() -> None:
     with pytest.raises(ValueError, match="Unsupported document namespace"):
         from_xml('<Image xmlns="http://unknown.org" />')
+
+
+def test_uncapitalized_ns() -> None:
+    xml = '<Detector xmlns="http://www.openmicroscopy.org/Schemas/ome/2013-06" />'
+    ome = from_xml(xml)
+    assert isinstance(ome, model.Detector)
