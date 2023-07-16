@@ -432,12 +432,21 @@ def ensure_2016(
         If lxml is not installed and a transformation is required.
     """
     normed_source = _normalize(source)
-    ns_in = _get_ns_file(normed_source)
+    try:
+        ns_in = _get_ns_file(normed_source)
+    except Exception as e:
+        raise ValueError(f"Could not parse XML from {source!r}") from e
+
+    # catch rare case of OME-XML with lowercase ome in namespace
+    if "Schemas/ome/" in ns_in:
+        normed_source = _capitalize_ome(normed_source)
+        ns_in = _get_ns_file(normed_source)
+
+    if hasattr(normed_source, "seek"):
+        normed_source.seek(0)
 
     if ns_in == OME_2016_06_URI:
         if as_tree:
-            if hasattr(normed_source, "seek"):
-                normed_source.seek(0)
             return ET.parse(normed_source)
         return normed_source
 
@@ -456,6 +465,20 @@ def ensure_2016(
         return tree if as_tree else io.BytesIO(ET.tostring(tree, encoding="utf-8"))
 
     raise ValueError(f"Unsupported document namespace {ns_in!r}")
+
+
+def _capitalize_ome(source: FileLike) -> FileLike:
+    """Fix OME namespace capitalization errors."""
+    if hasattr(source, "read") and hasattr(source, "seek"):
+        source.seek(0)
+        data = source.read()
+    else:
+        with open(source, "rb") as fh:
+            data = fh.read()
+
+    io_out = io.BytesIO(data.replace(b"Schemas/ome/", b"Schemas/OME/"))
+    io_out.seek(0)
+    return io_out
 
 
 def _normalize(source: XMLSource) -> FileLike:
@@ -480,6 +503,8 @@ def _normalize(source: XMLSource) -> FileLike:
     elif isinstance(source, bytes):
         return io.BytesIO(source)
     elif isinstance(source, io.BufferedIOBase):
+        if "b" not in source.mode:
+            raise ValueError("File must be opened in binary mode")
         return source
     raise TypeError(f"Unsupported source type {type(source)!r}")  # pragma: no cover
 
@@ -513,6 +538,8 @@ def _get_ns_elem(elem: ET._Element | ET._ElementTree) -> str:
 
 def _get_ns_file(source: FileLike) -> str:
     """Get namespace from a file or file-like object."""
+    if hasattr(source, "seek"):
+        source.seek(0)
     _, root = next(ET.iterparse(source, events=("start",)))
     return _get_ns_elem(root)  # type: ignore[arg-type]
 
