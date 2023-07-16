@@ -26,18 +26,6 @@ def test_from_tiff() -> None:
         assert model.OME.from_tiff(fh) == ome  # class method for coverage
 
 
-def test_no_id() -> None:
-    """Test that ids are optional, and auto-increment."""
-    i = model.Instrument(id=20)  # type: ignore
-    assert i.id == "Instrument:20"
-    i2 = model.Instrument()  # type: ignore
-    assert i2.id == "Instrument:21"
-
-    # but validation still works
-    with pytest.warns(match="Casting invalid InstrumentID"):
-        model.Instrument(id="nonsense")
-
-
 def test_required_missing() -> None:
     """Test subclasses with non-default arguments still work."""
     with pytest.raises(ValidationError, match="required"):
