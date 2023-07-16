@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import datetime
 import io
+import sys
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -202,3 +204,18 @@ def test_update_unset(pixels: model.Pixels) -> None:
     assert "CommentAnnotation" in xml
 
     assert from_xml(xml) == ome
+
+
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="transform doesn't work on 3.7")
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+def test_transformations() -> None:
+    from ome_types import etree_fixes
+
+    # should not warn
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        from_xml(DATA / "MMStack.ome.xml", transformations=etree_fixes.ALL_FIXES)
+
+    # SHOULD warn
+    with pytest.warns(match="Casting invalid DetectorID"):
+        from_xml(DATA / "MMStack.ome.xml")

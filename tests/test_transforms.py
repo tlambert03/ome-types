@@ -19,4 +19,4 @@ def test_transform() -> None:
     assert ome.instruments[0].microscope.manufacturer == "OME Insturuments"
 
     with pytest.warns(match="Transformed source"):
-        from_xml(DATA / "2008_instrument.ome.xml", warn_on_transform=True)
+        from_xml(DATA / "2008_instrument.ome.xml", warn_on_schema_update=True)
