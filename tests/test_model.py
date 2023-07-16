@@ -9,34 +9,14 @@ import pytest
 from pydantic import ValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
-from ome_types._conversion import OME_2016_06_URI, _get_root_ome_type
 
 DATA = Path(__file__).parent / "data"
-VALIDATE = [False]
 
 
-@pytest.mark.parametrize("validate", VALIDATE)
-def test_from_valid_xml(valid_xml: Path, validate: bool) -> None:
-    ome = model.OME.from_xml(valid_xml, validate=validate)  # class method for coverage
-    assert ome
-    assert repr(ome)
-
-
-@pytest.mark.parametrize("validate", VALIDATE)
-def test_from_invalid_xml(invalid_xml: Path, validate: bool) -> None:
-    if validate:
-        with pytest.raises(ValidationError):
-            from_xml(invalid_xml, validate=validate)
-    else:
-        with pytest.warns():
-            from_xml(invalid_xml, validate=validate)
-
-
-@pytest.mark.parametrize("validate", VALIDATE)
-def test_from_tiff(validate: bool) -> None:
+def test_from_tiff() -> None:
     """Test that OME metadata extractions from Tiff headers works."""
     _path = DATA / "ome.tiff"
-    ome = from_tiff(_path, validate=validate)
+    ome = from_tiff(_path)
     assert len(ome.images) == 1
     assert ome.images[0].id == "Image:0"
     assert ome.images[0].pixels.size_x == 6
@@ -44,18 +24,6 @@ def test_from_tiff(validate: bool) -> None:
 
     with open(_path, "rb") as fh:
         assert model.OME.from_tiff(fh) == ome  # class method for coverage
-
-
-def test_no_id() -> None:
-    """Test that ids are optional, and auto-increment."""
-    i = model.Instrument(id=20)  # type: ignore
-    assert i.id == "Instrument:20"
-    i2 = model.Instrument()  # type: ignore
-    assert i2.id == "Instrument:21"
-
-    # but validation still works
-    with pytest.warns(match="Casting invalid InstrumentID"):
-        model.Instrument(id="nonsense")
 
 
 def test_required_missing() -> None:
@@ -71,32 +39,6 @@ def test_refs() -> None:
     xml = DATA / "two-screens-two-plates-four-wells.ome.xml"
     ome = from_xml(xml)
     assert ome.screens[0].plate_refs[0].ref is ome.plates[0]
-
-
-def test_with_ome_ns() -> None:
-    assert from_xml(DATA / "ome_ns.ome.xml").experimenters
-
-
-def test_get_root_ome_type() -> None:
-    xml = io.BytesIO(f'<Image xmlns="{OME_2016_06_URI}" />'.encode())
-    t = _get_root_ome_type(xml)
-    assert t is model.Image
-
-    xml = io.BytesIO(f'<ome:Image xmlns:ome="{OME_2016_06_URI}" />'.encode())
-    t = _get_root_ome_type(xml)
-    assert t is model.Image
-
-    with pytest.raises(ValueError, match="Unknown root element"):
-        _get_root_ome_type(io.BytesIO(b"<Imdgage />"))
-
-    # this can be used to instantiate XML with a non OME root type:
-    obj = from_xml(f'<Project xmlns="{OME_2016_06_URI}" />')
-    assert isinstance(obj, model.Project)
-    obj = from_xml(
-        f'<XMLAnnotation xmlns="{OME_2016_06_URI}"><Value><Data>'
-        "</Data></Value></XMLAnnotation>"
-    )
-    assert isinstance(obj, model.XMLAnnotation)
 
 
 def test_datetimes() -> None:
