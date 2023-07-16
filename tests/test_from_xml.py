@@ -65,3 +65,8 @@ def test_uncapitalized_ns() -> None:
     xml = '<Detector xmlns="http://www.openmicroscopy.org/Schemas/ome/2013-06" />'
     ome = from_xml(xml)
     assert isinstance(ome, model.Detector)
+
+
+def test_weird_input():
+    with pytest.raises(ValueError, match="Could not parse XML"):
+        from_xml("ImageJmetadata")
