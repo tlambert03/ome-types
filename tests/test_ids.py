@@ -1,18 +1,22 @@
 import pytest
 
 from ome_types import from_xml
+from ome_types._mixins import _ids
 from ome_types.model import Line, Rectangle
 
 
-def test_shape_ids() -> None:
+def test_shape_ids(monkeypatch: "pytest.MonkeyPatch") -> None:
+    monkeypatch.setattr(_ids, "ID_COUNTER", {})
     rect = Rectangle(x=0, y=0, width=1, height=1)
     line = Line(x1=0, y1=0, x2=1, y2=1)
     assert rect.id == "Shape:0"
     assert line.id == "Shape:1"
 
 
-def test_id_conversion() -> None:
+def test_id_conversion(monkeypatch: "pytest.MonkeyPatch") -> None:
     """When converting ids, we should still be preserving references."""
+    monkeypatch.setattr(_ids, "ID_COUNTER", {})
+
     XML_WITH_BAD_REFS = """<?xml version="1.0" ?>
     <OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">
         <Instrument ID="Microscope">
