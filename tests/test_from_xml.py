@@ -81,3 +81,6 @@ def test_must_be_binary(tmp_path: Path) -> None:
 
     with open(xml) as fh, pytest.raises(TypeError, match="must be opened in binary"):
         from_xml(fh)  # type: ignore[arg-type]
+
+    with pytest.raises(TypeError, match="Unsupported source type"):
+        from_xml(8)  # type: ignore[arg-type]

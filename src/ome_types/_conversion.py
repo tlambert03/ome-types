@@ -507,7 +507,7 @@ def _normalize(source: XMLSource) -> FileLike:
 
     if hasattr(source, "mode") and "b" not in source.mode:
         raise TypeError("File must be opened in binary mode")
-    raise TypeError(f"Unsupported source type {type(source)!r}")  # pragma: no cover
+    raise TypeError(f"Unsupported source type {type(source)!r}")
 
 
 def _apply_xslt(root: ElementOrTree, xslt_path: str | Path) -> _XSLTResultTree:
