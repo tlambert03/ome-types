@@ -455,7 +455,7 @@ def ensure_2016(
 
         return tree if as_tree else io.BytesIO(ET.tostring(tree, encoding="utf-8"))
 
-    raise ValueError(f"Unsupported document namespace {ns!r}")  # pragma: no cover
+    raise ValueError(f"Unsupported document namespace {ns_in!r}")
 
 
 def _normalize(source: XMLSource) -> FileLike:
