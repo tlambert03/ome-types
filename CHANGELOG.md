@@ -1,8 +1,132 @@
 # Changelog
 
-## [0.3.4](https://github.com/tlambert03/ome-types/tree/0.3.4) (2023-04-06)
+## [v0.4.0](https://github.com/tlambert03/ome-types/tree/v0.4.0) (2023-07-16)
 
-[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.3...0.3.4)
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0rc3...v0.4.0)
+
+**Implemented enhancements:**
+
+- feat: catch and fix lowercase 'ome' in schemas [\#209](https://github.com/tlambert03/ome-types/pull/209) ([tlambert03](https://github.com/tlambert03))
+- feat: add transformations to from\_xml [\#208](https://github.com/tlambert03/ome-types/pull/208) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.4.0rc3](https://github.com/tlambert03/ome-types/tree/v0.4.0rc3) (2023-07-14)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0rc2...v0.4.0rc3)
+
+**Implemented enhancements:**
+
+- feat: add back napari plugin [\#207](https://github.com/tlambert03/ome-types/pull/207) ([tlambert03](https://github.com/tlambert03))
+- feat: support pydantic2 [\#205](https://github.com/tlambert03/ome-types/pull/205) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- build: remove pydantic-extra-types dep [\#206](https://github.com/tlambert03/ome-types/pull/206) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.4.0rc2](https://github.com/tlambert03/ome-types/tree/v0.4.0rc2) (2023-07-12)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0rc1...v0.4.0rc2)
+
+**Implemented enhancements:**
+
+- feat: add `numpy_dtype` property to PixelType [\#202](https://github.com/tlambert03/ome-types/pull/202) ([tlambert03](https://github.com/tlambert03))
+- feat: to\_etree\_element [\#201](https://github.com/tlambert03/ome-types/pull/201) ([tlambert03](https://github.com/tlambert03))
+- feat: transform old schema [\#199](https://github.com/tlambert03/ome-types/pull/199) ([tlambert03](https://github.com/tlambert03))
+- feat: add 'kind' field to dict output for various subclasses that are otherwise identical [\#185](https://github.com/tlambert03/ome-types/pull/185) ([tlambert03](https://github.com/tlambert03))
+
+**Fixed bugs:**
+
+- fix: fix missing set values in xml output [\#204](https://github.com/tlambert03/ome-types/pull/204) ([tlambert03](https://github.com/tlambert03))
+
+**Tests & CI:**
+
+- ci: add codspeed benchmarks [\#200](https://github.com/tlambert03/ome-types/pull/200) ([tlambert03](https://github.com/tlambert03))
+- test: test for bad dates [\#198](https://github.com/tlambert03/ome-types/pull/198) ([tlambert03](https://github.com/tlambert03))
+- ci: fixing built branch [\#197](https://github.com/tlambert03/ome-types/pull/197) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- docs: add migration guide for v0.4.0 [\#203](https://github.com/tlambert03/ome-types/pull/203) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.4.0rc1](https://github.com/tlambert03/ome-types/tree/v0.4.0rc1) (2023-07-08)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0a5...v0.4.0rc1)
+
+**Implemented enhancements:**
+
+- feat: complete rewrite, using xsdata instead of xmlschema [\#176](https://github.com/tlambert03/ome-types/pull/176) ([tlambert03](https://github.com/tlambert03))
+
+**Fixed bugs:**
+
+- fix: Move deprecated init kwargs to proper fields [\#194](https://github.com/tlambert03/ome-types/pull/194) ([tlambert03](https://github.com/tlambert03))
+- fix: Fix colors [\#190](https://github.com/tlambert03/ome-types/pull/190) ([tlambert03](https://github.com/tlambert03))
+
+**Tests & CI:**
+
+- ci: coverage changes [\#195](https://github.com/tlambert03/ome-types/pull/195) ([tlambert03](https://github.com/tlambert03))
+- test: rearranging tests [\#192](https://github.com/tlambert03/ome-types/pull/192) ([tlambert03](https://github.com/tlambert03))
+- test: more omero-cli tests [\#191](https://github.com/tlambert03/ome-types/pull/191) ([tlambert03](https://github.com/tlambert03))
+- test: add nd2 test [\#188](https://github.com/tlambert03/ome-types/pull/188) ([tlambert03](https://github.com/tlambert03))
+- test: Omero-cli-transfer test [\#187](https://github.com/tlambert03/ome-types/pull/187) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- build: make pint and lxml optional deps [\#196](https://github.com/tlambert03/ome-types/pull/196) ([tlambert03](https://github.com/tlambert03))
+- docs: updating docs [\#193](https://github.com/tlambert03/ome-types/pull/193) ([tlambert03](https://github.com/tlambert03))
+- build: add back py37 support [\#189](https://github.com/tlambert03/ome-types/pull/189) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.4.0a5](https://github.com/tlambert03/ome-types/tree/v0.4.0a5) (2023-07-06)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0a4...v0.4.0a5)
+
+## [v0.4.0a4](https://github.com/tlambert03/ome-types/tree/v0.4.0a4) (2023-07-05)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0a3...v0.4.0a4)
+
+**Implemented enhancements:**
+
+- feat: better rich\_repr [\#181](https://github.com/tlambert03/ome-types/pull/181) ([tlambert03](https://github.com/tlambert03))
+
+**Fixed bugs:**
+
+- fix: better sequence for structured annotations [\#186](https://github.com/tlambert03/ome-types/pull/186) ([tlambert03](https://github.com/tlambert03))
+- fix: fix metadata only [\#184](https://github.com/tlambert03/ome-types/pull/184) ([tlambert03](https://github.com/tlambert03))
+- fix: use date time instead of xsdata XMLDateTime [\#182](https://github.com/tlambert03/ome-types/pull/182) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.4.0a3](https://github.com/tlambert03/ome-types/tree/v0.4.0a3) (2023-07-04)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0a2...v0.4.0a3)
+
+**Fixed bugs:**
+
+- fix: more robust id conversion [\#180](https://github.com/tlambert03/ome-types/pull/180) ([tlambert03](https://github.com/tlambert03))
+
+**Tests & CI:**
+
+- test: add typing tests [\#178](https://github.com/tlambert03/ome-types/pull/178) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.4.0a2](https://github.com/tlambert03/ome-types/tree/v0.4.0a2) (2023-07-03)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0a1...v0.4.0a2)
+
+**Tests & CI:**
+
+- test: add more tests [\#177](https://github.com/tlambert03/ome-types/pull/177) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.4.0a1](https://github.com/tlambert03/ome-types/tree/v0.4.0a1) (2023-07-02)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/ruff-panic...v0.4.0a1)
+
+**Merged pull requests:**
+
+- ci\(pre-commit.ci\): autoupdate [\#172](https://github.com/tlambert03/ome-types/pull/172) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
+
+## [ruff-panic](https://github.com/tlambert03/ome-types/tree/ruff-panic) (2023-06-20)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.4...ruff-panic)
+
+## [v0.3.4](https://github.com/tlambert03/ome-types/tree/v0.3.4) (2023-04-06)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.3...v0.3.4)
 
 **Implemented enhancements:**
 
