@@ -12,7 +12,11 @@ NSMAP = {"": OME_2016_06_URI, "ome": OME_2016_06_URI}
 
 
 def fix_micro_manager_instrument(tree: AnyElementTree) -> AnyElementTree:
-    """Fix MicroManager Instrument and Detector IDs and References."""
+    """Fix MicroManager Instrument and Detector IDs and References.
+
+    Some versions of OME-XML produced by MicroManager have invalid IDs (and references)
+    for Instruments and Detectors. This function fixes those IDs and references.
+    """
     for i_idx, instrument in enumerate(tree.findall("Instrument", NSMAP)):
         old_id = instrument.get("ID")
         if old_id.startswith("Microscope"):
