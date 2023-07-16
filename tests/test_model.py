@@ -206,13 +206,13 @@ def test_update_unset(pixels: model.Pixels) -> None:
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-def test_transformations():
-    from ome_types import fixes
+def test_transformations() -> None:
+    from ome_types import etree_fixes
 
     # should not warn
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        from_xml(DATA / "MMStack.ome.xml", transformations=fixes.ALL_FIXES)
+        from_xml(DATA / "MMStack.ome.xml", transformations=etree_fixes.ALL_FIXES)
 
     # SHOULD warn
     with pytest.warns(match="Casting invalid DetectorID"):
