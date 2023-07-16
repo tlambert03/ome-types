@@ -5,8 +5,10 @@ from ome_types._mixins import _ids
 from ome_types.model import Line, Rectangle
 
 
-def test_no_id() -> None:
+def test_no_id(monkeypatch: "pytest.MonkeyPatch") -> None:
     """Test that ids are optional, and auto-increment."""
+    monkeypatch.setattr(_ids, "ID_COUNTER", {})
+
     i = model.Instrument(id=20)  # type: ignore
     assert i.id == "Instrument:20"
     i2 = model.Instrument()  # type: ignore
