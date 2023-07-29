@@ -1,3 +1,4 @@
+from contextlib import suppress
 from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, Type, TypeVar
 
 try:
@@ -149,7 +150,5 @@ else:
 
     for type_, val in _validators.items():
         get_schema = _make_get_core_schema(val[0])
-        try:
+        with suppress(TypeError):
             type_.__get_pydantic_core_schema__ = get_schema  # type: ignore
-        except TypeError as e:
-            print(e)
