@@ -1,8 +1,24 @@
 # Changelog
 
+## [v0.4.1](https://github.com/tlambert03/ome-types/tree/v0.4.1) (2023-08-01)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0...v0.4.1)
+
+**Merged pull requests:**
+
+- fix: remove print [\#211](https://github.com/tlambert03/ome-types/pull/211) ([tlambert03](https://github.com/tlambert03))
+
 ## [v0.4.0](https://github.com/tlambert03/ome-types/tree/v0.4.0) (2023-07-16)
 
-[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0rc3...v0.4.0)
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0rc4...v0.4.0)
+
+**Merged pull requests:**
+
+- fix: update stacklevel for deprecation warning [\#210](https://github.com/tlambert03/ome-types/pull/210) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.4.0rc4](https://github.com/tlambert03/ome-types/tree/v0.4.0rc4) (2023-07-16)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0rc3...v0.4.0rc4)
 
 **Implemented enhancements:**
 
@@ -114,15 +130,11 @@
 
 ## [v0.4.0a1](https://github.com/tlambert03/ome-types/tree/v0.4.0a1) (2023-07-02)
 
-[Full Changelog](https://github.com/tlambert03/ome-types/compare/ruff-panic...v0.4.0a1)
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.4...v0.4.0a1)
 
 **Merged pull requests:**
 
 - ci\(pre-commit.ci\): autoupdate [\#172](https://github.com/tlambert03/ome-types/pull/172) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
-
-## [ruff-panic](https://github.com/tlambert03/ome-types/tree/ruff-panic) (2023-06-20)
-
-[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.3.4...ruff-panic)
 
 ## [v0.3.4](https://github.com/tlambert03/ome-types/tree/v0.3.4) (2023-04-06)
 
