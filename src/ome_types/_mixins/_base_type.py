@@ -17,7 +17,7 @@ from typing import (
 )
 
 from pydantic import BaseModel
-from pydantic_compat import PYDANTIC2, PydanticCompatMixin, field_validator
+from pydantic_compat import PydanticCompatMixin, field_validator
 
 from ome_types._mixins._ids import validate_id
 from ome_types._pydantic_compat import field_type, update_set_fields
@@ -31,7 +31,6 @@ if TYPE_CHECKING:
     from pydantic import ConfigDict
 
     from ome_types._conversion import XMLSource
-
 
 T = TypeVar("T", bound="OMEType")
 # Default value to support automatic numbering for id field values.
@@ -71,13 +70,6 @@ def _move_deprecated_fields(data: Dict[str, Any], field_names: Set[str]) -> None
             data[DEPRECATED_NAMES[key]] = data.pop(key)
 
 
-CONFIG: "ConfigDict" = {
-    "arbitrary_types_allowed": True,
-    "validate_assignment": True,
-    "validate_default": True,
-}
-
-
 class OMEType(PydanticCompatMixin, BaseModel):
     """The base class that all OME Types inherit from.
 
@@ -92,10 +84,11 @@ class OMEType(PydanticCompatMixin, BaseModel):
     # pydantic BaseModel configuration.
     # see: https://pydantic-docs.helpmanual.io/usage/model_config/
 
-    if PYDANTIC2:
-        model_config = CONFIG
-    else:
-        Config = type("Config", (), CONFIG)  # type: ignore
+    model_config: ClassVar["ConfigDict"] = {
+        "arbitrary_types_allowed": True,
+        "validate_assignment": True,
+        "validate_default": True,
+    }
 
     # allow use with weakref
     __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
