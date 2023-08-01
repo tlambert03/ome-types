@@ -17,14 +17,13 @@ from typing import (
 )
 
 from pydantic import BaseModel
+from pydantic_compat import PydanticCompatMixin
 
 from ome_types._mixins._ids import validate_id
 from ome_types._pydantic_compat import (
     PYDANTIC2,
     field_type,
     field_validator,
-    model_dump,
-    model_fields,
     update_set_fields,
 )
 
@@ -84,7 +83,7 @@ CONFIG: "ConfigDict" = {
 }
 
 
-class OMEType(BaseModel):
+class OMEType(PydanticCompatMixin, BaseModel):
     """The base class that all OME Types inherit from.
 
     This provides some global conveniences around auto-setting ids. (i.e., making them
@@ -112,7 +111,7 @@ class OMEType(BaseModel):
 
     def __init__(self, **data: Any) -> None:
         warn_extra = data.pop("warn_extra", True)
-        field_names = set(model_fields(self))
+        field_names = set(self.model_fields)
         _move_deprecated_fields(data, field_names)
         super().__init__(**data)
         kwargs = set(data.keys())
@@ -133,7 +132,7 @@ class OMEType(BaseModel):
     def __repr_args__(self) -> Sequence[Tuple[Optional[str], Any]]:
         """Repr with only set values, and truncated sequences."""
         args = []
-        for k, v in model_dump(self, exclude_defaults=True).items():
+        for k, v in self.model_dump(exclude_defaults=True).items():
             if k == "kind":
                 continue
             if isinstance(v, Sequence) and not isinstance(v, str):
@@ -142,7 +141,7 @@ class OMEType(BaseModel):
                 # if this is a sequence with a long repr, just show the length
                 # and type
                 if len(repr(v).split(",")) > 5:
-                    ftype = field_type(model_fields(self)[k])
+                    ftype = field_type(self.model_fields[k])
                     type_name = getattr(field_type, "__name__", str(ftype))
                     v = _RawRepr(f"[<{len(v)} {type_name}>]")
             elif isinstance(v, Enum):

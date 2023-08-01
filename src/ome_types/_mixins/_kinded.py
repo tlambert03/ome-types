@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 from pydantic import BaseModel
+from pydantic_compat import PydanticCompatMixin
 
 from ome_types._pydantic_compat import PYDANTIC2
 
@@ -10,7 +11,7 @@ except ImportError:
     model_serializer = None  # type: ignore
 
 
-class KindMixin(BaseModel):
+class KindMixin(PydanticCompatMixin, BaseModel):
     """This mixin adds a `kind` field to the dict output.
 
     This helps for casting a dict to a specific subclass, when the fields are
