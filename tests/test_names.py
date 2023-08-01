@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, version
 
 import ome_types
 from ome_types import model
-from ome_types._pydantic_compat import PYDANTIC2
 
+PYDANTIC2 = version.VERSION.startswith("2")
 TESTS = Path(__file__).parent
 KNOWN_CHANGES: dict[str, list[tuple[str, str | None]]] = {
     "OME.datasets": [

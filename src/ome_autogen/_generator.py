@@ -86,7 +86,7 @@ IMPORT_PATTERNS.update(
     {
         "ome_types._mixins._util": {"new_uuid": ["default_factory=new_uuid"]},
         "datetime": {"datetime": ["datetime"]},
-        "ome_types._pydantic_compat": {
+        "pydantic_compat": {
             "model_validator": ["model_validator("],
             "field_validator": ["field_validator("],
         },

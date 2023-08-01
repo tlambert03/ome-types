@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, MutableSequence, cast
+from typing import TYPE_CHECKING, Any, MutableSequence, cast
 
 import pydantic.version
 from pydantic import BaseModel
@@ -8,13 +8,8 @@ from pydantic import BaseModel
 if TYPE_CHECKING:
     from pydantic.fields import FieldInfo
 
-PYDANTIC2 = pydantic.version.VERSION.startswith("2")
 
-__all__ = ["model_validator", "field_validator"]
-
-if PYDANTIC2:
-    from pydantic import functional_validators, model_validator
-
+if pydantic.version.VERSION.startswith("2"):
     try:
         from pydantic_extra_types.color import Color as Color
     except ImportError:
@@ -29,15 +24,10 @@ if PYDANTIC2:
             return field_info.json_schema_extra.get("pattern")
         return None
 
-    def field_validator(*args: Any, **kwargs: Any) -> Callable[[Callable], Callable]:
-        kwargs.pop("always", None)
-        return functional_validators.field_validator(*args, **kwargs)
-
     def get_default(f: FieldInfo) -> Any:
         return f.get_default(call_default_factory=True)
 
 else:
-    from pydantic import root_validator, validator  # type: ignore
     from pydantic.color import Color as Color  # type: ignore [no-redef]
 
     def field_type(field: Any) -> Any:  # type: ignore
@@ -46,17 +36,6 @@ else:
     def field_regex(obj: type[BaseModel], field_name: str) -> str | None:
         field = obj.__fields__[field_name]  # type: ignore
         return cast(str, field.field_info.regex)
-
-    def model_validator(**kwargs: Any) -> Callable[[Callable], Callable]:  # type: ignore  # noqa
-        if kwargs.pop("mode", None) == "before":
-            kwargs["pre"] = True
-        return root_validator(**kwargs)
-
-    def field_validator(*fields: str, **kwargs: Any) -> Callable[[Callable], Callable]:  # type: ignore  # noqa
-        if kwargs.pop("mode", None) == "before":
-            kwargs["pre"] = True
-            return validator(*fields, **kwargs)
-        return validator(*fields, **kwargs)
 
     def get_default(f: Any) -> Any:  # type: ignore
         return f.get_default()

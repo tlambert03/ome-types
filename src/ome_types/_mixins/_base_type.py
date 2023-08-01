@@ -17,15 +17,10 @@ from typing import (
 )
 
 from pydantic import BaseModel
-from pydantic_compat import PydanticCompatMixin
+from pydantic_compat import PYDANTIC2, PydanticCompatMixin, field_validator
 
 from ome_types._mixins._ids import validate_id
-from ome_types._pydantic_compat import (
-    PYDANTIC2,
-    field_type,
-    field_validator,
-    update_set_fields,
-)
+from ome_types._pydantic_compat import field_type, update_set_fields
 
 try:
     from ome_types.units import add_quantity_properties
@@ -105,9 +100,7 @@ class OMEType(PydanticCompatMixin, BaseModel):
     # allow use with weakref
     __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
-    _vid = field_validator("id", mode="before", always=True, check_fields=False)(
-        validate_id
-    )
+    _vid = field_validator("id", mode="before", check_fields=False)(validate_id)
 
     def __init__(self, **data: Any) -> None:
         warn_extra = data.pop("warn_extra", True)

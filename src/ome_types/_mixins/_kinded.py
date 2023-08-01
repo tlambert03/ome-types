@@ -3,8 +3,6 @@ from typing import Any, Dict
 from pydantic import BaseModel
 from pydantic_compat import PydanticCompatMixin
 
-from ome_types._pydantic_compat import PYDANTIC2
-
 try:
     from pydantic import model_serializer
 except ImportError:
@@ -27,7 +25,7 @@ class KindMixin(PydanticCompatMixin, BaseModel):
         d["kind"] = self.__class__.__name__.lower()
         return d
 
-    if PYDANTIC2:
+    if model_serializer is not None:
 
         @model_serializer(mode="wrap")
         def serialize_root(self, handler, _info) -> Dict:  # type: ignore
