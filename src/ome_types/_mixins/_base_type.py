@@ -28,8 +28,6 @@ except ImportError:
     add_quantity_properties = lambda cls: None  # noqa: E731
 
 if TYPE_CHECKING:
-    from pydantic import ConfigDict
-
     from ome_types._conversion import XMLSource
 
 T = TypeVar("T", bound="OMEType")
@@ -84,7 +82,7 @@ class OMEType(PydanticCompatMixin, BaseModel):
     # pydantic BaseModel configuration.
     # see: https://pydantic-docs.helpmanual.io/usage/model_config/
 
-    model_config: ClassVar["ConfigDict"] = {
+    model_config: ClassVar[dict] = {  # type: ignore
         "arbitrary_types_allowed": True,
         "validate_assignment": True,
         "validate_default": True,
