@@ -1,10 +1,22 @@
 # Changelog
 
+## [v0.4.2](https://github.com/tlambert03/ome-types/tree/v0.4.2) (2023-08-20)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.1...v0.4.2)
+
+**Fixed bugs:**
+
+- fix: fix import of removed private vendored attr in pydantic [\#215](https://github.com/tlambert03/ome-types/pull/215) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- ci\(pre-commit.ci\): autoupdate [\#212](https://github.com/tlambert03/ome-types/pull/212) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
+
 ## [v0.4.1](https://github.com/tlambert03/ome-types/tree/v0.4.1) (2023-08-01)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0...v0.4.1)
 
-**Merged pull requests:**
+**Fixed bugs:**
 
 - fix: remove print [\#211](https://github.com/tlambert03/ome-types/pull/211) ([tlambert03](https://github.com/tlambert03))
 
@@ -12,7 +24,7 @@
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.0rc4...v0.4.0)
 
-**Merged pull requests:**
+**Fixed bugs:**
 
 - fix: update stacklevel for deprecation warning [\#210](https://github.com/tlambert03/ome-types/pull/210) ([tlambert03](https://github.com/tlambert03))
 
