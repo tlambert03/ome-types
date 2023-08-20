@@ -38,6 +38,7 @@ def test_populate_omero(monkeypatch: MonkeyPatch, full_ome_object: OME) -> None:
         hash="somehash",
         folder="",
         metadata=["md5", "img_id", "plate_id", "timestamp"],
+        merge=False,
     )
     assert conn.method_calls
 

@@ -25,7 +25,7 @@ if PYDANTIC2:
 
     def field_regex(obj: type[BaseModel], field_name: str) -> str | None:
         field_info = obj.model_fields[field_name]
-        if field_info.json_schema_extra:
+        if isinstance(field_info.json_schema_extra, dict):
             return field_info.json_schema_extra.get("pattern")
         return None
 

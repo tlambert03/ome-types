@@ -24,6 +24,7 @@ def imports_autogen(monkeypatch: MonkeyPatch) -> None:
         monkeypatch.syspath_prepend(str(SRC))
 
 
+@pytest.mark.filterwarnings("ignore:Support for class-based::pydantic")
 @pytest.mark.skipif(sys.version_info < (3, 8), reason="docs fail on python3.7")
 @pytest.mark.skipif(not os.getenv("CI"), reason="slow")
 @pytest.mark.usefixtures("imports_autogen")

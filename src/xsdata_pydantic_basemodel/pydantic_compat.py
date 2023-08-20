@@ -54,11 +54,11 @@ if PYDANTIC2:
         yield from obj.model_fields.items()
 
     def _get_metadata(pydantic_field: FieldInfo) -> dict[str, Any]:
-        if pydantic_field.json_schema_extra:
-            metadata = pydantic_field.json_schema_extra
-        else:
-            metadata = {}
-        return metadata
+        return (
+            pydantic_field.json_schema_extra
+            if isinstance(pydantic_field.json_schema_extra, dict)
+            else {}
+        )
 
     def model_config(**kwargs: Any) -> dict | type:
         return kwargs
