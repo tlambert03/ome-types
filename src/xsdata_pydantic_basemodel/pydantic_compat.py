@@ -32,7 +32,7 @@ if PYDANTIC2:
     from pydantic.fields import FieldInfo
     from pydantic_core import PydanticUndefined as Undefined
 
-    def Field(*args: Any, **kwargs: Any) -> Any:  # type: ignore # noqa
+    def Field(*args: Any, **kwargs: Any) -> Any:  # type: ignore
         if "metadata" in kwargs:
             kwargs["json_schema_extra"] = kwargs.pop("metadata")
         if "regex" in kwargs:
