@@ -5,7 +5,11 @@ that logic is in the `methods` method in ome_autogen/_generator.py
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Sequence
 
+import numpy as np
+
 if TYPE_CHECKING:
+    from numpy.typing import DTypeLike
+
     from ome_types.model import (  # type: ignore
         BinData,
         Pixels,
@@ -76,7 +80,7 @@ def xml_value_validator(cls: "XMLAnnotation", v: Any) -> "XMLAnnotation.Value":
     return v
 
 
-def pixel_type_to_numpy_dtype(self: "PixelType") -> str:
+def pixel_type_to_numpy_dtype(self: "PixelType") -> "DTypeLike":
     """Get a numpy dtype string for this pixel type."""
     m = {
         "float": "float32",
@@ -86,3 +90,18 @@ def pixel_type_to_numpy_dtype(self: "PixelType") -> str:
         "bit": "bool",  # ?
     }
     return m.get(self.value, self.value)
+
+
+def numpy_dtype_to_pixel_type(dtype: "DTypeLike") -> "PixelType":
+    """Return the PixelType corresponding to the numpy dtype."""
+    from ome_types.model import PixelType
+
+    _dtype = np.dtype(dtype)
+    m: dict[np.dtype, str] = {
+        np.dtype("float32"): "float",
+        np.dtype("float64"): "double",
+        np.dtype("complex64"): "complex",
+        np.dtype("complex128"): "double-complex",
+        np.dtype("bool"): "bit",
+    }
+    return PixelType(m.get(_dtype, dtype))
