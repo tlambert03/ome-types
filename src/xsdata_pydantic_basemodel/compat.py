@@ -1,5 +1,17 @@
 from contextlib import suppress
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, Type, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 try:
     from lxml import etree as ET
@@ -7,36 +19,20 @@ except ImportError:
     import xml.etree.ElementTree as ET  # type: ignore
 
 from pydantic import BaseModel, validators
+from pydantic_compat import PYDANTIC2, PydanticCompatMixin
 from xsdata.formats.dataclass.compat import Dataclasses, class_types
 from xsdata.formats.dataclass.models.elements import XmlType
 from xsdata.models.datatype import XmlDate, XmlDateTime, XmlDuration, XmlPeriod, XmlTime
 
-from xsdata_pydantic_basemodel.pydantic_compat import (
-    PYDANTIC2,
-    Field,
-    dataclass_fields,
-    model_config,
-    update_forward_refs,
-)
+from xsdata_pydantic_basemodel.pydantic_compat import Field, dataclass_fields
 
 T = TypeVar("T", bound=object)
 
-
-# don't switch to exclude ... it makes it hard to add fields to the
-# schema without breaking backwards compatibility
-_config = model_config(arbitrary_types_allowed=True)
+if TYPE_CHECKING:
+    from pydantic import ConfigDict
 
 
-class _BaseModel(BaseModel):
-    """Base model for all types."""
-
-    if PYDANTIC2:
-        model_config = _config  # type: ignore
-    else:
-        Config = _config  # type: ignore
-
-
-class AnyElement(BaseModel):
+class AnyElement(PydanticCompatMixin, BaseModel):
     """Generic model to bind xml document data to wildcard fields.
 
     :param qname: The element's qualified name
@@ -56,10 +52,7 @@ class AnyElement(BaseModel):
         default_factory=dict, metadata={"type": XmlType.ATTRIBUTES}
     )
 
-    if PYDANTIC2:
-        model_config = _config  # type: ignore
-    else:
-        Config = _config  # type: ignore
+    model_config: ClassVar["ConfigDict"] = {"arbitrary_types_allowed": True}
 
     def to_etree_element(self) -> "ET._Element":
         elem = ET.Element(self.qname or "", self.attributes)
@@ -70,7 +63,7 @@ class AnyElement(BaseModel):
         return elem
 
 
-class DerivedElement(BaseModel, Generic[T]):
+class DerivedElement(PydanticCompatMixin, BaseModel, Generic[T]):
     """Generic model wrapper for type substituted elements.
 
     Example: eg. <b xsi:type="a">...</b>
@@ -84,10 +77,7 @@ class DerivedElement(BaseModel, Generic[T]):
     value: T
     type: Optional[str] = None
 
-    if PYDANTIC2:
-        model_config = _config  # type: ignore
-    else:
-        Config = _config  # type: ignore
+    model_config: ClassVar["ConfigDict"] = {"arbitrary_types_allowed": True}
 
 
 class PydanticBaseModel(Dataclasses):
@@ -101,8 +91,10 @@ class PydanticBaseModel(Dataclasses):
 
     def is_model(self, obj: Any) -> bool:
         clazz = obj if isinstance(obj, type) else type(obj)
-        if issubclass(clazz, BaseModel):
-            update_forward_refs(clazz)
+        if issubclass(clazz, BaseModel) and clazz != BaseModel:
+            rebuild = getattr(clazz, "model_rebuild", None)
+            if callable(rebuild):
+                rebuild()
             return True
 
         return False

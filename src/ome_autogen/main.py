@@ -24,6 +24,7 @@ RUFF_IGNORE: list[str] = [
     "D404",  # First word of the docstring should not be This
     "E501",  # Line too long
     "S105",  # Possible hardcoded password
+    "RUF002",  # ambiguous-unicode-character-docstring
 ]
 
 

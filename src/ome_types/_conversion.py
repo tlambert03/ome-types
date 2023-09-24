@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Callable, Iterable, cast, overload
 from pydantic import BaseModel
 from xsdata.formats.dataclass.parsers.config import ParserConfig
 
-from ome_types._pydantic_compat import model_dump
 from xsdata_pydantic_basemodel.bindings import (
     SerializerConfig,
     XmlParser,
@@ -227,7 +226,7 @@ def to_dict(source: OME | XMLSource) -> dict[str, Any]:
         A dictionary representation of the OME object or XML document.
     """
     if isinstance(source, BaseModel):
-        return model_dump(source, exclude_defaults=True)
+        return source.model_dump(exclude_defaults=True)
 
     return from_xml(  # type: ignore[return-value]
         source,
