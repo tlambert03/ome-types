@@ -16,17 +16,10 @@ from typing import (
     cast,
 )
 
-from pydantic import BaseModel
+from pydantic_compat import PYDANTIC2, BaseModel, field_validator
 
 from ome_types._mixins._ids import validate_id
-from ome_types._pydantic_compat import (
-    PYDANTIC2,
-    field_type,
-    field_validator,
-    model_dump,
-    model_fields,
-    update_set_fields,
-)
+from ome_types._pydantic_compat import field_type, update_set_fields
 
 try:
     from ome_types.units import add_quantity_properties
@@ -34,10 +27,7 @@ except ImportError:
     add_quantity_properties = lambda cls: None  # noqa: E731
 
 if TYPE_CHECKING:
-    from pydantic import ConfigDict
-
     from ome_types._conversion import XMLSource
-
 
 T = TypeVar("T", bound="OMEType")
 # Default value to support automatic numbering for id field values.
@@ -77,13 +67,6 @@ def _move_deprecated_fields(data: Dict[str, Any], field_names: Set[str]) -> None
             data[DEPRECATED_NAMES[key]] = data.pop(key)
 
 
-CONFIG: "ConfigDict" = {
-    "arbitrary_types_allowed": True,
-    "validate_assignment": True,
-    "validate_default": True,
-}
-
-
 class OMEType(BaseModel):
     """The base class that all OME Types inherit from.
 
@@ -98,21 +81,21 @@ class OMEType(BaseModel):
     # pydantic BaseModel configuration.
     # see: https://pydantic-docs.helpmanual.io/usage/model_config/
 
-    if PYDANTIC2:
-        model_config = CONFIG
-    else:
-        Config = type("Config", (), CONFIG)  # type: ignore
+    model_config: ClassVar[dict] = {  # type: ignore
+        "arbitrary_types_allowed": True,
+        "validate_assignment": True,
+        "validate_default": True,
+    }
 
     # allow use with weakref
-    __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
+    if not PYDANTIC2:
+        __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
-    _vid = field_validator("id", mode="before", always=True, check_fields=False)(
-        validate_id
-    )
+    _vid = field_validator("id", mode="before", check_fields=False)(validate_id)
 
     def __init__(self, **data: Any) -> None:
         warn_extra = data.pop("warn_extra", True)
-        field_names = set(model_fields(self))
+        field_names = set(self.model_fields)
         _move_deprecated_fields(data, field_names)
         super().__init__(**data)
         kwargs = set(data.keys())
@@ -133,7 +116,7 @@ class OMEType(BaseModel):
     def __repr_args__(self) -> Sequence[Tuple[Optional[str], Any]]:
         """Repr with only set values, and truncated sequences."""
         args = []
-        for k, v in model_dump(self, exclude_defaults=True).items():
+        for k, v in self.model_dump(exclude_defaults=True).items():
             if k == "kind":
                 continue
             if isinstance(v, Sequence) and not isinstance(v, str):
@@ -142,7 +125,7 @@ class OMEType(BaseModel):
                 # if this is a sequence with a long repr, just show the length
                 # and type
                 if len(repr(v).split(",")) > 5:
-                    ftype = field_type(model_fields(self)[k])
+                    ftype = field_type(self.model_fields[k])
                     type_name = getattr(field_type, "__name__", str(ftype))
                     v = _RawRepr(f"[<{len(v)} {type_name}>]")
             elif isinstance(v, Enum):

@@ -1,8 +1,6 @@
 from typing import Any, Dict
 
-from pydantic import BaseModel
-
-from ome_types._pydantic_compat import PYDANTIC2
+from pydantic_compat import BaseModel
 
 try:
     from pydantic import model_serializer
@@ -26,7 +24,7 @@ class KindMixin(BaseModel):
         d["kind"] = self.__class__.__name__.lower()
         return d
 
-    if PYDANTIC2:
+    if model_serializer is not None:
 
         @model_serializer(mode="wrap")
         def serialize_root(self, handler, _info) -> Dict:  # type: ignore
