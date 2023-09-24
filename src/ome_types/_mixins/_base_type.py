@@ -16,7 +16,7 @@ from typing import (
     cast,
 )
 
-from pydantic_compat import BaseModel, field_validator
+from pydantic_compat import PYDANTIC2, BaseModel, field_validator
 
 from ome_types._mixins._ids import validate_id
 from ome_types._pydantic_compat import field_type, update_set_fields
@@ -86,6 +86,10 @@ class OMEType(BaseModel):
         "validate_assignment": True,
         "validate_default": True,
     }
+
+    # allow use with weakref
+    if not PYDANTIC2:
+        __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
     _vid = field_validator("id", mode="before", check_fields=False)(validate_id)
 
