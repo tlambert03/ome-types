@@ -102,7 +102,7 @@ def ome_image(
     dtype: npt.DTypeLike,
     axes: Sequence[str] = "",
     *,
-    channels: Sequence[ChannelKwargs] | ChannelTable = (),
+    channels: Sequence[m.Channel] | Sequence[ChannelKwargs] | ChannelTable = (),
     planes: Sequence[PlaneKwargs] | PlaneTable = (),
     **img_kwargs: Unpack[ImagePixelsKwargs],
 ) -> m.Image:
@@ -211,7 +211,7 @@ def _determine_axes(
 
 
 def ome_channels(
-    channels: Sequence[ChannelKwargs] | ChannelTable = (),
+    channels: Sequence[m.Channel] | Sequence[ChannelKwargs] | ChannelTable = (),
     max_channels: int | None = None,
     samples_per_pixel: int = 1,
 ) -> list[m.Channel]:
@@ -229,15 +229,15 @@ def ome_channels(
     # TODO: should we warn if too many channels are provided?
     channels = channels[:max_channels]
 
-    return [
-        m.Channel(
-            **{
-                **_convert_keys_to_snake_case(channel),
-                "samples_per_pixel": samples_per_pixel,
-            }
-        )
-        for channel in channels
-    ]
+    channel_list: list[m.Channel] = []
+    for channel in channels[:max_channels]:
+        if isinstance(channel, m.Channel):
+            kwargs: dict = channel.dict()
+        else:
+            kwargs = _convert_keys_to_snake_case(channel)
+        kwargs["samples_per_pixel"] = samples_per_pixel
+        channel_list.append(m.Channel(**kwargs))
+    return channel_list
 
 
 def ome_planes(
@@ -281,7 +281,7 @@ def _dol2lod(dol: Mapping[str, Any], max_items: int | None = None) -> list[dict]
     return [dict(zip(dol, v)) for v in val_zip]
 
 
-def _convert_keys_to_snake_case(d: Mapping[str, Vt]) -> Mapping[str, Vt]:
+def _convert_keys_to_snake_case(d: Mapping[str, Vt]) -> dict[str, Vt]:
     from ome_types._conversion import camel_to_snake
 
     return {camel_to_snake(k): v for k, v in d.items()}
