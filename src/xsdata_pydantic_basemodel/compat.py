@@ -92,7 +92,9 @@ class PydanticBaseModel(Dataclasses):
     def is_model(self, obj: Any) -> bool:
         clazz = obj if isinstance(obj, type) else type(obj)
         if issubclass(clazz, BaseModel) and clazz != BaseModel:
-            clazz.model_rebuild()
+            rebuild = getattr(clazz, "model_rebuild", None)
+            if callable(rebuild):
+                rebuild()
             return True
 
         return False
