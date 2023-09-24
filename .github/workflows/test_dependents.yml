@@ -15,11 +15,11 @@ jobs:
     name: test aicsimageio
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: AllenCellModeling/aicsimageio
           submodules: true
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: ome-types
           fetch-depth: 0
@@ -63,7 +63,7 @@ jobs:
     env:
       QUPATH_VERSION: 0.4.3
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -97,11 +97,11 @@ jobs:
     name: test nd2
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: tlambert03/nd2
           fetch-depth: 0
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: ome-types
           fetch-depth: 0
@@ -139,7 +139,7 @@ jobs:
     name: test omero-cli-transfer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v4
         with:

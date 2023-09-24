@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import MISSING, field
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from pydantic import BaseModel, version
 
@@ -22,7 +22,7 @@ if PYDANTIC2:
     from pydantic.fields import FieldInfo
     from pydantic_core import PydanticUndefined as Undefined
 
-    def Field(*args: Any, **kwargs: Any) -> Any:  # type: ignore # noqa
+    def Field(*args: Any, **kwargs: Any) -> Any:  # type: ignore
         if "metadata" in kwargs:
             kwargs["json_schema_extra"] = kwargs.pop("metadata")
         if "regex" in kwargs:
@@ -32,11 +32,11 @@ if PYDANTIC2:
         return _Field(*args, **kwargs)  # type: ignore
 
     def _get_metadata(pydantic_field: FieldInfo) -> dict[str, Any]:
-        if pydantic_field.json_schema_extra:
-            metadata = pydantic_field.json_schema_extra
-        else:
-            metadata = {}
-        return cast("dict", metadata)
+        return (
+            pydantic_field.json_schema_extra
+            if isinstance(pydantic_field.json_schema_extra, dict)
+            else {}
+        )
 
 else:
     from pydantic.fields import Field as _Field
