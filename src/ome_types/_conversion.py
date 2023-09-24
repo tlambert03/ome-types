@@ -586,3 +586,20 @@ def _get_root_ome_type(xml: FileLike | AnyElementTree) -> type[OMEType]:
         return getattr(model, localname)
     except AttributeError:
         raise ValueError(f"Unknown root element {localname!r}") from None
+
+
+def camel_to_snake(name: str) -> str:
+    """Variant of camel_to_snake that preserves adjacent uppercase letters.
+
+    https://stackoverflow.com/a/1176023
+
+    Note: this function also exists in ome_autogen._util, but we shouldn't import
+    anything from that module at runtime, so we duplicate it here.
+    """
+    import re
+
+    name = name.lstrip("@")  # remove leading @ from "@any_element"
+    result = re.sub("([A-Z]+)([A-Z][a-z]+)", r"\1_\2", name)
+    result = re.sub("([a-z0-9])([A-Z])", r"\1_\2", result)
+    result = result.lower().replace(" ", "_")
+    return result

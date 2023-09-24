@@ -80,28 +80,25 @@ def xml_value_validator(cls: "XMLAnnotation", v: Any) -> "XMLAnnotation.Value":
     return v
 
 
+# maps OME PixelType names to numpy dtype names
+NP_DTYPE_MAP: dict[str, str] = {
+    "float": "float32",
+    "double": "float64",
+    "complex": "complex64",
+    "double-complex": "complex128",
+    "bit": "bool",  # ?
+}
+REV_NP_DTYPE_MAP: dict[str, str] = {v: k for k, v in NP_DTYPE_MAP.items()}
+
+
 def pixel_type_to_numpy_dtype(self: "PixelType") -> "DTypeLike":
     """Get a numpy dtype string for this pixel type."""
-    m = {
-        "float": "float32",
-        "double": "float64",
-        "complex": "complex64",
-        "double-complex": "complex128",
-        "bit": "bool",  # ?
-    }
-    return m.get(self.value, self.value)
+    return NP_DTYPE_MAP.get(self.value, self.value)
 
 
 def numpy_dtype_to_pixel_type(dtype: "DTypeLike") -> "PixelType":
     """Return the PixelType corresponding to the numpy dtype."""
     from ome_types.model import PixelType
 
-    _dtype = np.dtype(dtype)
-    m: dict[np.dtype, str] = {
-        np.dtype("float32"): "float",
-        np.dtype("float64"): "double",
-        np.dtype("complex64"): "complex",
-        np.dtype("complex128"): "double-complex",
-        np.dtype("bool"): "bit",
-    }
-    return PixelType(m.get(_dtype, dtype))
+    _dtype = np.dtype(dtype).name
+    return PixelType(value=REV_NP_DTYPE_MAP.get(_dtype, _dtype))
