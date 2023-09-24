@@ -65,7 +65,7 @@ test = [
   "pytest-cov",
   "pytest-mypy-plugins",
   "pytest",
-  "xmlschema",
+  "xmlschema <2.5",  # FIXME: determine why
 ]
 test-qt = ["qtpy", "pytest-qt"]
 
