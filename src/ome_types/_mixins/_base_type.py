@@ -16,8 +16,7 @@ from typing import (
     cast,
 )
 
-from pydantic import BaseModel
-from pydantic_compat import PydanticCompatMixin, field_validator
+from pydantic_compat import BaseModel, field_validator
 
 from ome_types._mixins._ids import validate_id
 from ome_types._pydantic_compat import field_type, update_set_fields
@@ -68,7 +67,7 @@ def _move_deprecated_fields(data: Dict[str, Any], field_names: Set[str]) -> None
             data[DEPRECATED_NAMES[key]] = data.pop(key)
 
 
-class OMEType(PydanticCompatMixin, BaseModel):
+class OMEType(BaseModel):
     """The base class that all OME Types inherit from.
 
     This provides some global conveniences around auto-setting ids. (i.e., making them
@@ -87,9 +86,6 @@ class OMEType(PydanticCompatMixin, BaseModel):
         "validate_assignment": True,
         "validate_default": True,
     }
-
-    # allow use with weakref
-    __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
 
     _vid = field_validator("id", mode="before", check_fields=False)(validate_id)
 
