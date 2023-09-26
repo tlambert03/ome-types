@@ -20,21 +20,23 @@ import math
 import re
 import sys
 from colorsys import hls_to_rgb, rgb_to_hls
-from typing import Any, Callable, Tuple, Union, cast
+from typing import Any, Callable, Tuple, Union, cast, TYPE_CHECKING
+import typing
 
 if sys.version_info >= (3, 8):  # pragma: no cover
     from typing import Literal
 else:  # pragma: no cover
     from typing_extensions import Literal
 
-from pydantic import GetJsonSchemaHandler
-from pydantic._internal import _repr
-from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema, PydanticCustomError, core_schema
 
 ColorTuple = Union[Tuple[int, int, int], Tuple[int, int, int, float]]
 ColorType = Union[ColorTuple, str, "Color"]
 HslColorTuple = Union[Tuple[float, float, float], Tuple[float, float, float, float]]
+
+if TYPE_CHECKING:
+    from pydantic import GetJsonSchemaHandler
+    from pydantic.json_schema import JsonSchemaValue
 
 
 class RGBA:
@@ -82,7 +84,68 @@ repeat_colors = {int(c * 2, 16) for c in "0123456789abcdef"}
 rads = 2 * math.pi
 
 
-class Color(_repr.Representation):
+class Representation:
+    # Mixin to provide `__str__`, `__repr__`, and `__pretty__` and `__rich_repr__` methods.
+    # `__pretty__` is used by [devtools](https://python-devtools.helpmanual.io/).
+    # `__rich_repr__` is used by [rich](https://rich.readthedocs.io/en/stable/pretty.html).
+    # (this is not a docstring to avoid adding a docstring to classes which inherit from Representation)
+
+    # we don't want to use a type annotation here as it can break get_type_hints
+    __slots__ = tuple()  # type: typing.Collection[str]
+
+    def __repr_args__(self) -> Any:
+        """Returns the attributes to show in __str__, __repr__, and __pretty__ this is generally overridden.
+
+        Can either return:
+        * name - value pairs, e.g.: `[('foo_name', 'foo'), ('bar_name', ['b', 'a', 'r'])]`
+        * or, just values, e.g.: `[(None, 'foo'), (None, ['b', 'a', 'r'])]`
+        """
+        attrs_names = self.__slots__
+        if not attrs_names and hasattr(self, "__dict__"):
+            attrs_names = self.__dict__.keys()
+        attrs = ((s, getattr(self, s)) for s in attrs_names)
+        return [(a, v) for a, v in attrs if v is not None]
+
+    def __repr_name__(self) -> str:
+        """Name of the instance's class, used in __repr__."""
+        return self.__class__.__name__
+
+    def __repr_str__(self, join_str: str) -> str:
+        return join_str.join(
+            repr(v) if a is None else f"{a}={v!r}" for a, v in self.__repr_args__()
+        )
+
+    def __pretty__(
+        self, fmt: typing.Callable[[Any], Any], **kwargs: Any
+    ) -> typing.Generator[Any, None, None]:
+        """Used by devtools (https://python-devtools.helpmanual.io/) to pretty print objects."""
+        yield self.__repr_name__() + "("
+        yield 1
+        for name, value in self.__repr_args__():
+            if name is not None:
+                yield name + "="
+            yield fmt(value)
+            yield ","
+            yield 0
+        yield -1
+        yield ")"
+
+    def __rich_repr__(self) -> Any:
+        """Used by Rich (https://rich.readthedocs.io/en/stable/pretty.html) to pretty print objects."""
+        for name, field_repr in self.__repr_args__():
+            if name is None:
+                yield field_repr
+            else:
+                yield name, field_repr
+
+    def __str__(self) -> str:
+        return self.__repr_str__(" ")
+
+    def __repr__(self) -> str:
+        return f'{self.__repr_name__()}({self.__repr_str__(", ")})'
+
+
+class Color(Representation):
     """
     Represents a color.
     """
@@ -271,7 +334,7 @@ class Color(_repr.Representation):
     def __str__(self) -> str:
         return self.as_named(fallback=True)
 
-    def __repr_args__(self) -> _repr.ReprArgs:
+    def __repr_args__(self) -> Any:
         return [(None, self.as_named(fallback=True))] + [("rgb", self.as_rgb_tuple())]
 
     def __eq__(self, other: Any) -> bool:
