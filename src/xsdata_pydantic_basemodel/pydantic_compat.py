@@ -1,35 +1,22 @@
 from __future__ import annotations
 
 from dataclasses import MISSING, field
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Iterator, TypeVar
 
-from pydantic import BaseModel, version
+from pydantic_compat import PYDANTIC2, Field
+
+__all__ = ["Field", "PYDANTIC2"]
 
 if TYPE_CHECKING:
-    from typing import Iterator
+    from pydantic import BaseModel
 
-    from pydantic import Field
-
-
-__all__ = ["Field"]
-PYDANTIC2 = version.VERSION.startswith("2")
-M = TypeVar("M", bound=BaseModel)
-C = TypeVar("C", bound=Callable[..., Any])
+    M = TypeVar("M", bound=BaseModel)
+    C = TypeVar("C", bound=Callable[..., Any])
 
 
 if PYDANTIC2:
-    from pydantic.fields import Field as _Field
     from pydantic.fields import FieldInfo
     from pydantic_core import PydanticUndefined as Undefined
-
-    def Field(*args: Any, **kwargs: Any) -> Any:  # type: ignore
-        if "metadata" in kwargs:
-            kwargs["json_schema_extra"] = kwargs.pop("metadata")
-        if "regex" in kwargs:
-            kwargs["pattern"] = kwargs.pop("regex")
-        if "min_items" in kwargs:
-            kwargs["min_length"] = kwargs.pop("min_items")
-        return _Field(*args, **kwargs)  # type: ignore
 
     def _get_metadata(pydantic_field: FieldInfo) -> dict[str, Any]:
         return (
@@ -39,13 +26,7 @@ if PYDANTIC2:
         )
 
 else:
-    from pydantic.fields import Field as _Field
     from pydantic.fields import Undefined as Undefined  # type: ignore
-
-    def Field(*args: Any, **kwargs: Any) -> Any:  # type: ignore
-        if "metadata" in kwargs:
-            kwargs["json_schema_extra"] = kwargs.pop("metadata")
-        return _Field(*args, **kwargs)  # type: ignore
 
     def _get_metadata(pydantic_field) -> dict:  # type: ignore
         extra = pydantic_field.field_info.extra
@@ -74,16 +55,9 @@ def _pydantic_field_to_dataclass_field(name: str, pydantic_field: FieldInfo) -> 
     metadata = _get_metadata(pydantic_field)
 
     dataclass_field = field(  # type: ignore
-        default=default,
-        default_factory=default_factory,
-        # init=True,
-        # hash=None,
-        # compare=True,
-        metadata=metadata,
-        # kw_only=MISSING,
+        default=default, default_factory=default_factory, metadata=metadata
     )
     dataclass_field.name = name
-    # dataclass_field.type = pydantic_field.type_
     return dataclass_field
 
 
