@@ -1,9 +1,15 @@
 """
+Vendored from
+https://github.com/pydantic/pydantic-extra-types/blob/0c42c50c9d8c6ee77b7e9fd3ca437856b2305eb0/pydantic_extra_types/color.py
+The MIT License (MIT)
+
+Copyright (c) 2023 Samuel Colvin and other contributors
+
+
 Color definitions are used as per the CSS3
 [CSS Color Module Level 3](http://www.w3.org/TR/css3-color/#svg-color) specification.
 
-A few colors have multiple names referring to the sames colors, eg. `grey` and `gray`
-or `aqua` and `cyan`.
+A few colors have multiple names referring to the sames colors, eg. `grey` and `gray` or `aqua` and `cyan`.
 
 In these cases the _last_ color when sorted alphabetically takes preferences,
 eg. `Color((0, 255, 255)).as_named() == 'cyan'` because "cyan" comes after "aqua".
@@ -12,18 +18,15 @@ from __future__ import annotations
 
 import math
 import re
+import sys
 from colorsys import hls_to_rgb, rgb_to_hls
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Generator,
-    Iterable,
-    Tuple,
-    Union,
-    cast,
-    Collection,
-)
+from typing import Any, Callable, Tuple, Union, cast, TYPE_CHECKING
+import typing
+
+if sys.version_info >= (3, 8):  # pragma: no cover
+    from typing import Literal
+else:  # pragma: no cover
+    from typing_extensions import Literal
 
 from pydantic_core import CoreSchema, PydanticCustomError, core_schema
 
@@ -88,7 +91,7 @@ class Representation:
     # (this is not a docstring to avoid adding a docstring to classes which inherit from Representation)
 
     # we don't want to use a type annotation here as it can break get_type_hints
-    __slots__ = ()  # type: Collection[str]
+    __slots__ = tuple()  # type: typing.Collection[str]
 
     def __repr_args__(self) -> Any:
         """Returns the attributes to show in __str__, __repr__, and __pretty__ this is generally overridden.
@@ -113,14 +116,14 @@ class Representation:
         )
 
     def __pretty__(
-        self, fmt: Callable[[Any], Any], **kwargs: Any
-    ) -> Generator[Any, None, None]:
+        self, fmt: typing.Callable[[Any], Any], **kwargs: Any
+    ) -> typing.Generator[Any, None, None]:
         """Used by devtools (https://python-devtools.helpmanual.io/) to pretty print objects."""
-        yield f"{self.__repr_name__()}("
+        yield self.__repr_name__() + "("
         yield 1
         for name, value in self.__repr_args__():
             if name is not None:
-                yield f"{name}="
+                yield name + "="
             yield fmt(value)
             yield ","
             yield 0
@@ -211,7 +214,7 @@ class Color(Representation):
         else:
             return self.as_hex()
 
-    def as_hex(self) -> str:
+    def as_hex(self, format: Literal["short", "long"] = "short") -> str:
         """Returns the hexadecimal representation of the color.
 
         Hex string representing the color can be 3, 4, 6, or 8 characters depending on whether the string
@@ -225,7 +228,7 @@ class Color(Representation):
             values.append(float_to_255(self._rgba.alpha))
 
         as_hex = "".join(f"{v:02x}" for v in values)
-        if all(c in repeat_colors for c in values):
+        if format == "short" and all(c in repeat_colors for c in values):
             as_hex = "".join(as_hex[c] for c in range(0, len(as_hex), 2))
         return "#" + as_hex
 
@@ -316,6 +319,10 @@ class Color(Representation):
     def __get_pydantic_core_schema__(
         cls, source: type[Any], handler: Callable[[Any], CoreSchema]
     ) -> core_schema.CoreSchema:
+        if hasattr(core_schema, "with_info_plain_validator_function"):
+            return core_schema.with_info_plain_validator_function(
+                cls._validate, serialization=core_schema.to_string_ser_schema()
+            )
         return core_schema.general_plain_validator_function(
             cls._validate, serialization=core_schema.to_string_ser_schema()
         )
@@ -327,7 +334,7 @@ class Color(Representation):
     def __str__(self) -> str:
         return self.as_named(fallback=True)
 
-    def __repr_args__(self) -> Iterable[tuple[str | None, Any]]:
+    def __repr_args__(self) -> Any:
         return [(None, self.as_named(fallback=True))] + [("rgb", self.as_rgb_tuple())]
 
     def __eq__(self, other: Any) -> bool:
@@ -485,11 +492,6 @@ def parse_color_value(value: int | str, max_val: int = 255) -> float:
         )
 
 
-def almost_equal_floats(value_1: float, value_2: float, *, delta: float = 1e-8) -> bool:
-    """Return True if two floats are almost equal."""
-    return abs(value_1 - value_2) <= delta
-
-
 def parse_float_alpha(value: None | str | float | int) -> float | None:
     """
     Parse an alpha value checking it's a valid float in the range 0 to 1.
@@ -516,7 +518,7 @@ def parse_float_alpha(value: None | str | float | int) -> float | None:
             "value is not a valid color: alpha values must be a valid float",
         )
 
-    if almost_equal_floats(alpha, 1):
+    if math.isclose(alpha, 1):
         return None
     elif 0 <= alpha <= 1:
         return alpha
@@ -567,11 +569,8 @@ def float_to_255(c: float) -> int:
 
     Returns:
         The integer equivalent of the given float value rounded to the nearest whole number.
-
-    Raises:
-        ValueError: If the given float value is outside the acceptable range of 0 to 1 (inclusive).
     """
-    return int(round(c * 255))
+    return round(c * 255)
 
 
 COLORS_BY_NAME = {
