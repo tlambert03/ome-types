@@ -1,4 +1,9 @@
 """
+vendored from https://github.com/pydantic/pydantic/blob/c04e8e2816b10024477a7fa3629cf791395d65ee/pydantic/v1/color.py
+The MIT License (MIT)
+
+Copyright (c) 2017 to present Pydantic Services Inc. and individual contributors.
+
 Color definitions are  used as per CSS3 specification:
 http://www.w3.org/TR/css3-color/#svg-color
 
