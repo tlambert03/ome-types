@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -10,6 +11,8 @@ from typing import Any
 from ome_autogen import _util
 from ome_autogen._config import get_config
 from ome_autogen._transformer import OMETransformer
+from ome_types import model
+from ome_types._mixins._base_type import OMEType
 
 BLACK_LINE_LENGTH = 88
 BLACK_TARGET_VERSION = "py37"
@@ -103,60 +106,70 @@ def _print_green(text: str) -> None:
     print(text)
 
 
+KWARGS_MODULE = """
+from __future__ import annotations
+from typing_extensions import TypedDict, TypeAlias
+from typing import Union, List
+from datetime import datetime
+import ome_types.model as ome
+
+class RefDict(TypedDict):
+    id: str
+"""
+
+
 def _build_typed_dicts(package_dir: str) -> None:
+    """Create a TypedDict class for each OMEType subclass.
+
+    Useful for passing kwargs to the constructors.
+
+    def foo(**kwargs: Unpack[ome.ImageDict]) -> None:
+        ...
+    """
+    # sourcery skip: assign-if-exp, reintroduce-else
     from pydantic._internal._repr import display_as_type
 
-    from ome_types import model
-    from ome_types._mixins._base_type import OMEType
-
-    T = "class {name}(TypedDict, total=False):\n\t{fields}\n\n"
-    models = {
+    ome_models = {
         name: obj
         for name, obj in vars(model).items()
         if isinstance(obj, type) and issubclass(obj, OMEType) and obj.__annotations__
     }
-
-    module = """
-from __future__ import annotations
-from typing_extensions import TypedDict
-from typing import Union, List
-from datetime import datetime
-import ome_types.model as ome
-"""
-    import re
 
     def _disp_type(obj: Any) -> str:
         x = display_as_type(obj).replace("NoneType", "None")
         if "ForwardRef" in x:
             #  replace "List[ForwardRef('Map.M')]" with "List[Map.M]"
             x = re.sub(r"ForwardRef\('([a-zA-Z_.]*)'\)", r"\1", x)
-
         return x
 
-    for m in models.values():
-        _fields = []
-        for k, v in m.__annotations__.items():
-            type_display = _disp_type(v)
-            _fields.append(f"{k}: {type_display}")
-        module += T.format(
-            name=f"{m.__name__}Dict",
-            fields="\n\t".join(_fields),
-        )
+    # add TypedDicts for all models
+    module = KWARGS_MODULE
+    SUFFIX = "Dict"
+    CLASS = "class {name}(TypedDict, total=False):\n\t{fields}\n\n"
+    for cls_name, m in sorted(ome_models.items()):
+        if cls_name.endswith("Ref"):
+            module += f"{cls_name}: TypeAlias = RefDict\n"
+        else:
+            _fields = [
+                f"{k}: {_disp_type(v.annotation)}"
+                for k, v in sorted(m.model_fields.items())
+            ]
+            module += CLASS.format(
+                name=f"{m.__name__}{SUFFIX}", fields="\n\t".join(_fields)
+            )
 
-    # replace all capital letter words with the prefix m.
-
+    # fix name spaces
+    # prefix all remaining capitalized words with ome.
     def _repl(match: re.Match) -> str:
-        word = match.group(1)
-        if word in {"None", "True", "False", "Union", "List", "TypedDict"}:
+        word = match[1]
+        if word in {"None", "True", "False", "Union", "List", "TypedDict", "TypeAlias"}:
             return word
-        if word.endswith("Dict"):
+        if word.endswith(SUFFIX):
             return word
-        if word in models:
-            return word + "Dict"
+        if word in ome_models:
+            return word + SUFFIX
         # the rest are enums, they can be passed as strings
         return f"ome.{word} | str"
 
     module = re.sub(r"\b([A-Z][a-zA-Z_^.]*)\b", _repl, module)
-
-    with open(os.path.join(package_dir, "kwargs.py"), "w") as f:
-        f.write(module)
+    (Path(package_dir) / "kwargs.py").write_text(module)
