@@ -9,7 +9,7 @@ from shutil import rmtree
 from typing import Any
 
 from ome_autogen import _util
-from ome_autogen._config import get_config
+from ome_autogen._config import PYDANTIC_SUPPORT, get_config
 from ome_autogen._transformer import OMETransformer
 
 BLACK_LINE_LENGTH = 88
@@ -132,6 +132,9 @@ def _build_typed_dicts(package_dir: str) -> None:
     except ImportError:
         # don't try to do this on pydantic1
         return
+    if PYDANTIC_SUPPORT == "v1":
+        return
+
     from ome_types import model
     from ome_types._mixins._base_type import OMEType
 
