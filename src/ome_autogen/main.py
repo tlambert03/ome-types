@@ -11,8 +11,6 @@ from typing import Any
 from ome_autogen import _util
 from ome_autogen._config import get_config
 from ome_autogen._transformer import OMETransformer
-from ome_types import model
-from ome_types._mixins._base_type import OMEType
 
 BLACK_LINE_LENGTH = 88
 BLACK_TARGET_VERSION = "py37"
@@ -126,6 +124,9 @@ def _build_typed_dicts(package_dir: str) -> None:
     def foo(**kwargs: Unpack[ome.ImageDict]) -> None:
         ...
     """
+    from ome_types import model
+    from ome_types._mixins._base_type import OMEType
+
     # sourcery skip: assign-if-exp, reintroduce-else
     try:
         from pydantic._internal._repr import display_as_type
