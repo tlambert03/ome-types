@@ -5,6 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 from shutil import rmtree
+from typing import Any
 
 from ome_autogen import _util
 from ome_autogen._config import get_config
@@ -49,6 +50,7 @@ def build_model(
         _print_gray("Writing Files...")
         transformer.process_classes()
 
+    _build_typed_dicts(package_dir)
     if do_formatting:
         _fix_formatting(package_dir, ruff_ignore)
 
@@ -99,3 +101,62 @@ def _print_green(text: str) -> None:
         # UnicodeEncodeError: 'charmap' codec can't encode character '\u2713'
         text = f"\033[92m\033[1m{text}\033[0m"
     print(text)
+
+
+def _build_typed_dicts(package_dir: str) -> None:
+    from pydantic._internal._repr import display_as_type
+
+    from ome_types import model
+    from ome_types._mixins._base_type import OMEType
+
+    T = "class {name}(TypedDict, total=False):\n\t{fields}\n\n"
+    models = {
+        name: obj
+        for name, obj in vars(model).items()
+        if isinstance(obj, type) and issubclass(obj, OMEType) and obj.__annotations__
+    }
+
+    module = """
+from __future__ import annotations
+from typing_extensions import TypedDict
+from typing import Union, List
+from datetime import datetime
+import ome_types.model as ome
+"""
+    import re
+
+    def _disp_type(obj: Any) -> str:
+        x = display_as_type(obj).replace("NoneType", "None")
+        if "ForwardRef" in x:
+            #  replace "List[ForwardRef('Map.M')]" with "List[Map.M]"
+            x = re.sub(r"ForwardRef\('([a-zA-Z_.]*)'\)", r"\1", x)
+
+        return x
+
+    for m in models.values():
+        _fields = []
+        for k, v in m.__annotations__.items():
+            type_display = _disp_type(v)
+            _fields.append(f"{k}: {type_display}")
+        module += T.format(
+            name=f"{m.__name__}Dict",
+            fields="\n\t".join(_fields),
+        )
+
+    # replace all capital letter words with the prefix m.
+
+    def _repl(match: re.Match) -> str:
+        word = match.group(1)
+        if word in {"None", "True", "False", "Union", "List", "TypedDict"}:
+            return word
+        if word.endswith("Dict"):
+            return word
+        if word in models:
+            return word + "Dict"
+        # the rest are enums, they can be passed as strings
+        return f"ome.{word} | str"
+
+    module = re.sub(r"\b([A-Z][a-zA-Z_^.]*)\b", _repl, module)
+
+    with open(os.path.join(package_dir, "kwargs.py"), "w") as f:
+        f.write(module)
