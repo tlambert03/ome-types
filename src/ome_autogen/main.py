@@ -126,15 +126,14 @@ def _build_typed_dicts(package_dir: str) -> None:
     def foo(**kwargs: Unpack[ome.ImageDict]) -> None:
         ...
     """
-    from ome_types import model
-    from ome_types._mixins._base_type import OMEType
-
     # sourcery skip: assign-if-exp, reintroduce-else
     try:
         from pydantic._internal._repr import display_as_type
     except ImportError:
         # don't try to do this on pydantic1
         return
+    from ome_types import model
+    from ome_types._mixins._base_type import OMEType
 
     ome_models = {
         name: obj
