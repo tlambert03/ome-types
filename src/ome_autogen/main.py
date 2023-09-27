@@ -163,9 +163,14 @@ def _build_typed_dicts(package_dir: str) -> None:
                 f"{k}: {_disp_type(v.annotation)}"
                 for k, v in sorted(m.model_fields.items())
             ]
-            module += CLASS.format(
-                name=f"{m.__name__}{SUFFIX}", fields="\n\t".join(_fields)
-            )
+            if _fields:
+                module += CLASS.format(
+                    name=f"{m.__name__}{SUFFIX}", fields="\n\t".join(_fields)
+                )
+            else:
+                module += (
+                    f"class {m.__name__}{SUFFIX}(TypedDict, total=False):\n\tpass\n\n"
+                )
 
     # fix name spaces
     # prefix all remaining capitalized words with ome.
