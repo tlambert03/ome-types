@@ -133,7 +133,8 @@ def _build_typed_dicts(package_dir: str) -> None:
     try:
         from pydantic._internal._repr import display_as_type
     except ImportError:
-        from pydantic.typing import display_as_type  # type: ignore
+        # don't try to do this on pydantic1
+        return
 
     ome_models = {
         name: obj
