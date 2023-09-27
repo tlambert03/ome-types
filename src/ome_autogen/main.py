@@ -121,6 +121,8 @@ def _build_typed_dicts(package_dir: str) -> None:
 
     Useful for passing kwargs to the constructors.
 
+    https://peps.python.org/pep-0692/
+
     def foo(**kwargs: Unpack[ome.ImageDict]) -> None:
         ...
     """
