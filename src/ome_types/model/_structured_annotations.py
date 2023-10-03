@@ -40,7 +40,7 @@ _KINDS = {cls.__name__.lower(): cls for cls in AnnotationTypes}
 if pydantic.version.VERSION.startswith("2"):
     from pydantic import RootModel, field_validator
 
-    class StructuredAnnotationList(OMEType, RootModel, UserSequence[Annotation]):  # type: ignore[misc]  # noqa: E501
+    class StructuredAnnotationList(OMEType, RootModel, UserSequence[Annotation]):  # type: ignore[misc]
         """A mutable sequence of [`ome_types.model.Annotation`][].
 
         Members of this sequence must be one of the following types:
@@ -102,7 +102,7 @@ if pydantic.version.VERSION.startswith("2"):
 
 else:
 
-    class StructuredAnnotationList(OMEType, UserSequence[Annotation]):  # type: ignore  # noqa: E501
+    class StructuredAnnotationList(OMEType, UserSequence[Annotation]):  # type: ignore
         """A mutable sequence of [`ome_types.model.Annotation`][].
 
         Members of this sequence must be one of the following types:
