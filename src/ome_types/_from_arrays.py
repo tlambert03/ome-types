@@ -245,8 +245,8 @@ def ome_planes(
     czt_order: tuple[int, int, int],
     planes: Sequence[PlaneKwargs] | PlaneTable,
 ) -> list[m.Plane]:
-    if not planes:
-        return []
+    # if not planes:
+    # return []
 
     plane_count = int(np.prod(n_czt))
 
@@ -254,7 +254,9 @@ def ome_planes(
         # convert dict of lists to list of dicts
         planes = cast("Sequence[PlaneKwargs]", _dol2lod(planes, plane_count))
 
-    if len(planes) > plane_count:
+    if not planes:
+        planes = [{} for _ in range(plane_count)]
+    elif len(planes) > plane_count:
         warnings.warn(
             f"Provided {len(planes)} planes, but expected {plane_count}",
             stacklevel=2,
