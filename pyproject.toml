@@ -74,7 +74,7 @@ test-qt = ["qtpy", "pytest-qt"]
 # requirements to run the autogen script in hatch_build.py
 require-runtime-dependencies = true
 # pin ruff for builds because it changes often
-dependencies = ["black", "ruff ==0.0.291", "xsdata[cli]>=23.6"]
+dependencies = ["black", "ruff ==0.1.5", "xsdata[cli]>=23.6"]
 
 
 # https://hatch.pypa.io/latest/config/metadata/
