@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     # this needs fixing at pydantic_compat. which forwards the type import to Pydantic
     # but in this case we need the metadata field:
     # Unexpected keyword argument "metadata" for "Field"  [call-arg]
-    
+
     from pydantic_compat._shared import Field
 else:
     from pydantic_compat import PYDANTIC2, Field
