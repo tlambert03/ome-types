@@ -81,7 +81,7 @@ class PydanticBaseFilters(Filters):
         elif self.pydantic_support == "auto":
             use_v2 = PYDANTIC2
         else:  # v1 or both
-            use_v2 = False
+            use_v2 = True
 
         restriction_map = V2_RESTRICTION_MAP if use_v2 else V1_RESTRICTION_MAP
 
