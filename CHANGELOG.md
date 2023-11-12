@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.4.3](https://github.com/tlambert03/ome-types/tree/v0.4.3) (2023-11-12)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.2...v0.4.3)
+
+**Implemented enhancements:**
+
+- feat: build typed kwargs dicts [\#225](https://github.com/tlambert03/ome-types/pull/225) ([tlambert03](https://github.com/tlambert03))
+
+**Fixed bugs:**
+
+- fix: fix build by adding ruff unsafe-fixes and other build fixes [\#229](https://github.com/tlambert03/ome-types/pull/229) ([tlambert03](https://github.com/tlambert03))
+- fix: update vendored color deprecations [\#223](https://github.com/tlambert03/ome-types/pull/223) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- ci\(pre-commit.ci\): autoupdate [\#228](https://github.com/tlambert03/ome-types/pull/228) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
+- build: update pydantic compat to v0.1.0 [\#224](https://github.com/tlambert03/ome-types/pull/224) ([tlambert03](https://github.com/tlambert03))
+- ci\(dependabot\): bump actions/checkout from 3 to 4 [\#216](https://github.com/tlambert03/ome-types/pull/216) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build: use pydantic-compat library [\#213](https://github.com/tlambert03/ome-types/pull/213) ([tlambert03](https://github.com/tlambert03))
+
 ## [v0.4.2](https://github.com/tlambert03/ome-types/tree/v0.4.2) (2023-08-20)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.1...v0.4.2)
