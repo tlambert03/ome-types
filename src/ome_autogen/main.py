@@ -64,7 +64,7 @@ def build_model(
 def _fix_formatting(package_dir: str, ruff_ignore: list[str] = RUFF_IGNORE) -> None:
     _print_gray("Running black and ruff ...")
 
-    ruff = ["ruff", "-q", "--fix", package_dir]
+    ruff = ["ruff", "-q", "--fix", "--unsafe-fixes", package_dir]
     ruff.extend(f"--ignore={ignore}" for ignore in ruff_ignore)
     subprocess.check_call(ruff)  # noqa S
 
