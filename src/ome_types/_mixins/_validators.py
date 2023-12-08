@@ -5,7 +5,11 @@ that logic is in the `methods` method in ome_autogen/_generator.py
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Sequence
 
+import numpy as np
+
 if TYPE_CHECKING:
+    from numpy.typing import DTypeLike
+
     from ome_types.model import (  # type: ignore
         BinData,
         Pixels,
@@ -32,15 +36,14 @@ def bin_data_root_validator(cls: "BinData", values: dict) -> Dict[str, Any]:
 
 # @root_validator(pre=True)
 def pixels_root_validator(cls: "Pixels", value: dict) -> dict:
-    if "metadata_only" in value:
-        if isinstance(value["metadata_only"], bool):
-            if not value["metadata_only"]:
-                value.pop("metadata_only")
-            else:
-                # type ignore in case the autogeneration hasn't been built
-                from ome_types.model import MetadataOnly  # type: ignore
+    if "metadata_only" in value and isinstance(value["metadata_only"], bool):
+        if not value["metadata_only"]:
+            value.pop("metadata_only")
+        else:
+            # type ignore in case the autogeneration hasn't been built
+            from ome_types.model import MetadataOnly  # type: ignore
 
-                value["metadata_only"] = MetadataOnly()
+            value["metadata_only"] = MetadataOnly()
 
     return value
 
@@ -76,13 +79,25 @@ def xml_value_validator(cls: "XMLAnnotation", v: Any) -> "XMLAnnotation.Value":
     return v
 
 
-def pixel_type_to_numpy_dtype(self: "PixelType") -> str:
+# maps OME PixelType names to numpy dtype names
+NP_DTYPE_MAP: "dict[str, str]" = {
+    "float": "float32",
+    "double": "float64",
+    "complex": "complex64",
+    "double-complex": "complex128",
+    "bit": "bool",  # ?
+}
+REV_NP_DTYPE_MAP: "dict[str, str]" = {v: k for k, v in NP_DTYPE_MAP.items()}
+
+
+def pixel_type_to_numpy_dtype(self: "PixelType") -> "DTypeLike":
     """Get a numpy dtype string for this pixel type."""
-    m = {
-        "float": "float32",
-        "double": "float64",
-        "complex": "complex64",
-        "double-complex": "complex128",
-        "bit": "bool",  # ?
-    }
-    return m.get(self.value, self.value)
+    return NP_DTYPE_MAP.get(self.value, self.value)
+
+
+def numpy_dtype_to_pixel_type(dtype: "DTypeLike") -> "PixelType":
+    """Return the PixelType corresponding to the numpy dtype."""
+    from ome_types.model import PixelType
+
+    _dtype = np.dtype(dtype).name
+    return PixelType(value=REV_NP_DTYPE_MAP.get(_dtype, _dtype))

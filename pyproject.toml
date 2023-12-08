@@ -184,6 +184,7 @@ no_implicit_reexport = true
 ignore_missing_imports = true
 disallow_untyped_defs = true
 plugins = "pydantic.mypy"
+enable_incomplete_feature = ["Unpack"]
 
 [tool.pydantic-mypy]
 init_forbid_extra = true
