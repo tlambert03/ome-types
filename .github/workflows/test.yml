@@ -99,7 +99,7 @@ jobs:
           python -m pip install .[test,test-qt]
           python -m pip install "${{ matrix.backend }}"
       - name: Test
-        uses: aganders3/headless-gui@v1
+        uses: aganders3/headless-gui@v2
         with:
           run: pytest tests/test_widget.py
 
