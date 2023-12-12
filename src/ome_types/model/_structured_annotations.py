@@ -64,7 +64,7 @@ if pydantic.version.VERSION.startswith("2"):
             default_factory=list,
             json_schema_extra={
                 "type": "Elements",
-                "choices": tuple(
+                "choices": tuple(  # type: ignore[dict-item]
                     {"name": cls.__name__, "type": cls} for cls in AnnotationTypes
                 ),
             },
@@ -124,7 +124,7 @@ else:
         # for some reason that messes up xsdata data binding
         __root__: List[object] = Field(
             default_factory=list,
-            metadata={
+            metadata={  # type: ignore[call-arg]
                 "type": "Elements",
                 "choices": tuple(
                     {"name": cls.__name__, "type": cls} for cls in AnnotationTypes

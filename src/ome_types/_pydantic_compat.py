@@ -23,7 +23,7 @@ if pydantic.version.VERSION.startswith("2"):
         if field_info.json_schema_extra and isinstance(
             field_info.json_schema_extra, dict
         ):
-            return field_info.json_schema_extra.get("pattern")
+            return field_info.json_schema_extra.get("pattern")  # type: ignore
         return None
 
     def get_default(f: FieldInfo) -> Any:
