@@ -55,7 +55,7 @@ if PYDANTIC2:
             default_factory=list,
             json_schema_extra={
                 "type": "Elements",
-                "choices": tuple(
+                "choices": tuple(  # type: ignore[dict-item]
                     {"name": kind.title(), "type": cls} for kind, cls in _KINDS.items()
                 ),
             },
@@ -117,7 +117,7 @@ else:
         # for some reason that messes up xsdata data binding
         __root__: List[object] = Field(
             default_factory=list,
-            metadata={
+            metadata={  # type: ignore[call-arg]
                 "type": "Elements",
                 "choices": tuple(
                     {"name": kind.title(), "type": cls} for kind, cls in _KINDS.items()
