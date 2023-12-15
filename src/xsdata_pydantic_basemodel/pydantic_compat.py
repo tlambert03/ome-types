@@ -20,7 +20,7 @@ if PYDANTIC2:
 
     def _get_metadata(pydantic_field: FieldInfo) -> dict[str, Any]:
         return (
-            pydantic_field.json_schema_extra
+            pydantic_field.json_schema_extra.get("metadata", {})  # type: ignore
             if isinstance(pydantic_field.json_schema_extra, dict)
             else {}
         )
@@ -29,10 +29,7 @@ else:
     from pydantic.fields import Undefined as Undefined  # type: ignore
 
     def _get_metadata(pydantic_field) -> dict:  # type: ignore
-        extra = pydantic_field.field_info.extra
-        if "json_schema_extra" in extra:
-            return extra["json_schema_extra"]
-        return extra.get("metadata", {})
+        return pydantic_field.field_info.extra.get("metadata", {})
 
 
 def _get_defaults(pydantic_field: FieldInfo) -> tuple[Any, Any]:

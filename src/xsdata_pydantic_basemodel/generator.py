@@ -92,7 +92,8 @@ class PydanticBaseFilters(Filters):
                 kwargs[to_] = getitem(from_)
 
         if use_v2 and "metadata" in kwargs:
-            kwargs["json_schema_extra"] = kwargs.pop("metadata")
+            json_schema_extra = kwargs.setdefault("json_schema_extra", {})
+            json_schema_extra["metadata"] = kwargs.pop("metadata")
 
 
 V1_RESTRICTION_MAP = {
