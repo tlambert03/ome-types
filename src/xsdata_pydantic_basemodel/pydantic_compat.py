@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import MISSING, field
 from typing import TYPE_CHECKING, Any, Callable, Iterator, TypeVar
 
@@ -65,7 +66,24 @@ def _pydantic_field_to_dataclass_field(name: str, pydantic_field: FieldInfo) -> 
     # Then, in our source code, we declare choices as tuple[tuple[str, str], ...]
     # which IS hashable.
     if "choices" in metadata:
-        metadata["choices"] = [dict(choice) for choice in metadata["choices"]]
+        choices = []
+        for choice in metadata["choices"]:
+            choice = dict(choice)
+            # we also, unfortunately, need to convert the "type" field from a
+            # class name to a class object
+            if "type" in choice and isinstance(choice["type"], str):
+                try:
+                    from ome_types import model
+
+                    choice["type"] = getattr(model, choice["type"])
+                except AttributeError:
+                    warnings.warn(
+                        f"Could not find {choice['type']} in ome_types.model",
+                        stacklevel=2,
+                    )
+
+            choices.append(choice)
+        metadata["choices"] = choices
 
     dataclass_field = field(  # type: ignore
         default=default, default_factory=default_factory, metadata=metadata

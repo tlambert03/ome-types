@@ -172,4 +172,4 @@ def test_canonicalize() -> None:
 def test_export_schema() -> None:
     schema = OME.model_json_schema()
     assert isinstance(schema, dict)
-    assert isinstance(str, json.dumps(schema))
+    assert isinstance(json.dumps(schema), str)
