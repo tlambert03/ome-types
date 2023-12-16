@@ -55,8 +55,9 @@ if PYDANTIC2:
             default_factory=list,
             json_schema_extra={
                 "type": "Elements",
-                "choices": tuple(  # type: ignore[dict-item]
-                    {"name": kind.title(), "type": cls} for kind, cls in _KINDS.items()
+                "choices": tuple(
+                    (("name", kind.title()), ("type", cls))
+                    for kind, cls in _KINDS.items()
                 ),
             },
         )
@@ -120,7 +121,8 @@ else:
             metadata={  # type: ignore[call-arg]
                 "type": "Elements",
                 "choices": tuple(
-                    {"name": kind.title(), "type": cls} for kind, cls in _KINDS.items()
+                    (("name", kind.title()), ("type", cls))
+                    for kind, cls in _KINDS.items()
                 ),
             },
         )

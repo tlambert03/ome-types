@@ -64,8 +64,8 @@ if pydantic.version.VERSION.startswith("2"):
             default_factory=list,
             json_schema_extra={
                 "type": "Elements",
-                "choices": tuple(  # type: ignore[dict-item]
-                    {"name": cls.__name__, "type": cls} for cls in AnnotationTypes
+                "choices": tuple(
+                    (("name", cls.__name__), ("type", cls)) for cls in AnnotationTypes
                 ),
             },
         )
@@ -127,7 +127,7 @@ else:
             metadata={  # type: ignore[call-arg]
                 "type": "Elements",
                 "choices": tuple(
-                    {"name": cls.__name__, "type": cls} for cls in AnnotationTypes
+                    (("name", cls.__name__), ("type", cls)) for cls in AnnotationTypes
                 ),
             },
         )

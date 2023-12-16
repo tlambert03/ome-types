@@ -54,6 +54,19 @@ def _pydantic_field_to_dataclass_field(name: str, pydantic_field: FieldInfo) -> 
 
     metadata = _get_metadata(pydantic_field)
 
+    # HACK
+    # see https://github.com/tlambert03/ome-types/pull/235 for description of problem
+    # This is a hack to get around the fact that xsdata requires Element choices
+    # to be added to the Field metadata as `choices: List[dict]` ... but pydantic
+    # requires that everything in a Field be hashable (if you want to cast the model
+    # to a JSON schema), and `dict` is not hashable. So here, when we're converting
+    # a pydantic Field to a dataclass Field for xsdata to consume, we cast all items
+    # in the `choices` list to `dict` (which is hashable).
+    # Then, in our source code, we declare choices as tuple[tuple[str, str], ...]
+    # which IS hashable.
+    if "choices" in metadata:
+        metadata["choices"] = [dict(choice) for choice in metadata["choices"]]
+
     dataclass_field = field(  # type: ignore
         default=default, default_factory=default_factory, metadata=metadata
     )
