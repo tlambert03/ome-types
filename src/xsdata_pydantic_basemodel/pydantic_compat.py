@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import MISSING, field
-from typing import TYPE_CHECKING, Any, Callable, Iterator, TypeVar
+from functools import lru_cache
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from pydantic_compat import PYDANTIC2, Field
 
@@ -52,7 +54,37 @@ def _get_defaults(pydantic_field: FieldInfo) -> tuple[Any, Any]:
 def _pydantic_field_to_dataclass_field(name: str, pydantic_field: FieldInfo) -> Any:
     default_factory, default = _get_defaults(pydantic_field)
 
-    metadata = _get_metadata(pydantic_field)
+    metadata = _get_metadata(pydantic_field).copy()
+
+    # HACK
+    # see https://github.com/tlambert03/ome-types/pull/235 for description of problem
+    # This is a hack to get around the fact that xsdata requires Element choices
+    # to be added to the Field metadata as `choices: List[dict]` ... but pydantic
+    # requires that everything in a Field be hashable (if you want to cast the model
+    # to a JSON schema), and `dict` is not hashable. So here, when we're converting
+    # a pydantic Field to a dataclass Field for xsdata to consume, we cast all items
+    # in the `choices` list to `dict` (which is hashable).
+    # Then, in our source code, we declare choices as tuple[tuple[str, str], ...]
+    # which IS hashable.
+    if "choices" in metadata:
+        choices = []
+        for choice in metadata["choices"]:
+            choice = dict(choice)
+            # we also, unfortunately, need to convert the "type" field from a
+            # class name to a class object
+            if "type" in choice and isinstance(choice["type"], str):
+                try:
+                    from ome_types import model
+
+                    choice["type"] = getattr(model, choice["type"])
+                except AttributeError:
+                    warnings.warn(
+                        f"Could not find {choice['type']} in ome_types.model",
+                        stacklevel=2,
+                    )
+
+            choices.append(choice)
+        metadata["choices"] = choices
 
     dataclass_field = field(  # type: ignore
         default=default, default_factory=default_factory, metadata=metadata
@@ -61,6 +93,10 @@ def _pydantic_field_to_dataclass_field(name: str, pydantic_field: FieldInfo) -> 
     return dataclass_field
 
 
-def dataclass_fields(obj: type[M]) -> Iterator[Any]:
-    for name, f in obj.model_fields.items():
-        yield _pydantic_field_to_dataclass_field(name, f)
+@lru_cache(maxsize=None)
+def dataclass_fields(obj: type[M]) -> tuple:
+    """Return a tuple of dataclass fields for the given pydantic model class."""
+    return tuple(
+        _pydantic_field_to_dataclass_field(name, f)
+        for name, f in obj.model_fields.items()
+    )
