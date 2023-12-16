@@ -241,7 +241,7 @@ clone this repository and run:
 python -m src.ome_autogen
 ```
 
-The documentation and types for the full model can be in the [API Reference](https://ome-types.readthedocs.io/en/latest/ome_types.model.html)
+The documentation and types for the full model can be in the [API Reference](https://ome-types.readthedocs.io/en/latest/API/ome_types/)
 
 ## Contributing
 
