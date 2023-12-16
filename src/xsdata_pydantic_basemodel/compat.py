@@ -102,7 +102,7 @@ class PydanticBaseModel(Dataclasses):
         return False
 
     def get_fields(self, obj: Any) -> Tuple[Any, ...]:
-        return tuple(dataclass_fields(obj))
+        return dataclass_fields(obj)
 
 
 class_types.register("pydantic-basemodel", PydanticBaseModel())

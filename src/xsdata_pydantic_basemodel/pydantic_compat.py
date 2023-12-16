@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import MISSING, field
-from typing import TYPE_CHECKING, Any, Callable, Iterator, TypeVar
+from functools import lru_cache
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from pydantic_compat import PYDANTIC2, Field
 
@@ -53,7 +54,7 @@ def _get_defaults(pydantic_field: FieldInfo) -> tuple[Any, Any]:
 def _pydantic_field_to_dataclass_field(name: str, pydantic_field: FieldInfo) -> Any:
     default_factory, default = _get_defaults(pydantic_field)
 
-    metadata = _get_metadata(pydantic_field)
+    metadata = _get_metadata(pydantic_field).copy()
 
     # HACK
     # see https://github.com/tlambert03/ome-types/pull/235 for description of problem
@@ -92,6 +93,10 @@ def _pydantic_field_to_dataclass_field(name: str, pydantic_field: FieldInfo) -> 
     return dataclass_field
 
 
-def dataclass_fields(obj: type[M]) -> Iterator[Any]:
-    for name, f in obj.model_fields.items():
-        yield _pydantic_field_to_dataclass_field(name, f)
+@lru_cache(maxsize=None)
+def dataclass_fields(obj: type[M]) -> tuple:
+    """Return a tuple of dataclass fields for the given pydantic model class."""
+    return tuple(
+        _pydantic_field_to_dataclass_field(name, f)
+        for name, f in obj.model_fields.items()
+    )
