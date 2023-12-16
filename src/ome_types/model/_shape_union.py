@@ -52,6 +52,7 @@ if PYDANTIC2:
 
         # NOTE: in reality, this is List[ShapeGroupType]... but
         # for some reason that messes up xsdata data binding
+        # see also, HACK in xsdata_pydantic_basemodel/pydantic_compat.py
         root: List[object] = Field(
             default_factory=list,
             json_schema_extra={
@@ -117,6 +118,7 @@ else:
 
         # NOTE: in reality, this is List[ShapeGroupType]... but
         # for some reason that messes up xsdata data binding
+        # see also, HACK in xsdata_pydantic_basemodel/pydantic_compat.py
         __root__: List[object] = Field(
             default_factory=list,
             metadata={  # type: ignore[call-arg]
