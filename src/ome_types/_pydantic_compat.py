@@ -20,10 +20,13 @@ if pydantic.version.VERSION.startswith("2"):
 
     def field_regex(obj: type[BaseModel], field_name: str) -> str | None:
         field_info = obj.model_fields[field_name]
-        if field_info.json_schema_extra and isinstance(
-            field_info.json_schema_extra, dict
-        ):
-            return field_info.json_schema_extra.get("pattern")  # type: ignore
+        meta = field_info.json_schema_extra or {}
+        # if a "metadata" key exists... use it.
+        # After pydantic-compat 0.2, this is where it will be.
+        if "metadata" in meta:  # type: ignore
+            meta = meta["metadata"]  # type: ignore
+        if meta:
+            return meta.get("pattern")  # type: ignore
         return None
 
     def get_default(f: FieldInfo) -> Any:
