@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.4.5](https://github.com/tlambert03/ome-types/tree/v0.4.5) (2023-12-17)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.3...v0.4.5)
+
+**Implemented enhancements:**
+
+- feat: support pydantic-compat v0.2. [\#236](https://github.com/tlambert03/ome-types/pull/236) ([tlambert03](https://github.com/tlambert03))
+
+**Fixed bugs:**
+
+- fix: fix output to JSON schema \[WIP\] [\#235](https://github.com/tlambert03/ome-types/pull/235) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- ci\(dependabot\): bump aganders3/headless-gui from 1 to 2 [\#233](https://github.com/tlambert03/ome-types/pull/233) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci\(dependabot\): bump actions/setup-python from 4 to 5 [\#232](https://github.com/tlambert03/ome-types/pull/232) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci\(dependabot\): bump CodSpeedHQ/action from 1 to 2 [\#231](https://github.com/tlambert03/ome-types/pull/231) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci\(pre-commit.ci\): autoupdate [\#230](https://github.com/tlambert03/ome-types/pull/230) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
+
 ## [v0.4.3](https://github.com/tlambert03/ome-types/tree/v0.4.3) (2023-11-12)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.2...v0.4.3)
