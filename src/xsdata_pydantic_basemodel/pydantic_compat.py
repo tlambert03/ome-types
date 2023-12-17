@@ -21,11 +21,16 @@ if PYDANTIC2:
     from pydantic_core import PydanticUndefined as Undefined
 
     def _get_metadata(pydantic_field: FieldInfo) -> dict[str, Any]:
-        return (
+        meta = (
             pydantic_field.json_schema_extra
             if isinstance(pydantic_field.json_schema_extra, dict)
             else {}
         )
+        # if a "metadata" key exists... use it.
+        # After pydantic-compat 0.2, this is where it will be.
+        if "metadata" in meta:
+            meta = meta["metadata"]  # type: ignore
+        return meta
 
 else:
     from pydantic.fields import Undefined as Undefined  # type: ignore
