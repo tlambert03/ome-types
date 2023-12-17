@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING, Any, Dict, List, Sequence
 
 if TYPE_CHECKING:
     from ome_types.model import (  # type: ignore
+        OME,
         BinData,
         Pixels,
         PixelType,
+        StructuredAnnotationList,
         XMLAnnotation,
     )
     from xsdata_pydantic_basemodel.compat import AnyElement
@@ -86,3 +88,22 @@ def pixel_type_to_numpy_dtype(self: "PixelType") -> str:
         "bit": "bool",  # ?
     }
     return m.get(self.value, self.value)
+
+
+# @field_validator("structured_annotations", mode="before")
+def validate_structured_annotations(cls: "OME", v: Any) -> "StructuredAnnotationList":
+    """Convert list input for OME.structured_annotations to dict."""
+    from ome_types.model import StructuredAnnotationList
+
+    if isinstance(v, StructuredAnnotationList):
+        return v
+    if isinstance(v, list):
+        # convert list[AnnotationType] to dict with keys matching the
+        # fields in StructuredAnnotations
+        _values: dict = {}
+        for item in v:
+            _values.setdefault(StructuredAnnotationList._field_name(item), []).append(
+                item
+            )
+        v = _values
+    return v

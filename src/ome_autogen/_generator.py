@@ -47,6 +47,10 @@ ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
         lambda c: c.name == "PixelType",
         "\n\nnumpy_dtype = property(pixel_type_to_numpy_dtype)",
     ),
+    (
+        lambda c: c.name == "OME",
+        "\n\n_v_structured_annotations = field_validator('structured_annotations', mode='before')(validate_structured_annotations)",  # noqa: E501
+    ),
 ]
 
 
@@ -96,6 +100,7 @@ IMPORT_PATTERNS.update(
             "pixels_root_validator": ["pixels_root_validator"],
             "xml_value_validator": ["xml_value_validator"],
             "pixel_type_to_numpy_dtype": ["pixel_type_to_numpy_dtype"],
+            "validate_structured_annotations": ["validate_structured_annotations"],
         },
     }
 )
