@@ -36,7 +36,7 @@ AnnotationType: TypeAlias = Union[
 AnnotationInstances = get_args(AnnotationType)
 
 
-class StructuredAnnotations(OMEType):
+class StructuredAnnotationList(OMEType):
     """Unordered collection of annotations attached to objects in the OME data model."""
 
     class Meta:
@@ -144,6 +144,3 @@ class StructuredAnnotations(OMEType):
                 _values.setdefault(cls._field_name(item), []).append(item)
             values = _values
         return values
-
-
-StructuredAnnotationList = StructuredAnnotations
