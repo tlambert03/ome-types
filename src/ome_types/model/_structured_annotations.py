@@ -43,77 +43,77 @@ class StructuredAnnotationList(OMEType):
 
     xml_annotations: List[XMLAnnotation] = Field(
         default_factory=list,
-        metadata={
+        json_schema_extra={
             "name": "XMLAnnotation",
             "type": "Element",
         },
     )
     file_annotations: List[FileAnnotation] = Field(
         default_factory=list,
-        metadata={
+        json_schema_extra={
             "name": "FileAnnotation",
             "type": "Element",
         },
     )
     list_annotations: List[ListAnnotation] = Field(
         default_factory=list,
-        metadata={
+        json_schema_extra={
             "name": "ListAnnotation",
             "type": "Element",
         },
     )
     long_annotations: List[LongAnnotation] = Field(
         default_factory=list,
-        metadata={
+        json_schema_extra={
             "name": "LongAnnotation",
             "type": "Element",
         },
     )
     double_annotations: List[DoubleAnnotation] = Field(
         default_factory=list,
-        metadata={
+        json_schema_extra={
             "name": "DoubleAnnotation",
             "type": "Element",
         },
     )
     comment_annotations: List[CommentAnnotation] = Field(
         default_factory=list,
-        metadata={
+        json_schema_extra={
             "name": "CommentAnnotation",
             "type": "Element",
         },
     )
     boolean_annotations: List[BooleanAnnotation] = Field(
         default_factory=list,
-        metadata={
+        json_schema_extra={
             "name": "BooleanAnnotation",
             "type": "Element",
         },
     )
     timestamp_annotations: List[TimestampAnnotation] = Field(
         default_factory=list,
-        metadata={
+        json_schema_extra={
             "name": "TimestampAnnotation",
             "type": "Element",
         },
     )
     tag_annotations: List[TagAnnotation] = Field(
         default_factory=list,
-        metadata={
+        json_schema_extra={
             "name": "TagAnnotation",
             "type": "Element",
         },
     )
     term_annotations: List[TermAnnotation] = Field(
         default_factory=list,
-        metadata={
+        json_schema_extra={
             "name": "TermAnnotation",
             "type": "Element",
         },
     )
     map_annotations: List[MapAnnotation] = Field(
         default_factory=list,
-        metadata={
+        json_schema_extra={
             "name": "MapAnnotation",
             "type": "Element",
         },
