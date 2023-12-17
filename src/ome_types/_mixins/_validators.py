@@ -11,7 +11,7 @@ if TYPE_CHECKING:
         BinData,
         Pixels,
         PixelType,
-        StructuredAnnotationList,
+        StructuredAnnotations,
         XMLAnnotation,
     )
     from xsdata_pydantic_basemodel.compat import AnyElement
@@ -91,19 +91,17 @@ def pixel_type_to_numpy_dtype(self: "PixelType") -> str:
 
 
 # @field_validator("structured_annotations", mode="before")
-def validate_structured_annotations(cls: "OME", v: Any) -> "StructuredAnnotationList":
+def validate_structured_annotations(cls: "OME", v: Any) -> "StructuredAnnotations":
     """Convert list input for OME.structured_annotations to dict."""
-    from ome_types.model import StructuredAnnotationList
+    from ome_types.model import StructuredAnnotations
 
-    if isinstance(v, StructuredAnnotationList):
+    if isinstance(v, StructuredAnnotations):
         return v
     if isinstance(v, list):
         # convert list[AnnotationType] to dict with keys matching the
         # fields in StructuredAnnotations
         _values: dict = {}
         for item in v:
-            _values.setdefault(StructuredAnnotationList._field_name(item), []).append(
-                item
-            )
+            _values.setdefault(StructuredAnnotations._field_name(item), []).append(item)
         v = _values
     return v
