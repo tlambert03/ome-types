@@ -52,7 +52,7 @@ your code to the new version.
 ### Added classes
 
 - [`MetadataOnly`][ome_types.model.MetadataOnly]
-- [`ShapeUnion`][ome_types.model.ShapeUnion]
+- `ROI.Union`
 - [`StructuredAnnotations`][ome_types.model.StructuredAnnotations]
 
 ### Removed classes

@@ -34,7 +34,7 @@ T = TypeVar("T")
 class CollectionMixin(BaseModel, Generic[T]):
     """Mixin to be used for classes that behave like collections.
 
-    Notably: ShapeUnion and StructuredAnnotations.
+    Notably: ROI.Union and StructuredAnnotations.
     All the fields in these types list[SomeType], and they collectively behave like
     a list with the union of all field types.
     """
