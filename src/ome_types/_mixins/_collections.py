@@ -50,6 +50,11 @@ class CollectionMixin(BaseModel, Generic[T]):
         """Append an item to the appropriate field list."""
         cast(list, getattr(self, self._field_name(item))).append(item)
 
+    def extend(self, items: list[T]) -> None:
+        """Extend the appropriate field list with the given items."""
+        for item in items:
+            self.append(item)
+
     def remove(self, item: T) -> None:
         """Remove an item from the appropriate field list."""
         cast(list, getattr(self, self._field_name(item))).remove(item)
