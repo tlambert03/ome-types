@@ -51,6 +51,10 @@ ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
         lambda c: c.name == "OME",
         "\n\n_v_structured_annotations = field_validator('structured_annotations', mode='before')(validate_structured_annotations)",  # noqa: E501
     ),
+    (
+        lambda c: c.name == "ROI",
+        "\n\n_v_shape_union = field_validator('union', mode='before')(validate_shape_union)",  # noqa: E501
+    ),
 ]
 
 
@@ -64,7 +68,7 @@ CLASS_OVERRIDES = [
     Override("FillColor", "Color", "ome_types.model._color"),
     Override("StrokeColor", "Color", "ome_types.model._color"),
     Override("Color", "Color", "ome_types.model._color"),
-    Override("Union", "ShapeUnion", "ome_types.model._shape_union"),
+    # Override("Union", "ShapeUnion", "ome_types.model._shape_union"),
     Override(
         "StructuredAnnotations",
         "StructuredAnnotations",
@@ -101,6 +105,7 @@ IMPORT_PATTERNS.update(
             "xml_value_validator": ["xml_value_validator"],
             "pixel_type_to_numpy_dtype": ["pixel_type_to_numpy_dtype"],
             "validate_structured_annotations": ["validate_structured_annotations"],
+            "validate_shape_union": ["validate_shape_union"],
         },
     }
 )

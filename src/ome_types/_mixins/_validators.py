@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Sequence
 if TYPE_CHECKING:
     from ome_types.model import (  # type: ignore
         OME,
+        ROI,
         BinData,
         Pixels,
         PixelType,
@@ -103,5 +104,22 @@ def validate_structured_annotations(cls: "OME", v: Any) -> "StructuredAnnotation
         _values: dict = {}
         for item in v:
             _values.setdefault(StructuredAnnotations._field_name(item), []).append(item)
+        v = _values
+    return v
+
+
+# @field_validator("union", mode="before")
+def validate_shape_union(cls: "ROI", v: Any) -> "ROI.Union":
+    """Convert list input for OME.structured_annotations to dict."""
+    from ome_types.model import ROI
+
+    if isinstance(v, ROI.Union):
+        return v
+    if isinstance(v, list):
+        # convert list[AnnotationType] to dict with keys matching the
+        # fields in StructuredAnnotations
+        _values: dict = {}
+        for item in v:
+            _values.setdefault(ROI.Union._field_name(item), []).append(item)
         v = _values
     return v
