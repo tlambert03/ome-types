@@ -68,6 +68,8 @@ CLASS_OVERRIDES = [
     Override("FillColor", "Color", "ome_types.model._color"),
     Override("StrokeColor", "Color", "ome_types.model._color"),
     Override("Color", "Color", "ome_types.model._color"),
+    # make the type annotation Non-Optional for structured annotations
+    Override("StructuredAnnotations", "StructuredAnnotations", None),
 ]
 # classes that should never be optional, but always have default_factories
 NO_OPTIONAL = {"Union", "StructuredAnnotations"}
