@@ -258,8 +258,9 @@ class OmeFilters(PydanticBaseFilters):
                 if not self._attr_is_optional(attr):
                     return override.class_name
 
+        # HACK
         # Two special cases to make ROI.Union and OME.StructuredAnnotations
-        # have defult_factory=...
+        # have default_factory=...
         if attr.name == "Union":
             return "lambda: ROI.Union()"
         if attr.name == "StructuredAnnotations":
