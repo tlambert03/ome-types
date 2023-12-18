@@ -8,8 +8,4 @@
 
 ## Extra types
 
-::: ome_types.model._structured_annotations
-
-::: ome_types.model._shape_union
-
 ::: ome_types.model._color
