@@ -6,7 +6,11 @@ import pytest
 from ome_types import validate_xml
 
 # to run this test locally, you can download QuPath.app as follows:
+# pip install paquo
+# mkdir -p qupath/apps qupath/download
+# brew install p7zip
 # python -m paquo get_qupath --install-path ./qupath/apps --download-path ./qupath/download 0.4.3  # noqa: E501
+# export PAQUO_QUPATH_DIR=./qupath/apps/QuPath-0.4.3.app
 # (this is done automatically on CI)
 if "PAQUO_QUPATH_DIR" not in os.environ:
     qupath_apps = Path(__file__).parent.parent / "qupath" / "apps"

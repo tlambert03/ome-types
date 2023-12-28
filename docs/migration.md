@@ -52,8 +52,8 @@ your code to the new version.
 ### Added classes
 
 - [`MetadataOnly`][ome_types.model.MetadataOnly]
-- [`ShapeUnion`][ome_types.model.ShapeUnion]
-- [`StructuredAnnotationList`][ome_types.model.StructuredAnnotationList]
+- `ROI.Union`
+- [`StructuredAnnotations`][ome_types.model.StructuredAnnotations]
 
 ### Removed classes
 
@@ -223,7 +223,7 @@ your code to the new version.
 
 ### [`OME`][ome_types.model.OME]
 
-- **`structured_annotations`** - type changed from `List[Annotation]` to `StructuredAnnotationList`
+- **`structured_annotations`** - type changed from `List[Annotation]` to `StructuredAnnotations`
 - **`uuid`** - type changed from `Optional[UniversallyUniqueIdentifier]` to `Optional[ConstrainedStrValue]`
 
 ### [`Objective`][ome_types.model.Objective]
