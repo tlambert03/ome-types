@@ -19,6 +19,12 @@ MIXINS: list[tuple[str, str, bool]] = [
     ("OME", f"{MIXIN_MODULE}._ome.OMEMixin", True),
     ("Instrument", f"{MIXIN_MODULE}._instrument.InstrumentMixin", False),
     ("Reference", f"{MIXIN_MODULE}._reference.ReferenceMixin", True),
+    ("Union", f"{MIXIN_MODULE}._collections.ShapeUnionMixin", True),
+    (
+        "StructuredAnnotations",
+        f"{MIXIN_MODULE}._collections.StructuredAnnotationsMixin",
+        True,
+    ),
     ("(Shape|ManufacturerSpec|Annotation)", f"{MIXIN_MODULE}._kinded.KindMixin", True),
 ]
 

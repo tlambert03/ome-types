@@ -1,5 +1,52 @@
 # Changelog
 
+## [v0.5.0](https://github.com/tlambert03/ome-types/tree/v0.5.0) (2023-12-28)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.5...v0.5.0)
+
+**Merged pull requests:**
+
+- refactor: different pattern for structured annotations list and shapes union [\#237](https://github.com/tlambert03/ome-types/pull/237) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.4.5](https://github.com/tlambert03/ome-types/tree/v0.4.5) (2023-12-17)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.3...v0.4.5)
+
+**Implemented enhancements:**
+
+- feat: support pydantic-compat v0.2. [\#236](https://github.com/tlambert03/ome-types/pull/236) ([tlambert03](https://github.com/tlambert03))
+
+**Fixed bugs:**
+
+- fix: fix output to JSON schema \[WIP\] [\#235](https://github.com/tlambert03/ome-types/pull/235) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- ci\(dependabot\): bump aganders3/headless-gui from 1 to 2 [\#233](https://github.com/tlambert03/ome-types/pull/233) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci\(dependabot\): bump actions/setup-python from 4 to 5 [\#232](https://github.com/tlambert03/ome-types/pull/232) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci\(dependabot\): bump CodSpeedHQ/action from 1 to 2 [\#231](https://github.com/tlambert03/ome-types/pull/231) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci\(pre-commit.ci\): autoupdate [\#230](https://github.com/tlambert03/ome-types/pull/230) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
+
+## [v0.4.3](https://github.com/tlambert03/ome-types/tree/v0.4.3) (2023-11-12)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.2...v0.4.3)
+
+**Implemented enhancements:**
+
+- feat: build typed kwargs dicts [\#225](https://github.com/tlambert03/ome-types/pull/225) ([tlambert03](https://github.com/tlambert03))
+
+**Fixed bugs:**
+
+- fix: fix build by adding ruff unsafe-fixes and other build fixes [\#229](https://github.com/tlambert03/ome-types/pull/229) ([tlambert03](https://github.com/tlambert03))
+- fix: update vendored color deprecations [\#223](https://github.com/tlambert03/ome-types/pull/223) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- ci\(pre-commit.ci\): autoupdate [\#228](https://github.com/tlambert03/ome-types/pull/228) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
+- build: update pydantic compat to v0.1.0 [\#224](https://github.com/tlambert03/ome-types/pull/224) ([tlambert03](https://github.com/tlambert03))
+- ci\(dependabot\): bump actions/checkout from 3 to 4 [\#216](https://github.com/tlambert03/ome-types/pull/216) ([dependabot[bot]](https://github.com/apps/dependabot))
+- build: use pydantic-compat library [\#213](https://github.com/tlambert03/ome-types/pull/213) ([tlambert03](https://github.com/tlambert03))
+
 ## [v0.4.2](https://github.com/tlambert03/ome-types/tree/v0.4.2) (2023-08-20)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.1...v0.4.2)

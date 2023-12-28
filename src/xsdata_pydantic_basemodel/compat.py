@@ -46,10 +46,12 @@ class AnyElement(PydanticCompatMixin, BaseModel):
     text: Optional[str] = Field(default=None)
     tail: Optional[str] = Field(default=None)
     children: List["AnyElement"] = Field(
-        default_factory=list, metadata={"type": XmlType.WILDCARD}
+        default_factory=list,
+        metadata={"type": XmlType.WILDCARD},  # type: ignore [call-arg]
     )
     attributes: Dict[str, str] = Field(
-        default_factory=dict, metadata={"type": XmlType.ATTRIBUTES}
+        default_factory=dict,
+        metadata={"type": XmlType.ATTRIBUTES},  # type: ignore [call-arg]
     )
 
     model_config: ClassVar["ConfigDict"] = {"arbitrary_types_allowed": True}
@@ -100,7 +102,7 @@ class PydanticBaseModel(Dataclasses):
         return False
 
     def get_fields(self, obj: Any) -> Tuple[Any, ...]:
-        return tuple(dataclass_fields(obj))
+        return dataclass_fields(obj)
 
 
 class_types.register("pydantic-basemodel", PydanticBaseModel())

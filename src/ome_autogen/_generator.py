@@ -47,6 +47,14 @@ ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
         lambda c: c.name == "PixelType",
         "\n\nnumpy_dtype = property(pixel_type_to_numpy_dtype)",
     ),
+    (
+        lambda c: c.name == "OME",
+        "\n\n_v_structured_annotations = field_validator('structured_annotations', mode='before')(validate_structured_annotations)",  # noqa: E501
+    ),
+    (
+        lambda c: c.name == "ROI",
+        "\n\n_v_shape_union = field_validator('union', mode='before')(validate_shape_union)",  # noqa: E501
+    ),
 ]
 
 
@@ -60,18 +68,17 @@ CLASS_OVERRIDES = [
     Override("FillColor", "Color", "ome_types.model._color"),
     Override("StrokeColor", "Color", "ome_types.model._color"),
     Override("Color", "Color", "ome_types.model._color"),
-    Override("Union", "ShapeUnion", "ome_types.model._shape_union"),
-    Override(
-        "StructuredAnnotations",
-        "StructuredAnnotationList",
-        "ome_types.model._structured_annotations",
-    ),
+    # make the type annotation Non-Optional for structured annotations
+    Override("StructuredAnnotations", "StructuredAnnotations", None),
 ]
 # classes that should never be optional, but always have default_factories
 NO_OPTIONAL = {"Union", "StructuredAnnotations"}
 
 # if these names are found as default=..., turn them into default_factory=...
-FACTORIZE = set([x.class_name for x in CLASS_OVERRIDES] + ["StructuredAnnotations"])
+FACTORIZE = set(
+    [x.class_name for x in CLASS_OVERRIDES]
+    + ["StructuredAnnotations", "lambda: ROI.Union()"]
+)
 
 # prebuilt maps for usage in code below
 OVERRIDE_ELEM_TO_CLASS = {o.element_name: o.class_name for o in CLASS_OVERRIDES}
@@ -96,6 +103,8 @@ IMPORT_PATTERNS.update(
             "pixels_root_validator": ["pixels_root_validator"],
             "xml_value_validator": ["xml_value_validator"],
             "pixel_type_to_numpy_dtype": ["pixel_type_to_numpy_dtype"],
+            "validate_structured_annotations": ["validate_structured_annotations"],
+            "validate_shape_union": ["validate_shape_union"],
         },
     }
 )
@@ -250,6 +259,14 @@ class OmeFilters(PydanticBaseFilters):
             if attr.name == override.element_name:
                 if not self._attr_is_optional(attr):
                     return override.class_name
+
+        # HACK
+        # Two special cases to make ROI.Union and OME.StructuredAnnotations
+        # have default_factory=...
+        if attr.name == "Union":
+            return "lambda: ROI.Union()"
+        if attr.name == "StructuredAnnotations":
+            return "StructuredAnnotations"
         return super().field_default_value(attr, ns_map)
 
     def format_arguments(self, kwargs: dict, indent: int = 0) -> str:

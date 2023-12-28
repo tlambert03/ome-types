@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import pickle
 import re
 import sys
@@ -166,3 +167,9 @@ def test_canonicalize() -> None:
     pytest.importorskip("lxml")
     ome = from_xml(DATA / "example.ome.xml", validate=True)
     _ = to_xml(ome, validate=True, canonicalize=True)
+
+
+def test_export_schema() -> None:
+    schema = OME.model_json_schema()
+    assert isinstance(schema, dict)
+    assert isinstance(json.dumps(schema), str)

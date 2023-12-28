@@ -75,6 +75,7 @@ class PydanticBaseFilters(Filters):
         # The choice to use v1 syntax for cross-compatible mode has to do with
         # https://docs.pydantic.dev/usage/schema/#unenforced-field-constraints
         # There were more fields in v1 than in v2, so "min_length" is degenerate in v2
+        # NOTE: ... this might be fixed by using pydantic_compat?
         if self.pydantic_support == "v2":
             use_v2 = True
         elif self.pydantic_support == "auto":
