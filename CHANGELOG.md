@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.5.0](https://github.com/tlambert03/ome-types/tree/v0.5.0) (2023-12-28)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.5...v0.5.0)
+
+**Merged pull requests:**
+
+- refactor: different pattern for structured annotations list and shapes union [\#237](https://github.com/tlambert03/ome-types/pull/237) ([tlambert03](https://github.com/tlambert03))
+
 ## [v0.4.5](https://github.com/tlambert03/ome-types/tree/v0.4.5) (2023-12-17)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.3...v0.4.5)
