@@ -35,7 +35,7 @@ jobs:
           python -m pip install .[test]
           python -m pip install bioformats_jar
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: cache
         with:
           path: aicsimageio/tests/resources
@@ -75,7 +75,7 @@ jobs:
           python -m pip install paquo
 
       - name: Restore qupath cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           CACHE_NUMBER: 0
         with:
@@ -116,7 +116,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install .[test]
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: cache
         with:
           path: tests/data
