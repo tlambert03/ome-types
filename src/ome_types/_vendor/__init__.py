@@ -5,6 +5,7 @@ require pydantic-extra-types because it pins pydantic to >2.0.0.  So, in order t
 retain compatibility with pydantic 1.x and 2.x without getting the color warning, and
 without accidentally pinning pydantic, we vendor the two Color classes here.
 """
+
 import pydantic.version
 
 if pydantic.version.VERSION.startswith("2"):

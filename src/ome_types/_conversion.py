@@ -324,8 +324,7 @@ def _canonicalize(xml: str, indent: str) -> str:
 # ------------------------
 
 
-class ValidationError(ValueError):
-    ...
+class ValidationError(ValueError): ...
 
 
 def validate_xml(
@@ -406,8 +405,7 @@ TRANSFORMS = {
 @overload
 def ensure_2016(
     source: XMLSource, *, warn_on_schema_update: bool = ..., as_tree: Literal[True]
-) -> AnyElementTree:
-    ...
+) -> AnyElementTree: ...
 
 
 @overload
@@ -416,8 +414,7 @@ def ensure_2016(
     *,
     warn_on_schema_update: bool = ...,
     as_tree: Literal[False] = ...,
-) -> FileLike:
-    ...
+) -> FileLike: ...
 
 
 def ensure_2016(
