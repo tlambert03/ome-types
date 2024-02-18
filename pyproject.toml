@@ -26,6 +26,7 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
 ]
 dynamic = ["version"]
 dependencies = [
@@ -48,24 +49,21 @@ ome-types = "ome_types:napari.yaml"
 [project.optional-dependencies]
 pint = ["Pint >=0.15"]
 lxml = ["lxml >=4.8.0"]
-dev = [
-  "black",
-  "ruff",
-  "xsdata[cli]>=23.6",
-  "mypy",
-  "pre-commit",
-  "types-lxml; python_version >= '3.8'",
-]
+dev = ["pre-commit", "types-lxml; python_version >= '3.8'"]
 docs = ["mkdocs-material", "mkdocstrings-python"]
 test = [
+  "black",
   "lxml",
+  "mypy",
   "numpy",
   "pint",
   "pytest-codspeed",
   "pytest-cov",
   "pytest-mypy-plugins",
   "pytest",
+  "ruff",
   "xmlschema <2.5",      # FIXME: determine why
+  "xsdata[cli]>=23.6",
 ]
 test-qt = ["qtpy", "pytest-qt"]
 

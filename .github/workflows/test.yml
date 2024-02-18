@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         platform: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - python-version: "3.7"
@@ -81,6 +81,20 @@ jobs:
         if: matrix.python-version != '3.7'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-min-reqs:
+    name: Test min reqs
+    uses: pyapp-kit/workflows/.github/workflows/test-pyrepo.yml@main
+    with:
+      os: ubuntu-latest
+      python-version: ${{ matrix.python-version }}
+      pip-install-min-reqs: true
+    secrets:
+      codecov-token: ${{ secrets.CODECOV_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
   test-widget:
     name: test-widget
