@@ -2,6 +2,7 @@
 
 that logic is in the `methods` method in ome_autogen/_generator.py
 """
+
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Sequence
 

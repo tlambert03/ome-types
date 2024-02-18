@@ -12,6 +12,7 @@ A few colors have multiple names referring to the sames colors, eg. `grey` and `
 In these cases the LAST color when sorted alphabetically takes preferences,
 eg. Color((0, 255, 255)).as_named() == 'cyan' because "cyan" comes after "aqua".
 """
+
 import math
 import re
 from colorsys import hls_to_rgb, rgb_to_hls

@@ -77,8 +77,10 @@ jobs:
           pip uninstall -y lxml xmlschema
           pytest --cov --cov-report=xml --cov-append
 
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         if: matrix.python-version != '3.7'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   test-min-reqs:
     name: Test min reqs
@@ -150,7 +152,9 @@ jobs:
           python -m pip install 'pydantic>=2'
           pytest --cov --cov-report=xml --cov-append
 
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   test-types:
     name: Typesafety
