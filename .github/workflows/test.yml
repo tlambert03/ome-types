@@ -79,6 +79,8 @@ jobs:
 
       - uses: codecov/codecov-action@v4
         if: matrix.python-version != '3.7'
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   test-widget:
     name: test-widget
@@ -137,6 +139,8 @@ jobs:
           pytest --cov --cov-report=xml --cov-append
 
       - uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   test-types:
     name: Typesafety
