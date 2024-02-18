@@ -31,7 +31,7 @@ dynamic = ["version"]
 dependencies = [
   "pydantic >=1.9.0",
   "pydantic-compat >=0.1.0",
-  "xsdata >=23.5",                              # 23.6 necessary for codegen, but not for runtime
+  "xsdata >=23.5, <25",                         # >=23.6 necessary for codegen, but not for runtime
   "importlib_metadata; python_version < '3.8'",
 ]
 
@@ -65,7 +65,7 @@ test = [
   "pytest-cov",
   "pytest-mypy-plugins",
   "pytest",
-  "xmlschema <2.5",  # FIXME: determine why
+  "xmlschema <2.5",      # FIXME: determine why
 ]
 test-qt = ["qtpy", "pytest-qt"]
 
