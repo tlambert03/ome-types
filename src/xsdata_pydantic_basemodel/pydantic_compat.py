@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses as dc
 import warnings
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Callable, Iterator, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from pydantic_compat import PYDANTIC2, Field
 
@@ -101,9 +101,9 @@ def _pydantic_field_to_dataclass_field(
 
 
 @lru_cache(maxsize=None)
-def dataclass_fields(obj: type[M]) -> Iterator[dc.Field]:
+def dataclass_fields(obj: type[M]) -> tuple[dc.Field, ...]:
     """Return a tuple of dataclass fields for the given pydantic model class."""
-    return (
+    return tuple(
         _pydantic_field_to_dataclass_field(name, f)
         for name, f in obj.model_fields.items()
     )

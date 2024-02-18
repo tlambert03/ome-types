@@ -105,7 +105,7 @@ class PydanticBaseModel(Dataclasses):
     #
     # https://github.com/tefra/xsdata/pull/949
     def get_fields(self, obj: Any) -> Iterator[dc.Field]:  # type: ignore[override]
-        return dataclass_fields(obj)
+        yield from dataclass_fields(obj)
 
 
 class_types.register("pydantic-basemodel", PydanticBaseModel())

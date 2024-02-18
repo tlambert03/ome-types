@@ -20,9 +20,9 @@ from __future__ import annotations
 import math
 import re
 import sys
-from colorsys import hls_to_rgb, rgb_to_hls
-from typing import Any, Callable, Tuple, Union, cast, TYPE_CHECKING
 import typing
+from colorsys import hls_to_rgb, rgb_to_hls
+from typing import TYPE_CHECKING, Any, Callable, Tuple, Union, cast
 
 if sys.version_info >= (3, 8):  # pragma: no cover
     from typing import Literal
@@ -192,13 +192,16 @@ class Color(Representation):
         otherwise returns the hexadecimal representation of the color or raises `ValueError`.
 
         Args:
+        ----
             fallback: If True, falls back to returning the hexadecimal representation of
                 the color instead of raising a ValueError when no named color is found.
 
         Returns:
+        -------
             The name of the color, or the hexadecimal representation of the color.
 
         Raises:
+        ------
             ValueError: When no named color is found and fallback is `False`.
         """
         if self._rgba.alpha is None:
@@ -221,7 +224,8 @@ class Color(Representation):
         Hex string representing the color can be 3, 4, 6, or 8 characters depending on whether the string
         a "short" representation of the color is possible and whether there's an alpha channel.
 
-        Returns:
+        Returns
+        -------
             The hexadecimal representation of the color.
         """
         values = [float_to_255(c) for c in self._rgba[:3]]
@@ -250,6 +254,7 @@ class Color(Representation):
         Returns the color as an RGB or RGBA tuple.
 
         Args:
+        ----
             alpha: Whether to include the alpha channel. There are three options for this input:
 
                 - `None` (default): Include alpha only if it's set. (e.g. not `None`)
@@ -257,6 +262,7 @@ class Color(Representation):
                 - `False`: Always omit alpha.
 
         Returns:
+        -------
             A tuple that contains the values of the red, green, and blue channels in the range 0 to 255.
                 If alpha is included, it is in the range 0 to 1.
         """
@@ -288,6 +294,7 @@ class Color(Representation):
         Returns the color as an HSL or HSLA tuple.
 
         Args:
+        ----
             alpha: Whether to include the alpha channel.
 
                 - `None` (default): Include the alpha channel only if it's set (e.g. not `None`).
@@ -295,10 +302,12 @@ class Color(Representation):
                 - `False`: Always omit alpha.
 
         Returns:
+        -------
             The color as a tuple of hue, saturation, lightness, and alpha (if included).
                 All elements are in the range 0 to 1.
 
         Note:
+        ----
             This is HSL as used in HTML and most other places, not HLS as used in Python's `colorsys`.
         """
         h, l, s = rgb_to_hls(self._rgba.r, self._rgba.g, self._rgba.b)  # noqa: E741
@@ -349,12 +358,15 @@ def parse_tuple(value: tuple[Any, ...]) -> RGBA:
     """Parse a tuple or list to get RGBA values.
 
     Args:
+    ----
         value: A tuple or list.
 
     Returns:
+    -------
         An `RGBA` tuple parsed from the input tuple.
 
     Raises:
+    ------
         PydanticCustomError: If tuple is not valid.
     """
     if len(value) == 3:
@@ -383,12 +395,15 @@ def parse_str(value: str) -> RGBA:
     * `transparent`
 
     Args:
+    ----
         value: A string representing a color.
 
     Returns:
+    -------
         An `RGBA` tuple parsed from the input string.
 
     Raises:
+    ------
         ValueError: If the input string cannot be parsed to an RGBA tuple.
     """
     value_lower = value.lower()
@@ -446,12 +461,14 @@ def ints_to_rgba(
     Converts integer or string values for RGB color and an optional alpha value to an `RGBA` object.
 
     Args:
+    ----
         r: An integer or string representing the red color value.
         g: An integer or string representing the green color value.
         b: An integer or string representing the blue color value.
         alpha: A float representing the alpha value. Defaults to None.
 
     Returns:
+    -------
         An instance of the `RGBA` class with the corresponding color and alpha values.
     """
     return RGBA(
@@ -467,13 +484,16 @@ def parse_color_value(value: int | str, max_val: int = 255) -> float:
     Parse the color value provided and return a number between 0 and 1.
 
     Args:
+    ----
         value: An integer or string color value.
         max_val: Maximum range value. Defaults to 255.
 
     Raises:
+    ------
         PydanticCustomError: If the value is not a valid color.
 
     Returns:
+    -------
         A number between 0 and 1.
     """
     try:
@@ -498,12 +518,15 @@ def parse_float_alpha(value: None | str | float | int) -> float | None:
     Parse an alpha value checking it's a valid float in the range 0 to 1.
 
     Args:
+    ----
         value: The input value to parse.
 
     Returns:
+    -------
         The parsed value as a float, or `None` if the value was None or equal 1.
 
     Raises:
+    ------
         PydanticCustomError: If the input value cannot be successfully parsed as a float in the expected range.
     """
     if value is None:
@@ -537,6 +560,7 @@ def parse_hsl(
     Parse raw hue, saturation, lightness, and alpha values and convert to RGBA.
 
     Args:
+    ----
         h: The hue value.
         h_units: The unit for hue value.
         sat: The saturation value.
@@ -544,6 +568,7 @@ def parse_hsl(
         alpha: Alpha value.
 
     Returns:
+    -------
         An instance of `RGBA`.
     """
     s_value, l_value = parse_color_value(sat, 100), parse_color_value(light, 100)
@@ -566,9 +591,11 @@ def float_to_255(c: float) -> int:
     Converts a float value between 0 and 1 (inclusive) to an integer between 0 and 255 (inclusive).
 
     Args:
+    ----
         c: The float value to be converted. Must be between 0 and 1 (inclusive).
 
     Returns:
+    -------
         The integer equivalent of the given float value rounded to the nearest whole number.
     """
     return round(c * 255)
