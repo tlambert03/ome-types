@@ -1,3 +1,4 @@
+import dataclasses as dc
 from contextlib import suppress
 from typing import (
     TYPE_CHECKING,
@@ -6,9 +7,9 @@ from typing import (
     ClassVar,
     Dict,
     Generic,
+    Iterator,
     List,
     Optional,
-    Tuple,
     Type,
     TypeVar,
 )
@@ -101,7 +102,9 @@ class PydanticBaseModel(Dataclasses):
 
         return False
 
-    def get_fields(self, obj: Any) -> Tuple[Any, ...]:
+    #
+    # https://github.com/tefra/xsdata/pull/949
+    def get_fields(self, obj: Any) -> Iterator[dc.Field]:  # type: ignore[override]
         return dataclass_fields(obj)
 
 

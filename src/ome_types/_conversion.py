@@ -232,7 +232,9 @@ def to_dict(source: OME | XMLSource) -> dict[str, Any]:
         source,
         # the class_factory is what prevents class instantiation,
         # simply returning the params instead
-        parser_kwargs={"config": ParserConfig(class_factory=lambda a, b: b)},
+        # normally, the class_factory is supposed to return an instance of a,
+        # hence the type: ignore
+        parser_kwargs={"config": ParserConfig(class_factory=lambda a, b: b)},  # type: ignore
     )
 
 

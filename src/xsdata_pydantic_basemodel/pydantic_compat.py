@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import dataclasses as dc
 import warnings
-from dataclasses import MISSING, field
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Iterator, TypeVar
 
 from pydantic_compat import PYDANTIC2, Field
 
@@ -45,18 +45,20 @@ else:
 def _get_defaults(pydantic_field: FieldInfo) -> tuple[Any, Any]:
     if pydantic_field.default_factory is not None:
         default_factory: Any = pydantic_field.default_factory
-        default = MISSING
+        default = dc.MISSING
     else:
-        default_factory = MISSING
+        default_factory = dc.MISSING
         default = (
-            MISSING
+            dc.MISSING
             if pydantic_field.default in (Undefined, Ellipsis)
             else pydantic_field.default
         )
     return default_factory, default
 
 
-def _pydantic_field_to_dataclass_field(name: str, pydantic_field: FieldInfo) -> Any:
+def _pydantic_field_to_dataclass_field(
+    name: str, pydantic_field: FieldInfo
+) -> dc.Field:
     default_factory, default = _get_defaults(pydantic_field)
 
     metadata = _get_metadata(pydantic_field).copy()
@@ -91,7 +93,7 @@ def _pydantic_field_to_dataclass_field(name: str, pydantic_field: FieldInfo) -> 
             choices.append(choice)
         metadata["choices"] = choices
 
-    dataclass_field = field(  # type: ignore
+    dataclass_field = dc.field(  # type: ignore
         default=default, default_factory=default_factory, metadata=metadata
     )
     dataclass_field.name = name
@@ -99,9 +101,9 @@ def _pydantic_field_to_dataclass_field(name: str, pydantic_field: FieldInfo) -> 
 
 
 @lru_cache(maxsize=None)
-def dataclass_fields(obj: type[M]) -> tuple:
+def dataclass_fields(obj: type[M]) -> Iterator[dc.Field]:
     """Return a tuple of dataclass fields for the given pydantic model class."""
-    return tuple(
+    return (
         _pydantic_field_to_dataclass_field(name, f)
         for name, f in obj.model_fields.items()
     )
