@@ -32,7 +32,7 @@ class XmlContext(context.XmlContext):
 class SerializerConfig(config.SerializerConfig):
     # here to add `ignore_unset_attributes` support to XmlSerializer
     __slots__ = (
-        *config.SerializerConfig.__slots__,
+        *getattr(config.SerializerConfig, '__slots__', ()),
         "ignore_unset_attributes",
         "attribute_sort_key",
     )

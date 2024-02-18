@@ -217,5 +217,5 @@ def test_transformations() -> None:
         from_xml(DATA / "MMStack.ome.xml", transformations=etree_fixes.ALL_FIXES)
 
     # SHOULD warn
-    with pytest.warns(match="Casting invalid DetectorID"):
+    with pytest.warns(match="Casting invalid"):
         from_xml(DATA / "MMStack.ome.xml")

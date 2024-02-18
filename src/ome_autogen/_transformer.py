@@ -7,7 +7,16 @@ from xsdata.codegen.analyzer import ClassAnalyzer
 from xsdata.codegen.container import ClassContainer
 from xsdata.codegen.handlers import RenameDuplicateAttributes
 from xsdata.codegen.mappers.schema import SchemaMapper
-from xsdata.codegen.transformer import SchemaTransformer
+
+if TYPE_CHECKING:
+    from xsdata.codegen.transformer import ResourceTransformer
+
+else:
+    try:
+        from xsdata.codegen.transformer import ResourceTransformer
+    except ImportError:
+        from xsdata.codegen.transformer import SchemaTransformer as ResourceTransformer
+
 from xsdata.models.xsd import Attribute
 
 if TYPE_CHECKING:
@@ -49,7 +58,7 @@ class OMESchemaMapper(SchemaMapper):
     pass
 
 
-class OMETransformer(SchemaTransformer):
+class OMETransformer(ResourceTransformer):
     # overriding to use our own schema mapper
     def generate_classes(self, schema: Schema) -> list[Class]:
         """Convert the given schema tree to a list of classes."""
