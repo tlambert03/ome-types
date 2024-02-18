@@ -232,7 +232,9 @@ def to_dict(source: OME | XMLSource) -> dict[str, Any]:
         source,
         # the class_factory is what prevents class instantiation,
         # simply returning the params instead
-        parser_kwargs={"config": ParserConfig(class_factory=lambda a, b: b)},
+        # normally, the class_factory is supposed to return an instance of a,
+        # hence the type: ignore
+        parser_kwargs={"config": ParserConfig(class_factory=lambda a, b: b)},  # type: ignore
     )
 
 
@@ -281,9 +283,16 @@ def to_xml(
     str
         The XML document as a string.
     """
+    # xsdata>=24.2
+    if hasattr(SerializerConfig, "indent"):
+        indent_kwargs: dict = {"indent": " " * indent}
+    else:
+        indent_kwargs = {
+            "pretty_print": (indent > 0) and not canonicalize,  # canonicalize does it
+            "pretty_print_indent": " " * indent,
+        }
     config = SerializerConfig(
-        pretty_print=(indent > 0) and not canonicalize,  # canonicalize does it for us
-        pretty_print_indent=" " * indent,
+        **indent_kwargs,
         xml_declaration=False,
         ignore_default_attributes=exclude_defaults,
         ignore_unset_attributes=exclude_unset,

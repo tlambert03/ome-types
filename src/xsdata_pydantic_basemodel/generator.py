@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import re
+from typing import TYPE_CHECKING, Any, Callable
 
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
+from xsdata.utils import text
 from xsdata.utils.collections import unique_sequence
-from xsdata.utils.text import stop_words
 
 from xsdata_pydantic_basemodel.pydantic_compat import PYDANTIC2
 
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
     from xsdata.codegen.models import Attr, Class
     from xsdata.models.config import GeneratorConfig, OutputFormat
 
-stop_words.update(("schema", "validate"))
+text.stop_words.update(("schema", "validate"))
 
 
 class PydanticBaseGenerator(DataclassGenerator):
@@ -93,6 +94,30 @@ class PydanticBaseFilters(Filters):
 
         if use_v2 and "metadata" in kwargs:
             kwargs["json_schema_extra"] = kwargs.pop("metadata")
+
+    # note, this method is the same as the base class implementation before it
+    # was changed in xsdata v24.  that change breaks private package names... so
+    # we're using the old implementation here.
+    # https://github.com/tefra/xsdata/issues/948
+    def safe_name(
+        self, name: str, prefix: str, name_case: Callable, **kwargs: Any
+    ) -> str:
+        """Sanitize names for safe generation."""
+        if not name:
+            return self.safe_name(prefix, prefix, name_case, **kwargs)
+
+        if re.match(r"^-\d*\.?\d+$", name):
+            return self.safe_name(f"{prefix}_minus_{name}", prefix, name_case, **kwargs)
+
+        slug = text.alnum(name)
+        if not slug or not slug[0].isalpha():
+            return self.safe_name(f"{prefix}_{name}", prefix, name_case, **kwargs)
+
+        result = name_case(name, **kwargs)
+        if text.is_reserved(result):
+            return self.safe_name(f"{name}_{prefix}", prefix, name_case, **kwargs)
+
+        return result
 
 
 V1_RESTRICTION_MAP = {

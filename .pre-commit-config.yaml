@@ -32,6 +32,6 @@ repos:
         additional_dependencies:
           - pydantic>=2
           - pydantic-compat
-          - xsdata
+          - xsdata>=24
           - Pint
           - types-lxml; python_version > '3.8'

@@ -174,11 +174,12 @@ class OmeFilters(PydanticBaseFilters):
             self.union_type = prev_u
             self.subscriptable_types = prev_s
 
-    def class_params(self, obj: Class) -> Iterator[tuple[str, str, str]]:
+    def class_params(self, obj: Class) -> Iterator[tuple[str, str, str]]:  # type: ignore[override]
         # This method override goes along with the docstring jinja template override
         # to fixup the numpy docstring format.
         # https://github.com/tefra/xsdata/issues/818
-
+        # The type ignore is because xsdata returns an iterator of 2-tuples
+        # but we want to return a 3-tuple.
         if sys.version_info < (3, 8):  # pragma: no cover
             # i don't know why, but in python 3.7, it's not picking up our
             # template ... so this method yields too many values to unpack
