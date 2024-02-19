@@ -8,8 +8,9 @@ from typing import TYPE_CHECKING, Any, cast
 from ome_types._pydantic_compat import field_regex
 
 if TYPE_CHECKING:
+    from typing import Final
+
     from pydantic import BaseModel
-    from typing_extensions import Final
 
 # Default value to support automatic numbering for id field values.
 AUTO_SEQUENCE: Final = "__auto_sequence__"
