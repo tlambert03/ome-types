@@ -89,8 +89,7 @@ jobs:
       os: ubuntu-latest
       python-version: ${{ matrix.python-version }}
       pip-install-min-reqs: true
-    secrets:
-      codecov-token: ${{ secrets.CODECOV_TOKEN }}
+      pytest-cov-flags: ""
     strategy:
       fail-fast: false
       matrix:
