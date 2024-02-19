@@ -26,12 +26,11 @@ except ImportError:  # pragma: no cover
 
 
 if TYPE_CHECKING:
-    from typing import Any, BinaryIO, ContextManager, TypedDict
+    from typing import Any, BinaryIO, ContextManager, Literal, TypedDict
     from xml.etree import ElementTree
 
     import xmlschema
     from lxml.etree import _XSLTResultTree
-    from typing_extensions import Literal
     from xsdata.formats.dataclass.parsers.mixins import XmlHandler
 
     from ome_types._mixins._base_type import OMEType

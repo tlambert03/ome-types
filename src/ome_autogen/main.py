@@ -106,8 +106,8 @@ def _print_green(text: str) -> None:
 
 KWARGS_MODULE = """
 from __future__ import annotations
-from typing_extensions import TypedDict, TypeAlias
-from typing import Union, List
+from typing_extensions import TypeAlias
+from typing import Union, List, TypedDict
 from datetime import datetime
 import ome_types.model as ome
 
