@@ -1,8 +1,27 @@
 # Changelog
 
-## [v0.5.0](https://github.com/tlambert03/ome-types/tree/v0.5.0) (2023-12-28)
+## [v0.5.0](https://github.com/tlambert03/ome-types/tree/v0.5.0) (2024-02-19)
 
-[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.5...v0.5.0)
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.5.0rc0...v0.5.0)
+
+**Fixed bugs:**
+
+- fix: compatibility fixes for xsdata \>=24 [\#243](https://github.com/tlambert03/ome-types/pull/243) ([tlambert03](https://github.com/tlambert03))
+
+**Tests & CI:**
+
+- ci: support python 3.12 and test min dependencies on ci [\#244](https://github.com/tlambert03/ome-types/pull/244) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- ci\(dependabot\): bump codecov/codecov-action from 3 to 4 [\#241](https://github.com/tlambert03/ome-types/pull/241) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci\(pre-commit.ci\): autoupdate [\#240](https://github.com/tlambert03/ome-types/pull/240) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
+- ci\(dependabot\): bump actions/cache from 3 to 4 [\#239](https://github.com/tlambert03/ome-types/pull/239) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci\(pre-commit.ci\): autoupdate [\#238](https://github.com/tlambert03/ome-types/pull/238) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
+
+## [v0.5.0rc0](https://github.com/tlambert03/ome-types/tree/v0.5.0rc0) (2023-12-28)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.4.5...v0.5.0rc0)
 
 **Merged pull requests:**
 
