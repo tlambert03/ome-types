@@ -35,7 +35,8 @@ def test_autogen(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     """
     import ome_autogen.main
 
-    mypy = bool(not os.getenv("MIN_REQS_TEST"))
+    # use this env-var skip mypy tests
+    mypy = os.getenv("MIN_REQS_TEST") not in {"1", "true", "True"}
     ome_autogen.main.build_model(output_dir=tmp_path, do_formatting=True, do_mypy=mypy)
 
     monkeypatch.delitem(sys.modules, "ome_types")
