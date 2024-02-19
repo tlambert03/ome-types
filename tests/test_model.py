@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import datetime
 import io
-import sys
 import warnings
 from pathlib import Path
 from typing import Any
@@ -206,7 +205,6 @@ def test_update_unset(pixels: model.Pixels) -> None:
     assert from_xml(xml) == ome
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="transform doesn't work on 3.7")
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_transformations() -> None:
     from ome_types import etree_fixes
