@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!-- Warning: this comment is an OME-XML metadata block, which
+contains crucial dimensional parameters and other important metadata. Please edit cautiously (if at
+all), and back up the original data before doing so. For more information, see the OME-TIFF web
+site: http://www.openmicroscopy.org/site/support/ome-model/ome-tiff/. -->
+<OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Creator="OME Bio-Formats 5.2.0-m4"
+    UUID="urn:uuid:4bd6aecd-1da8-47b3-8271-b02240bfcd1e"
+    xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd">
+    <StructuredAnnotations>
+        <XMLAnnotation ID="Annotation:3" Namespace="openmicroscopy.org/omero/dimension/modulo">
+            <Value>
+                <Modulo namespace="http://www.openmicroscopy.org/Schemas/Additions/2011-09">
+                    <ModuloAlongZ Type="angle" Unit="degree">
+                        <Label ID="Shape:0" X="0" Y="0" Text="0" />
+                        <Label ID="Shape:1" X="90" Y="90" Text="90" />
+                        <Label ID="Shape:2" X="180" Y="180" Text="180" />
+                        <Label ID="Shape:3" X="270" Y="270" Text="270" />
+                    </ModuloAlongZ>
+                    <ModuloAlongT End="4" Start="1" Step="1" Type="tile" />
+                </Modulo>
+            </Value>
+        </XMLAnnotation>
+        <XMLAnnotation ID="Annotation:4" Namespace="openmicroscopy.org/omero/dimension/modulo">
+            <Value>
+                <Modulo namespace="http://www.openmicroscopy.org/Schemas/Additions/2011-09">
+                    <ModuloAlongZ End="580" Start="480" Step="25" Type="phase" />
+                    <ModuloAlongT Type="lambda">
+                        <Label ID="Shape:0" X="505" Y="540" Text="505-540" />
+                        <Label ID="Shape:1" X="530" Y="565" Text="530-565" />
+                        <Label ID="Shape:2" X="555" Y="590" Text="555-590" />
+                        <Label ID="Shape:3" X="580" Y="615" Text="580-615" />
+                        <Label ID="Shape:4" X="605" Y="640" Text="605-640" />
+                        <Label ID="Shape:5" X="630" Y="665" Text="630-665" />
+                        <Label ID="Shape:6" X="655" Y="690" Text="655-690" />
+                        <Label ID="Shape:7" X="680" Y="705" Text="680-705" />
+                        <Label ID="Shape:8" X="705" Y="750" Text="705-750" />
+                        <Label ID="Shape:9" X="730" Y="765" Text="730-765" />
+                    </ModuloAlongT>
+                </Modulo>
+            </Value>
+        </XMLAnnotation>
+        <XMLAnnotation ID="Annotation:Modulo:0"
+            Namespace="openmicroscopy.org/omero/dimension/modulo">
+            <Description>
+                For a description of how 6D, 7D, and 8D data is stored
+                using the Modulo extension see
+                http://www.openmicroscopy.org/site/support/ome-model/developers/6d-7d-and-8d-storage.html
+            </Description>
+            <Value>
+                <Modulo namespace="http://www.openmicroscopy.org/Schemas/Additions/2011-09">
+                    <ModuloAlongT End="8" Start="1" Step="1" Type="lifetime" TypeDescription="TCSPC"
+                        Unit="ps" />
+                </Modulo>
+            </Value>
+        </XMLAnnotation>
+        <XMLAnnotation ID="Annotation:5" Namespace="openmicroscopy.org/omero/dimension/modulo">
+            <Value>
+                <Modulo namespace="http://www.openmicroscopy.org/Schemas/Additions/2011-09">
+                    <ModuloAlongC End="8" Start="1" Step="1" Type="lifetime" Unit="ps" />
+                </Modulo>
+            </Value>
+        </XMLAnnotation>
+    </StructuredAnnotations>
+</OME>
