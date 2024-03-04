@@ -217,15 +217,15 @@ omit = [
   "src/ome_types/widget.py",
 ]
 
+[tool.typos.default]
+extend-ignore-identifiers-re = ["nd2?.*", "ND2?.*", ".*ser_schema"]
+
+[tool.typos.files]
+extend-exclude = ["*.xsd", "*.xml", "*.xsl", "*.json"]
+
 # Entry points -- REMOVE ONCE XSDATA-PYDANTIC-BASEMODEL IS SEPARATE
 [project.entry-points."xsdata.plugins.class_types"]
 xsdata_pydantic_basemodel = "xsdata_pydantic_basemodel.hooks.class_type"
 
 [project.entry-points."xsdata.plugins.cli"]
 xsdata_pydantic_basemodel = "xsdata_pydantic_basemodel.hooks.cli"
-
-[tool.typos.default]
-extend-ignore-identifiers-re = ["nd2?.*", "ND2?.*", ".*ser_schema"]
-
-[tool.typos.files]
-extend-exclude = ["*.xsd", "*.xml", "*.xsl", "*.json"]
