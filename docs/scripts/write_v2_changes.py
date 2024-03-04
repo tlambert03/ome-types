@@ -20,7 +20,7 @@ PLURALS = """
     <details>
 
     <summary>List of plural name changes</summary>
-    
+
     These fields appear in many different classes:
 
     - `annotation_ref` -> `annotation_refs`
