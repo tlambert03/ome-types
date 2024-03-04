@@ -50,7 +50,6 @@ lxml = ["lxml >=4.8.0"]
 dev = ["pre-commit", "types-lxml; python_version >= '3.8'"]
 docs = ["mkdocs-material", "mkdocstrings-python"]
 test = [
-  "black",
   "lxml",
   "mypy",
   "numpy",
@@ -70,7 +69,7 @@ test-qt = ["qtpy", "pytest-qt"]
 # requirements to run the autogen script in hatch_build.py
 require-runtime-dependencies = true
 # pin ruff for builds because it changes often
-dependencies = ["black", "ruff ==0.1.5", "xsdata[cli]>=23.6"]
+dependencies = ["ruff ==0.3.0", "xsdata[cli]>=23.6"]
 
 
 # https://hatch.pypa.io/latest/config/metadata/
@@ -147,10 +146,6 @@ ignore = [
   "tests/**/*",
   "typesafety/**/*",
 ]
-
-
-[tool.black]
-target-version = ['py38']
 
 # https://docs.pytest.org/en/6.2.x/customize.html
 [tool.pytest.ini_options]
