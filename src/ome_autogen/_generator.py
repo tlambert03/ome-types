@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing as typing_module
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Iterator, NamedTuple, cast
@@ -57,7 +58,8 @@ ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
     (
         lambda c: c.name == "Map",
         "\n\n_v_map = model_validator(mode='before')(validate_map_annotation)"
-        "\n\ndict = MapMixin._pydict",
+        "\ndict: ClassVar = MapMixin._pydict"
+        "\n__iter__: ClassVar = MapMixin.__iter__",
     ),
 ]
 
@@ -112,6 +114,11 @@ IMPORT_PATTERNS.update(
             "xml_value_validator": ["xml_value_validator"],
         },
     }
+)
+
+# not all typing names appear to be added by xsdata
+IMPORT_PATTERNS.setdefault("typing", {}).update(
+    {n: [f": {n}"] for n in dir(typing_module) if not n.startswith("_")}
 )
 
 
