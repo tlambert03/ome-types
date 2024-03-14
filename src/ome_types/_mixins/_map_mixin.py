@@ -1,12 +1,4 @@
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Iterator,
-    List,
-    MutableMapping,
-    Optional,
-)
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, MutableMapping, Optional
 
 try:
     from pydantic import model_serializer
@@ -24,7 +16,7 @@ if TYPE_CHECKING:
         def ms(self) -> List["Map.M"]: ...
 
 
-class MapMixin(MutableMapping[str, str | None]):
+class MapMixin(MutableMapping[str, Optional[str]]):
     def __delitem__(self: "HasMsProtocol", key: str) -> None:
         for m in self.ms:
             if m.k == key:
@@ -40,7 +32,7 @@ class MapMixin(MutableMapping[str, str | None]):
     def __getitem__(self: "HasMsProtocol", key: str) -> Optional[str]:
         return next((m.value for m in self.ms if m.k == key), None)
 
-    def __setitem__(self: "HasMsProtocol", key: str, value: str | None) -> None:
+    def __setitem__(self: "HasMsProtocol", key: str, value: Optional[str]) -> None:
         for m in self.ms:
             if m.k == key:
                 m.value = value or ""
