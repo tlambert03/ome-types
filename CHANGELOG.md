@@ -470,7 +470,7 @@
 
 **Merged pull requests:**
 
-- intial setup config [\#1](https://github.com/tlambert03/ome-types/pull/1) ([tlambert03](https://github.com/tlambert03))
+- initial setup config [\#1](https://github.com/tlambert03/ome-types/pull/1) ([tlambert03](https://github.com/tlambert03))
 
 
 

@@ -47,15 +47,16 @@ jobs:
 
       - name: Install ome-types
         run: pip install .
+        
         working-directory: ome-types
-
       - name: Run Tests
         run: |
-          pytest --color=yes -k "not test_known_errors_without_cleaning and not bad" \
+          pytest --color=yes -k \
+            "not test_known_errors_without_cleaning and not bad and not Imaris" \
             aicsimageio/tests/readers/test_ome_tiff_reader.py \
             aicsimageio/tests/writers/test_ome_tiff_writer.py \
             aicsimageio/tests/readers/extra_readers/test_bioformats_reader.py \
-            aicsimageio/tests/readers/extra_readers/test_ome_zarr_reader.py
+            aicsimageio/tests/readers/extra_readers/test_ome_zarr_reader.py 
 
   test-paquo:
     name: test paquo

@@ -9,7 +9,7 @@ except ImportError:
 
 
 class KindMixin(BaseModel):
-    """This mixin adds a `kind` field to the dict output.
+    """Mixin to a `kind` field to the dict output.
 
     This helps for casting a dict to a specific subclass, when the fields are
     otherwise identical.
