@@ -54,6 +54,11 @@ ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
         lambda c: c.name == "ROI",
         "\n\n_v_shape_union = field_validator('union', mode='before')(validate_shape_union)",  # noqa: E501
     ),
+    (
+        lambda c: c.name == "Map",
+        "\n\n_v_map = model_validator(mode='before')(validate_map_annotation)"
+        "\n\ndict = MapMixin._pydict",
+    ),
 ]
 
 
@@ -99,11 +104,12 @@ IMPORT_PATTERNS.update(
         "ome_types._mixins._validators": {
             "any_elements_validator": ["any_elements_validator"],
             "bin_data_root_validator": ["bin_data_root_validator"],
-            "pixels_root_validator": ["pixels_root_validator"],
-            "xml_value_validator": ["xml_value_validator"],
             "pixel_type_to_numpy_dtype": ["pixel_type_to_numpy_dtype"],
-            "validate_structured_annotations": ["validate_structured_annotations"],
+            "pixels_root_validator": ["pixels_root_validator"],
+            "validate_map_annotation": ["validate_map_annotation"],
             "validate_shape_union": ["validate_shape_union"],
+            "validate_structured_annotations": ["validate_structured_annotations"],
+            "xml_value_validator": ["xml_value_validator"],
         },
     }
 )

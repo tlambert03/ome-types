@@ -11,6 +11,7 @@ if TYPE_CHECKING:
         OME,
         ROI,
         BinData,
+        Map,
         Pixels,
         PixelType,
         StructuredAnnotations,
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
     from xsdata_pydantic_basemodel.compat import AnyElement
 
 
-# @root_validator(pre=True)
+# @model_validator(mode='before')
 def bin_data_root_validator(cls: "BinData", values: dict) -> Dict[str, Any]:
     # This catches the case of <BinData Length="0"/>, where the parser may have
     # omitted value from the dict, and sets value to b""
@@ -34,7 +35,7 @@ def bin_data_root_validator(cls: "BinData", values: dict) -> Dict[str, Any]:
     return values
 
 
-# @root_validator(pre=True)
+# @model_validator(mode='before')
 def pixels_root_validator(cls: "Pixels", value: dict) -> dict:
     if "metadata_only" in value:
         if isinstance(value["metadata_only"], bool):
@@ -123,4 +124,15 @@ def validate_shape_union(cls: "ROI", v: Any) -> "ROI.Union":
         for item in v:
             _values.setdefault(ROI.Union._field_name(item), []).append(item)
         v = _values
+    return v
+
+
+# @model_validator(mode="before")
+def validate_map_annotation(cls: "Map", v: Any) -> "Map | dict":
+    from ome_types.model import Map
+
+    if isinstance(v, dict):
+        if len(v) == 1 and "ms" in v:
+            return v
+        return {"ms": [Map.M(k=k, value=v) for k, v in v.items()]}
     return v
