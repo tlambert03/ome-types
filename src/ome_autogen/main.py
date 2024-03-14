@@ -84,7 +84,7 @@ def _check_mypy(package_dir: str) -> None:
     _print_gray("Running mypy ...")
 
     # excluding map.py until i can fix the BaseModel.__iter__ override issues
-    mypy = ["mypy", package_dir, "--strict", "--exclude=\/map.py"]
+    mypy = ["mypy", package_dir, "--strict", r"--exclude=\/map.py"]
     try:
         subprocess.check_output(mypy, stderr=subprocess.STDOUT)  # noqa S
     except subprocess.CalledProcessError as e:  # pragma: no cover
