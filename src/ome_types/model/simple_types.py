@@ -1,4 +1,4 @@
-"""This module is only here for backwards compatibility with v<0.4.0 of ome-types.
+"""Module is only here for backwards compatibility with v<0.4.0 of ome-types.
 
 Most of the types defined here are also exported from `ome_types.model`.  But for
 now, you can also import them from here.

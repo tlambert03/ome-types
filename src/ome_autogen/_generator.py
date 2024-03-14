@@ -126,7 +126,7 @@ class OmeGenerator(DataclassGenerator):
         mod = super().render_module(resolver, classes)
 
         # xsdata renames classes like "FillRule" (which appears as a SimpleType
-        # inside of the Shape ComlexType) as "Shape_FillRule".
+        # inside of the Shape ComplexType) as "Shape_FillRule".
         # We want to make them available as "FillRule" in the corresponding
         # module, (i.e. the "Shape" module in this case).
         # That is, we want "Shape = Shape_FillRule" included in the module.
