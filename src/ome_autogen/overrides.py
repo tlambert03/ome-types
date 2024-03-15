@@ -80,12 +80,12 @@ OVERRIDES: dict[str, Ovr] = {
     "PixelType": Ovr(add_lines=["numpy_dtype = property(pixel_type_to_numpy_dtype)"]),
     "OME": Ovr(
         add_lines=[
-            "_v_structured_annotations = field_validator('structured_annotations', mode='before')(validate_structured_annotations)"  # noqa: E501
+            "_v_structured_annotations = field_validator('structured_annotations', mode='before')(validate_structured_annotations)"
         ],
     ),
     "ROI": Ovr(
         add_lines=[
-            "_v_shape_union = field_validator('union', mode='before')(validate_shape_union)"  # noqa: E501
+            "_v_shape_union = field_validator('union', mode='before')(validate_shape_union)"
         ],
     ),
     "Map": Ovr(

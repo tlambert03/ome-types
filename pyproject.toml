@@ -121,7 +121,7 @@ ban-relative-imports = "all" # Disallow all relative imports.
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["D", "S"]
-"src/ome_autogen.py" = ["D10", "E501"]
+"src/ome_autogen/*.py" = ["D10", "E501"]
 ".github/*.py" = ["D"]
 "setup.py" = ["D"]
 "docs/**/*.py" = ["D"]
