@@ -14,11 +14,13 @@ PYDANTIC_SUPPORT = os.getenv("PYDANTIC_SUPPORT", "both")
 ALLOW_RESERVED_NAMES = {"type", "Type", "Union"}
 OME_FORMAT = "OME"
 MIXIN_MODULE = "ome_types._mixins"
+# class_name, import_string, whether-to-prepend
 MIXINS: list[tuple[str, str, bool]] = [
     (".*", f"{MIXIN_MODULE}._base_type.OMEType", False),  # base type on every class
     ("OME", f"{MIXIN_MODULE}._ome.OMEMixin", True),
     ("Instrument", f"{MIXIN_MODULE}._instrument.InstrumentMixin", False),
     ("Reference", f"{MIXIN_MODULE}._reference.ReferenceMixin", True),
+    ("Map", f"{MIXIN_MODULE}._map_mixin.MapMixin", False),
     ("Union", f"{MIXIN_MODULE}._collections.ShapeUnionMixin", True),
     (
         "StructuredAnnotations",

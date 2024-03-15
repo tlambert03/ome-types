@@ -217,3 +217,35 @@ def test_transformations() -> None:
     # SHOULD warn
     with pytest.warns(match="Casting invalid"):
         from_xml(DATA / "MMStack.ome.xml")
+
+
+def test_map_annotations() -> None:
+    from ome_types.model import Map, MapAnnotation
+
+    data = {"a": "string", "b": 2}
+
+    # can be created from a dict
+    map_annotation = MapAnnotation(value=data)
+    map_val = map_annotation.value
+    assert isinstance(map_annotation, MapAnnotation)
+    assert isinstance(map_val, Map)
+
+    out = map_annotation.value.model_dump()
+    assert out == {k: str(v) for k, v in data.items()}  # all values cast to str
+
+    # it's a mutable mapping
+    map_val["c"] = "new"
+    assert map_val.get("c") == "new"
+    assert map_val.get("X") is None
+    assert len(map_val) == 3
+    assert set(map_val) == {"a", "b", "c"}
+    assert dict(map_val) == map_val.model_dump() == {**out, "c": "new"}
+    del map_val["c"]
+    assert len(map_val) == 2
+
+    _ = map_annotation.to_xml()  # shouldn't fail
+
+    # only strings are allowed as values
+    data["nested"] = [1, 2]
+    with pytest.raises(ValidationError):
+        MapAnnotation(value=data)

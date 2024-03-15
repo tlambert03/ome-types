@@ -85,6 +85,7 @@ class OMEType(BaseModel):
         "arbitrary_types_allowed": True,
         "validate_assignment": True,
         "validate_default": True,
+        "coerce_numbers_to_str": True,
     }
 
     # allow use with weakref
@@ -93,16 +94,23 @@ class OMEType(BaseModel):
 
     _vid = field_validator("id", mode="before", check_fields=False)(validate_id)
 
+    def __iter__(self) -> Any:
+        return super().__iter__()
+
     def __init__(self, **data: Any) -> None:
         warn_extra = data.pop("warn_extra", True)
         field_names = set(self.model_fields)
         _move_deprecated_fields(data, field_names)
         super().__init__(**data)
+        if type(self).__name__ == "Map":
+            # special escape hack for Map subclass, which can convert any
+            # dict into appropriate key-value pairs
+            return
         kwargs = set(data.keys())
         extra = kwargs - field_names
         if extra and warn_extra:
             warnings.warn(
-                f"Unrecognized fields for type {type(self)}: {kwargs - field_names}",
+                f"Unrecognized fields for type {type(self)}: {extra}",
                 stacklevel=3,
             )
 
