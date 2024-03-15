@@ -43,7 +43,7 @@ ome-types = "ome_types:napari.yaml"
 [project.optional-dependencies]
 pint = ["Pint >=0.15"]
 lxml = ["lxml >=4.8.0"]
-dev = ["pre-commit", "types-lxml; python_version >= '3.8'"]
+dev = ["pre-commit"]
 docs = ["mkdocs-material", "mkdocstrings-python"]
 test = [
   "lxml",
@@ -55,18 +55,19 @@ test = [
   "pytest-mypy-plugins",
   "pytest",
   "ruff",
-  "xmlschema <2.5",      # FIXME: determine why
+  "xmlschema <2.5",                      # FIXME: determine why
   "xsdata[cli]",
+  "types-lxml; python_version >= '3.8'",
 ]
 test-qt = ["qtpy", "pytest-qt"]
+# pin ruff for builds because it changes often
+build = ["ruff ==0.3.0", "xsdata[cli]==24.2.1"]
 
 # https://hatch.pypa.io/latest/plugins/build-hook/custom/
 [tool.hatch.build.targets.wheel.hooks.custom]
 # requirements to run the autogen script in hatch_build.py
 require-runtime-dependencies = true
-# pin ruff for builds because it changes often
-dependencies = ["ruff ==0.3.0", "xsdata[cli]==24.2.1"]
-
+require-runtime-features = ["build"]
 
 # https://hatch.pypa.io/latest/config/metadata/
 [tool.hatch]
