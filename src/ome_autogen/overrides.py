@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import NamedTuple, Sequence
 
 # from ome_types._mixins._base_type import AUTO_SEQUENCE
