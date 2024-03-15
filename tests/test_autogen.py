@@ -24,8 +24,11 @@ def imports_autogen(monkeypatch: MonkeyPatch) -> None:
         monkeypatch.syspath_prepend(str(SRC))
 
 
+# we only run this on request, since it depends on the version of xsdata installed
+# and we strictly pin that in pyproject.toml.  Use this test when you want to update
+# the codegen dependencies.
+@pytest.mark.skipif(not os.getenv("TEST_AUTOGEN"), reason="must be run manually")
 @pytest.mark.filterwarnings("ignore:Support for class-based::pydantic")
-@pytest.mark.skipif(not os.getenv("CI"), reason="slow")
 @pytest.mark.usefixtures("imports_autogen")
 def test_autogen(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     """Test that autogen works without raising an exception.
