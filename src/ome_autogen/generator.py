@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import typing as typing_module
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, NamedTuple, cast
+from typing import TYPE_CHECKING, Iterator, cast
 
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
 
+import ome_autogen.overrides as ovr
 from ome_autogen import _util
-from ome_autogen.overrides import OVERRIDES
 from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 if TYPE_CHECKING:
@@ -17,62 +16,6 @@ if TYPE_CHECKING:
     from xsdata.codegen.models import Attr, Class
     from xsdata.codegen.resolver import DependenciesResolver
     from xsdata.models.config import GeneratorConfig
-
-
-# classes that should never be optional, but always have default_factories
-NEVER_OPTIONAL = {x for x in OVERRIDES if OVERRIDES[x].never_optional}
-DEFAULTS = {x: d for x in OVERRIDES if (d := OVERRIDES[x].default) is not None}
-
-
-class Override(NamedTuple):
-    element_name: str  # name of the attribute in the XSD
-    class_name: str  # name of our override class
-    module_name: str | None  # module where the override class is defined
-
-
-CLASS_OVERRIDES = [
-    Override("FillColor", "Color", "ome_types.model._color"),
-    Override("StrokeColor", "Color", "ome_types.model._color"),
-    Override("Color", "Color", "ome_types.model._color"),
-    # make the type annotation Non-Optional for structured annotations
-    Override("StructuredAnnotations", "StructuredAnnotations", None),
-]
-
-
-# prebuilt maps for usage in code below
-OVERRIDE_ELEM_TO_CLASS = {o.element_name: o.class_name for o in CLASS_OVERRIDES}
-IMPORT_PATTERNS = {
-    o.module_name: {
-        o.class_name: [f": {o.class_name} =", f": Optional[{o.class_name}] ="]
-    }
-    for o in CLASS_OVERRIDES
-    if o.module_name
-}
-IMPORT_PATTERNS.update(
-    {
-        "ome_types._mixins._util": {"new_uuid": ["default_factory=new_uuid"]},
-        "datetime": {"datetime": ["datetime"]},
-        "pydantic_compat": {
-            "model_validator": ["model_validator("],
-            "field_validator": ["field_validator("],
-        },
-        "ome_types._mixins._validators": {
-            "any_elements_validator": ["any_elements_validator"],
-            "bin_data_root_validator": ["bin_data_root_validator"],
-            "pixel_type_to_numpy_dtype": ["pixel_type_to_numpy_dtype"],
-            "pixels_root_validator": ["pixels_root_validator"],
-            "validate_map_annotation": ["validate_map_annotation"],
-            "validate_shape_union": ["validate_shape_union"],
-            "validate_structured_annotations": ["validate_structured_annotations"],
-            "xml_value_validator": ["xml_value_validator"],
-        },
-    }
-)
-
-# not all typing names appear to be added by xsdata
-IMPORT_PATTERNS.setdefault("typing", {}).update(
-    {n: [f": {n}"] for n in dir(typing_module) if not n.startswith("_")}
-)
 
 
 class OmeGenerator(DataclassGenerator):
@@ -166,7 +109,7 @@ class OmeFilters(PydanticBaseFilters):
         return Filters.class_bases(self, obj, class_name)
 
     def _attr_is_optional(self, attr: Attr) -> bool:
-        if attr.name in NEVER_OPTIONAL:
+        if attr.name in ovr.NEVER_OPTIONAL:
             return False
         return attr.is_nillable or (
             attr.default is None and (attr.is_optional or not self.format.kw_only)
@@ -188,8 +131,8 @@ class OmeFilters(PydanticBaseFilters):
             attr.name = self.appinfo.plurals.get(attr.name, f"{attr.name}s")
             attr._plural_set = True  # type: ignore
 
-        if attr.name in OVERRIDE_ELEM_TO_CLASS:
-            return self._format_type(attr, OVERRIDE_ELEM_TO_CLASS[attr.name])
+        if attr.name in ovr.OVERRIDE_ELEM_TO_CLASS:
+            return self._format_type(attr, ovr.OVERRIDE_ELEM_TO_CLASS[attr.name])
 
         type_name = super().field_type(attr, parents)
         # we want to use datetime.datetime instead of XmlDateTime
@@ -197,35 +140,27 @@ class OmeFilters(PydanticBaseFilters):
 
     @classmethod
     def build_import_patterns(cls) -> dict[str, dict]:
-        patterns = super().build_import_patterns()
-        patterns.setdefault("pydantic", {}).update(
-            {
-                "validator": ["validator("],
-            }
-        )
-        patterns.update(IMPORT_PATTERNS)
-        return {key: patterns[key] for key in sorted(patterns)}
+        import_patterns = super().build_import_patterns()
+        for mod, types in ovr.IMPORT_PATTERNS.items():
+            mod_entry: dict[str, list[str]] = import_patterns.setdefault(mod, {})
+            for name, patterns in types.items():
+                name_entry: list[str] = mod_entry.setdefault(name, [])
+                name_entry.extend(patterns)
+        return {key: import_patterns[key] for key in sorted(import_patterns)}
 
     def field_default_value(self, attr: Attr, ns_map: dict | None = None) -> str:
-        if attr.name in DEFAULTS:
-            return DEFAULTS[attr.name]
-
-        for override in CLASS_OVERRIDES:
-            if attr.name == override.element_name:
-                if not self._attr_is_optional(attr):
-                    return override.class_name
-
-        over = OVERRIDES.get(attr.name)
-        if over and over.default_factory:
-            return over.default_factory
+        if override := ovr.get(attr.name):
+            if override.default_factory:
+                return override.default_factory
+            if override.default:
+                return override.default
 
         return super().field_default_value(attr, ns_map)
 
     def format_arguments(self, kwargs: dict, indent: int = 0) -> str:
         # keep default_factory at the front
         attr_name = kwargs["metadata"].get("name")
-        override = OVERRIDES.get(attr_name)
-        if override and override.default_factory:
+        if (override := ovr.get(attr_name)) and override.default_factory:
             kwargs.pop("default", None)
             kwargs["default_factory"] = override.default_factory
 
@@ -243,6 +178,6 @@ class OmeFilters(PydanticBaseFilters):
         return super().constant_name(name, class_name)
 
     def methods(self, obj: Class) -> list[str]:
-        if obj.name in OVERRIDES and (lines := OVERRIDES[obj.name].add_lines):
+        if (override := ovr.get(obj.name)) and (lines := override.add_lines):
             return ["\n\n" + "\n".join(lines)]
         return []
