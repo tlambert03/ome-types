@@ -51,6 +51,6 @@ def test_autogen(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
 @pytest.mark.usefixtures("imports_autogen")
 def test_autosequence_name() -> None:
     """These should match, but shouldn't be imported from each other."""
-    from ome_autogen import _generator
+    from ome_autogen import overrides
 
-    assert _generator.AUTO_SEQUENCE == _base_type.AUTO_SEQUENCE
+    assert overrides.AUTO_SEQUENCE == _base_type.AUTO_SEQUENCE

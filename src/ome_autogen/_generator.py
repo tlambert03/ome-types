@@ -3,12 +3,13 @@ from __future__ import annotations
 import typing as typing_module
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Iterator, NamedTuple, cast
+from typing import TYPE_CHECKING, Iterator, NamedTuple, cast
 
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
 
 from ome_autogen import _util
+from ome_autogen.overrides import OVERRIDES
 from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 if TYPE_CHECKING:
@@ -18,50 +19,9 @@ if TYPE_CHECKING:
     from xsdata.models.config import GeneratorConfig
 
 
-# from ome_types._mixins._base_type import AUTO_SEQUENCE
-# avoiding import to avoid build-time dependency on the ome-types package
-AUTO_SEQUENCE = "__auto_sequence__"
-
-# Methods and/or validators to add to generated classes
-# (predicate, method) where predicate returns True if the method should be added
-# to the given class.  Note: imports for these methods are added in
-# IMPORT_PATTERNS below.
-ADDED_METHODS: list[tuple[Callable[[Class], bool], str]] = [
-    (
-        lambda c: c.name == "BinData",
-        "\n\n_vbindata = model_validator(mode='before')(bin_data_root_validator)",
-    ),
-    (
-        lambda c: c.name == "Value",
-        "\n\n_vany = field_validator('any_elements')(any_elements_validator)",
-    ),
-    (
-        lambda c: c.name == "Pixels",
-        "\n\n_vpix = model_validator(mode='before')(pixels_root_validator)",
-    ),
-    (
-        lambda c: c.name == "XMLAnnotation",
-        "\n\n_vval = field_validator('value', mode='before')(xml_value_validator)",
-    ),
-    (
-        lambda c: c.name == "PixelType",
-        "\n\nnumpy_dtype = property(pixel_type_to_numpy_dtype)",
-    ),
-    (
-        lambda c: c.name == "OME",
-        "\n\n_v_structured_annotations = field_validator('structured_annotations', mode='before')(validate_structured_annotations)",  # noqa: E501
-    ),
-    (
-        lambda c: c.name == "ROI",
-        "\n\n_v_shape_union = field_validator('union', mode='before')(validate_shape_union)",  # noqa: E501
-    ),
-    (
-        lambda c: c.name == "Map",
-        "\n\n_v_map = model_validator(mode='before')(validate_map_annotation)"
-        "\ndict: ClassVar = MapMixin._pydict"
-        "\n__iter__: ClassVar = MapMixin.__iter__",
-    ),
-]
+# classes that should never be optional, but always have default_factories
+NEVER_OPTIONAL = {x for x in OVERRIDES if OVERRIDES[x].never_optional}
+DEFAULTS = {x: d for x in OVERRIDES if (d := OVERRIDES[x].default) is not None}
 
 
 class Override(NamedTuple):
@@ -77,14 +37,7 @@ CLASS_OVERRIDES = [
     # make the type annotation Non-Optional for structured annotations
     Override("StructuredAnnotations", "StructuredAnnotations", None),
 ]
-# classes that should never be optional, but always have default_factories
-NO_OPTIONAL = {"Union", "StructuredAnnotations"}
 
-# if these names are found as default=..., turn them into default_factory=...
-FACTORIZE = set(
-    [x.class_name for x in CLASS_OVERRIDES]
-    + ["StructuredAnnotations", "lambda: ROI.Union()"]
-)
 
 # prebuilt maps for usage in code below
 OVERRIDE_ELEM_TO_CLASS = {o.element_name: o.class_name for o in CLASS_OVERRIDES}
@@ -213,7 +166,7 @@ class OmeFilters(PydanticBaseFilters):
         return Filters.class_bases(self, obj, class_name)
 
     def _attr_is_optional(self, attr: Attr) -> bool:
-        if attr.name in NO_OPTIONAL:
+        if attr.name in NEVER_OPTIONAL:
             return False
         return attr.is_nillable or (
             attr.default is None and (attr.is_optional or not self.format.kw_only)
@@ -254,26 +207,27 @@ class OmeFilters(PydanticBaseFilters):
         return {key: patterns[key] for key in sorted(patterns)}
 
     def field_default_value(self, attr: Attr, ns_map: dict | None = None) -> str:
-        if attr.tag == "Attribute" and attr.name == "ID":
-            return repr(AUTO_SEQUENCE)
+        if attr.name in DEFAULTS:
+            return DEFAULTS[attr.name]
+
         for override in CLASS_OVERRIDES:
             if attr.name == override.element_name:
                 if not self._attr_is_optional(attr):
                     return override.class_name
 
-        # HACK
-        # Two special cases to make ROI.Union and OME.StructuredAnnotations
-        # have default_factory=...
-        if attr.name == "Union":
-            return "lambda: ROI.Union()"
-        if attr.name == "StructuredAnnotations":
-            return "StructuredAnnotations"
+        over = OVERRIDES.get(attr.name)
+        if over and over.default_factory:
+            return over.default_factory
+
         return super().field_default_value(attr, ns_map)
 
     def format_arguments(self, kwargs: dict, indent: int = 0) -> str:
         # keep default_factory at the front
-        if kwargs.get("default") in FACTORIZE:
-            kwargs = {"default_factory": kwargs.pop("default"), **kwargs}
+        attr_name = kwargs["metadata"].get("name")
+        override = OVERRIDES.get(attr_name)
+        if override and override.default_factory:
+            kwargs.pop("default", None)
+            kwargs["default_factory"] = override.default_factory
 
         # uncomment this to use new_uuid as the default_factory for all UUIDs
         # but then we have an equality checking problem in the tests
@@ -289,7 +243,6 @@ class OmeFilters(PydanticBaseFilters):
         return super().constant_name(name, class_name)
 
     def methods(self, obj: Class) -> list[str]:
-        for predicate, code in ADDED_METHODS:
-            if predicate(obj):
-                return [code]
+        if obj.name in OVERRIDES and (lines := OVERRIDES[obj.name].add_lines):
+            return ["\n\n" + "\n".join(lines)]
         return []
