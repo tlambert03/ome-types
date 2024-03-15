@@ -47,7 +47,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install -U pip
-          python -m pip install .[test,dev]
+          python -m pip install .[test]
 
       - name: Test
         run: pytest --cov --cov-report=xml
@@ -73,7 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.8", "3.10", "3.12"]
 
   test-widget:
     name: test-widget
@@ -115,7 +115,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install -U pip
-          python -m pip install .[test,dev]
+          python -m pip install .[test]
         env:
           PYDANTIC_SUPPORT: ${{ matrix.pydantic }}
 
@@ -131,6 +131,26 @@ jobs:
           python -m pip install 'pydantic>=2'
           pytest --cov --cov-report=xml --cov-append
 
+      - uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install -U pip
+          python -m pip install .[test,build]
+      - name: Build
+        run: pytest --cov --cov-report=xml --cov-append -k test_autogen
+        env:
+          TEST_AUTOGEN: "1"
       - uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
