@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.5.1](https://github.com/tlambert03/ome-types/tree/v0.5.1) (2024-03-16)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.5.0...v0.5.1)
+
+**Implemented enhancements:**
+
+- feat: make Map implement MutableMapping interface [\#249](https://github.com/tlambert03/ome-types/pull/249) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- refactor: Cleanup autogeneration [\#250](https://github.com/tlambert03/ome-types/pull/250) ([tlambert03](https://github.com/tlambert03))
+- ci\(dependabot\): bump softprops/action-gh-release from 1 to 2 [\#247](https://github.com/tlambert03/ome-types/pull/247) ([dependabot[bot]](https://github.com/apps/dependabot))
+- chore: replace black with ruff-format [\#246](https://github.com/tlambert03/ome-types/pull/246) ([tlambert03](https://github.com/tlambert03))
+- build: drop support for python3.7 [\#245](https://github.com/tlambert03/ome-types/pull/245) ([tlambert03](https://github.com/tlambert03))
+
 ## [v0.5.0](https://github.com/tlambert03/ome-types/tree/v0.5.0) (2024-02-19)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.5.0rc0...v0.5.0)
