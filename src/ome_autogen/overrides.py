@@ -3,15 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sequence
 
-# from ome_types._mixins._base_type import AUTO_SEQUENCE
-# avoiding import to avoid build-time dependency on the ome-types package
+# from some_types._mixins._base_type import AUTO_SEQUENCE
+# avoiding import to avoid build-time dependency on the some-types package
 AUTO_SEQUENCE = "__auto_sequence__"
 
-MIXIN_MODULE = "ome_types._mixins"
+MIXIN_MODULE = "some_types._mixins"
 # class_name, import_string, whether-to-prepend or append to the existing Bases
 MIXINS: list[tuple[str, str, bool]] = [
-    (".*", f"{MIXIN_MODULE}._base_type.OMEType", False),  # base type on every class
-    ("OME", f"{MIXIN_MODULE}._ome.OMEMixin", True),
+    (".*", f"{MIXIN_MODULE}._base_type.SOMEType", False),  # base type on every class
+    ("SOME", f"{MIXIN_MODULE}._some.SOMEMixin", True),
     ("Instrument", f"{MIXIN_MODULE}._instrument.InstrumentMixin", False),
     ("Reference", f"{MIXIN_MODULE}._reference.ReferenceMixin", True),
     ("Map", f"{MIXIN_MODULE}._map_mixin.MapMixin", False),
@@ -37,7 +37,7 @@ class Ovr:
     # Note: imports for these methods must be added to the IMPORT_PATTERNS elswhere.
     add_lines: Sequence[str] = ()
     # when name is found as a type in the XSD, the type will be overridden with this
-    # e.g. "Color" -> ("ome_types.model._color", "Color")
+    # e.g. "Color" -> ("some_types.model._color", "Color")
     type_override: tuple[str, str] | None = None
     # When name is used as a type hint, it should never be Optional[]
     never_optional: bool = False
@@ -53,12 +53,12 @@ OVERRIDES: dict[str, Ovr] = {
     "StructuredAnnotations": Ovr(
         never_optional=True, default_factory="StructuredAnnotations"
     ),
-    "FillColor": Ovr(type_override=("ome_types.model._color", "Color")),
+    "FillColor": Ovr(type_override=("some_types.model._color", "Color")),
     "StrokeColor": Ovr(
-        type_override=("ome_types.model._color", "Color"),
+        type_override=("some_types.model._color", "Color"),
     ),
     "Color": Ovr(
-        type_override=("ome_types.model._color", "Color"),
+        type_override=("some_types.model._color", "Color"),
         default_factory="Color",
     ),
     "BinData": Ovr(
@@ -78,7 +78,7 @@ OVERRIDES: dict[str, Ovr] = {
         ],
     ),
     "PixelType": Ovr(add_lines=["numpy_dtype = property(pixel_type_to_numpy_dtype)"]),
-    "OME": Ovr(
+    "SOME": Ovr(
         add_lines=[
             "_v_structured_annotations = field_validator('structured_annotations', mode='before')(validate_structured_annotations)"
         ],
@@ -119,14 +119,14 @@ NEVER_OPTIONAL = {x for x in OVERRIDES if OVERRIDES[x].never_optional}
 # module specified, in the file where the pattern was found.
 IMPORT_PATTERNS: dict[str, dict[str, list[str]]] = {
     "typing": {"ClassVar": [": ClassVar"]},
-    "ome_types._mixins._util": {"new_uuid": ["default_factory=new_uuid"]},
+    "some_types._mixins._util": {"new_uuid": ["default_factory=new_uuid"]},
     "datetime": {"datetime": ["datetime"]},
     "pydantic": {"validator": ["validator("]},
     "pydantic_compat": {
         "model_validator": ["model_validator("],
         "field_validator": ["field_validator("],
     },
-    "ome_types._mixins._validators": {
+    "some_types._mixins._validators": {
         "any_elements_validator": ["any_elements_validator"],
         "bin_data_root_validator": ["bin_data_root_validator"],
         "pixel_type_to_numpy_dtype": ["pixel_type_to_numpy_dtype"],

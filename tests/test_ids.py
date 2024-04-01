@@ -1,8 +1,7 @@
 import pytest
-
-from ome_types import from_xml, model
-from ome_types._mixins import _ids
-from ome_types.model import Line, Rectangle
+from some_types import from_xml, model
+from some_types._mixins import _ids
+from some_types.model import Line, Rectangle
 
 
 def test_no_id(monkeypatch: "pytest.MonkeyPatch") -> None:
@@ -32,7 +31,7 @@ def test_id_conversion(monkeypatch: "pytest.MonkeyPatch") -> None:
     monkeypatch.setattr(_ids, "ID_COUNTER", {})
 
     XML_WITH_BAD_REFS = """<?xml version="1.0" ?>
-    <OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">
+    <SOME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">
         <Instrument ID="Microscope">
         </Instrument>
         <Image ID="Image:0">
@@ -41,12 +40,12 @@ def test_id_conversion(monkeypatch: "pytest.MonkeyPatch") -> None:
                 SizeX="256" SizeY="256" SizeZ="5" ID="Pixels:0" Type="uint16">
             </Pixels>
         </Image>
-    </OME>
+    </SOME>
     """
     with pytest.warns(match="Casting invalid InstrumentID"):
-        ome = from_xml(XML_WITH_BAD_REFS)
+        some = from_xml(XML_WITH_BAD_REFS)
 
-    assert ome.instruments[0].id == "Instrument:0"
-    assert ome.images[0].instrument_ref is not None
-    assert ome.images[0].instrument_ref.id == "Instrument:0"
-    assert ome.images[0].instrument_ref.ref is ome.instruments[0]
+    assert some.instruments[0].id == "Instrument:0"
+    assert some.images[0].instrument_ref is not None
+    assert some.images[0].instrument_ref.id == "Instrument:0"
+    assert some.images[0].instrument_ref.ref is some.instruments[0]

@@ -115,7 +115,7 @@
 
 **Implemented enhancements:**
 
-- feat: catch and fix lowercase 'ome' in schemas [\#209](https://github.com/tlambert03/ome-types/pull/209) ([tlambert03](https://github.com/tlambert03))
+- feat: catch and fix lowercase 'some' in schemas [\#209](https://github.com/tlambert03/ome-types/pull/209) ([tlambert03](https://github.com/tlambert03))
 - feat: add transformations to from\_xml [\#208](https://github.com/tlambert03/ome-types/pull/208) ([tlambert03](https://github.com/tlambert03))
 
 ## [v0.4.0rc3](https://github.com/tlambert03/ome-types/tree/v0.4.0rc3) (2023-07-14)
@@ -350,7 +350,7 @@
 
 **Merged pull requests:**
 
-- look for ome\_types metadata at layer.metadata\['ome\_types'\] [\#97](https://github.com/tlambert03/ome-types/pull/97) ([tlambert03](https://github.com/tlambert03))
+- look for some\_types metadata at layer.metadata\['some\_types'\] [\#97](https://github.com/tlambert03/ome-types/pull/97) ([tlambert03](https://github.com/tlambert03))
 
 ## [v0.2.6](https://github.com/tlambert03/ome-types/tree/v0.2.6) (2021-06-26)
 
@@ -358,9 +358,9 @@
 
 **Merged pull requests:**
 
-- update OME tree widget [\#95](https://github.com/tlambert03/ome-types/pull/95) ([tlambert03](https://github.com/tlambert03))
+- update SOME tree widget [\#95](https://github.com/tlambert03/ome-types/pull/95) ([tlambert03](https://github.com/tlambert03))
 - add xml viewer widget napari plugin [\#94](https://github.com/tlambert03/ome-types/pull/94) ([tlambert03](https://github.com/tlambert03))
-- Fix retrieval of non 2016 OME schema [\#92](https://github.com/tlambert03/ome-types/pull/92) ([tlambert03](https://github.com/tlambert03))
+- Fix retrieval of non 2016 SOME schema [\#92](https://github.com/tlambert03/ome-types/pull/92) ([tlambert03](https://github.com/tlambert03))
 
 ## [v0.2.5](https://github.com/tlambert03/ome-types/tree/v0.2.5) (2021-06-14)
 
@@ -368,7 +368,7 @@
 
 **Merged pull requests:**
 
-- Fix OME model creation with OME namespace prefix [\#91](https://github.com/tlambert03/ome-types/pull/91) ([tlambert03](https://github.com/tlambert03))
+- Fix SOME model creation with SOME namespace prefix [\#91](https://github.com/tlambert03/ome-types/pull/91) ([tlambert03](https://github.com/tlambert03))
 - add py.typed for pep 561 compliance [\#83](https://github.com/tlambert03/ome-types/pull/83) ([tlambert03](https://github.com/tlambert03))
 - Make ureg public and test all unit enums in simple\_types [\#82](https://github.com/tlambert03/ome-types/pull/82) ([tlambert03](https://github.com/tlambert03))
 - Change aicsimageio tests cache key [\#81](https://github.com/tlambert03/ome-types/pull/81) ([tlambert03](https://github.com/tlambert03))
@@ -447,7 +447,7 @@
 
 - improved repr [\#26](https://github.com/tlambert03/ome-types/pull/26) ([tlambert03](https://github.com/tlambert03))
 - better non-default in subclass solution [\#25](https://github.com/tlambert03/ome-types/pull/25) ([tlambert03](https://github.com/tlambert03))
-- make IDs optional, add ome\_dataclass decorator [\#23](https://github.com/tlambert03/ome-types/pull/23) ([tlambert03](https://github.com/tlambert03))
+- make IDs optional, add some\_dataclass decorator [\#23](https://github.com/tlambert03/ome-types/pull/23) ([tlambert03](https://github.com/tlambert03))
 - Rename container fields to plural form [\#22](https://github.com/tlambert03/ome-types/pull/22) ([jmuhlich](https://github.com/jmuhlich))
 - Make annotations work [\#21](https://github.com/tlambert03/ome-types/pull/21) ([jmuhlich](https://github.com/jmuhlich))
 - no disk caching [\#20](https://github.com/tlambert03/ome-types/pull/20) ([tlambert03](https://github.com/tlambert03))
@@ -455,7 +455,7 @@
 - add --nogen option to run tests on pregenerated code [\#14](https://github.com/tlambert03/ome-types/pull/14) ([tlambert03](https://github.com/tlambert03))
 - add mypy check on generated code [\#12](https://github.com/tlambert03/ome-types/pull/12) ([tlambert03](https://github.com/tlambert03))
 - Improve model for BinData [\#11](https://github.com/tlambert03/ome-types/pull/11) ([jmuhlich](https://github.com/jmuhlich))
-- Add OME sample data to tests, and mark with xfail for now [\#10](https://github.com/tlambert03/ome-types/pull/10) ([tlambert03](https://github.com/tlambert03))
+- Add SOME sample data to tests, and mark with xfail for now [\#10](https://github.com/tlambert03/ome-types/pull/10) ([tlambert03](https://github.com/tlambert03))
 - Improve typing hints in generated code [\#7](https://github.com/tlambert03/ome-types/pull/7) ([jmuhlich](https://github.com/jmuhlich))
 - Pin isort version to 4.x due to big changes in 5.x [\#6](https://github.com/tlambert03/ome-types/pull/6) ([jmuhlich](https://github.com/jmuhlich))
 

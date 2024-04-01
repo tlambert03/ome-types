@@ -2,8 +2,7 @@ import os
 from pathlib import Path
 
 import pytest
-
-from ome_types import validate_xml
+from some_types import validate_xml
 
 # to run this test locally, you can download QuPath.app as follows:
 # pip install paquo
@@ -27,13 +26,13 @@ except (ValueError, ImportError):
 
 @pytest.mark.filterwarnings("ignore::pydantic.warnings.PydanticDeprecatedSince20")
 @pytest.mark.filterwarnings("ignore:Field 'm' is deprecated. Use 'ms' instead")
-@pytest.mark.filterwarnings("ignore:Importing submodules from ome_types.model")
-def test_to_ome_xml() -> None:
+@pytest.mark.filterwarnings("ignore:Importing submodules from some_types.model")
+def test_to_some_xml() -> None:
     h = QuPathPathObjectHierarchy()
     h.add_annotation(roi=shapely.geometry.Point(1, 2))
     h.add_annotation(roi=shapely.geometry.LineString([(0, 0), (1, 1)]))
     h.add_annotation(roi=shapely.geometry.LinearRing([(0, 0), (1, 1), (2, 2)]))
     h.add_annotation(roi=shapely.geometry.box(0, 0, 1, 1))
     h.add_annotation(roi=shapely.geometry.Polygon([(0, 0), (1, 0), (2, 1), (0, 5)]))
-    xml = h.to_ome_xml()
+    xml = h.to_some_xml()
     validate_xml(xml)

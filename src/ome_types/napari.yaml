@@ -1,11 +1,11 @@
-name: ome-types
-display_name: OME Types
+name: some-types
+display_name: SOME Types
 schema_version: 0.2.0
 contributions:
   commands:
-    - id: ome-types.ome_tree
-      title: Open OME Tree widget
-      python_name: ome_types.widget:OMETree
+    - id: some-types.some_tree
+      title: Open SOME Tree widget
+      python_name: some_types.widget:SOMETree
   widgets:
-    - command: ome-types.ome_tree
-      display_name: OME Tree Widget
+    - command: some-types.some_tree
+      display_name: SOME Tree Widget

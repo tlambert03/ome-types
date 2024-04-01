@@ -1,6 +1,6 @@
 # Base Type
 
-::: ome_types._mixins._base_type
+::: some_types._mixins._base_type
     options:
-        members: [OMEType]
+        members: [SOMEType]
         show_root_toc_entry: false

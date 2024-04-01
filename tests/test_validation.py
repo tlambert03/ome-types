@@ -5,8 +5,7 @@ from contextlib import nullcontext
 from typing import TYPE_CHECKING, Callable, ContextManager
 
 import pytest
-
-from ome_types import _conversion, validate_xml
+from some_types import _conversion, validate_xml
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -23,7 +22,7 @@ with contextlib.suppress(ImportError):
     VALIDATORS["xmlschema"] = _conversion.validate_xml_with_xmlschema
 
 
-REQUIRES_TRANSFORM = {"seq0000xy01c1.ome.xml", "2008_instrument.ome.xml"}
+REQUIRES_TRANSFORM = {"seq0000xy01c1.some.xml", "2008_instrument.some.xml"}
 
 
 @pytest.mark.filterwarnings("ignore:unclosed file")

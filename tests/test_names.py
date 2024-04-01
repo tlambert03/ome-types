@@ -5,77 +5,79 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import pytest
+import some_types
 from pydantic import BaseModel, version
-
-import ome_types
-from ome_types import model
+from some_types import model
 
 PYDANTIC2 = version.VERSION.startswith("2")
 TESTS = Path(__file__).parent
 KNOWN_CHANGES: dict[str, list[tuple[str, str | None]]] = {
-    "OME.datasets": [
+    "SOME.datasets": [
         ("annotation_ref", "annotation_refs"),
         ("image_ref", "image_refs"),
     ],
-    "OME.experimenter_groups": [
+    "SOME.experimenter_groups": [
         ("annotation_ref", "annotation_refs"),
         ("experimenter_ref", "experimenter_refs"),
         ("leader", "leaders"),
     ],
-    "OME.experimenters": [("annotation_ref", "annotation_refs")],
-    "OME.experiments.microbeam_manipulations": [
+    "SOME.experimenters": [("annotation_ref", "annotation_refs")],
+    "SOME.experiments.microbeam_manipulations": [
         ("roi_ref", "roi_refs"),
         ("light_source_settings", "light_source_settings_combinations"),
     ],
-    "OME.folders": [
+    "SOME.folders": [
         ("annotation_ref", "annotation_refs"),
         ("folder_ref", "folder_refs"),
         ("image_ref", "image_refs"),
         ("roi_ref", "roi_refs"),
     ],
-    "OME.images.pixels": [("bin_data", "bin_data_blocks")],
-    "OME.images.pixels.channels": [("annotation_ref", "annotation_refs")],
-    "OME.images.pixels.channels.light_path": [
+    "SOME.images.pixels": [("bin_data", "bin_data_blocks")],
+    "SOME.images.pixels.channels": [("annotation_ref", "annotation_refs")],
+    "SOME.images.pixels.channels.light_path": [
         ("annotation_ref", "annotation_refs"),
         ("emission_filter_ref", "emission_filters"),
         ("excitation_filter_ref", "excitation_filters"),
     ],
-    "OME.images.pixels.planes": [("annotation_ref", "annotation_refs")],
-    "OME.images": [
+    "SOME.images.pixels.planes": [("annotation_ref", "annotation_refs")],
+    "SOME.images": [
         ("annotation_ref", "annotation_refs"),
         ("microbeam_manipulation_ref", "microbeam_manipulation_refs"),
         ("roi_ref", "roi_refs"),
     ],
-    "OME.images.imaging_environment.map": [("m", "ms")],
-    "OME.instruments": [
+    "SOME.images.imaging_environment.map": [("m", "ms")],
+    "SOME.instruments": [
         ("annotation_ref", "annotation_refs"),
         ("light_source_group", None),
     ],
-    "OME.instruments.detectors": [("annotation_ref", "annotation_refs")],
-    "OME.instruments.dichroics": [("annotation_ref", "annotation_refs")],
-    "OME.instruments.filter_sets": [
+    "SOME.instruments.detectors": [("annotation_ref", "annotation_refs")],
+    "SOME.instruments.dichroics": [("annotation_ref", "annotation_refs")],
+    "SOME.instruments.filter_sets": [
         ("emission_filter_ref", "emission_filters"),
         ("excitation_filter_ref", "excitation_filters"),
     ],
-    "OME.instruments.filters": [("annotation_ref", "annotation_refs")],
-    "OME.instruments.objectives": [("annotation_ref", "annotation_refs")],
-    "OME.plates": [("annotation_ref", "annotation_refs")],
-    "OME.plates.plate_acquisitions": [
+    "SOME.instruments.filters": [("annotation_ref", "annotation_refs")],
+    "SOME.instruments.objectives": [("annotation_ref", "annotation_refs")],
+    "SOME.plates": [("annotation_ref", "annotation_refs")],
+    "SOME.plates.plate_acquisitions": [
         ("annotation_ref", "annotation_refs"),
         ("well_sample_ref", "well_sample_refs"),
     ],
-    "OME.plates.wells": [("annotation_ref", "annotation_refs")],
-    "OME.projects": [
+    "SOME.plates.wells": [("annotation_ref", "annotation_refs")],
+    "SOME.projects": [
         ("annotation_ref", "annotation_refs"),
         ("dataset_ref", "dataset_refs"),
     ],
-    "OME.rois": [("annotation_ref", "annotation_refs")],
-    "OME.screens": [("annotation_ref", "annotation_refs"), ("plate_ref", "plate_refs")],
-    "OME.screens.reagents": [("annotation_ref", "annotation_refs")],
-    # OME.structured_annotations went from
+    "SOME.rois": [("annotation_ref", "annotation_refs")],
+    "SOME.screens": [
+        ("annotation_ref", "annotation_refs"),
+        ("plate_ref", "plate_refs"),
+    ],
+    "SOME.screens.reagents": [("annotation_ref", "annotation_refs")],
+    # SOME.structured_annotations went from
     # List[Annotation] -> Optional[StructuredAnnotations]
     # this is the main breaking change.
-    "OME.structured_annotations": [
+    "SOME.structured_annotations": [
         ("annotation_ref", None),
         ("id", None),
         ("annotator", None),
@@ -126,8 +128,8 @@ def _get_fields(cls: type[BaseModel]) -> dict[str, Any]:
 def test_names() -> None:
     with (TESTS / "data" / "old_model.json").open() as f:
         old_names = json.load(f)
-    new_names = _get_fields(ome_types.model.OME)
-    _assert_names_match(old_names, new_names, ("OME",))
+    new_names = _get_fields(some_types.model.SOME)
+    _assert_names_match(old_names, new_names, ("SOME",))
 
 
 V1_EXPORTS = [
@@ -192,7 +194,7 @@ V1_EXPORTS = [
     ("numeric_annotation", "NumericAnnotation"),
     ("objective", "Objective"),
     ("objective_settings", "ObjectiveSettings"),
-    ("ome", "OME"),
+    ("some", "SOME"),
     ("pixels", "Pixels"),
     ("plane", "Plane"),
     ("plate", "Plate"),
@@ -234,12 +236,12 @@ V1_EXPORTS = [
 def test_model_imports(name: str, cls_name: str) -> None:
     from importlib import import_module
 
-    # with pytest.warns(UserWarning, match="Importing submodules from ome_types.model"):
-    mod = import_module(f"ome_types.model.{name}")
+    # with pytest.warns(UserWarning, match="Importing submodules from some_types.model"):
+    mod = import_module(f"some_types.model.{name}")
 
     cls = getattr(mod, cls_name)
     assert cls is not None
-    real_module = mod = import_module(f"ome_types._autogenerated.ome_2016_06.{name}")
+    real_module = mod = import_module(f"some_types._autogenerated.some_2016_06.{name}")
 
     # modules and object must have the same id!  This is important for pickle
     assert real_module is mod
@@ -247,13 +249,13 @@ def test_model_imports(name: str, cls_name: str) -> None:
 
 
 def test_deprecated_attrs() -> None:
-    ome = ome_types.from_xml(TESTS / "data" / "instrument-units-default.ome.xml")
+    some = some_types.from_xml(TESTS / "data" / "instrument-units-default.some.xml")
     with pytest.warns(
         match="Attribute 'FilterSet.excitation_filter_ref' is "
         "deprecated, use 'excitation_filters'"
     ):
-        ref1 = ome.instruments[0].filter_sets[0].excitation_filter_ref
-    assert ref1 is ome.instruments[0].filter_sets[0].excitation_filters
+        ref1 = some.instruments[0].filter_sets[0].excitation_filter_ref
+    assert ref1 is some.instruments[0].filter_sets[0].excitation_filters
 
 
 def test_deprecated_init_args() -> None:

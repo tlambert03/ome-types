@@ -2,17 +2,16 @@ import weakref
 from typing import Any, Dict, Optional, Union
 
 from pydantic import PrivateAttr
+from some_types._mixins._base_type import SOMEType
 
-from ome_types._mixins._base_type import OMEType
 
-
-class ReferenceMixin(OMEType):
+class ReferenceMixin(SOMEType):
     _ref: Optional[weakref.ReferenceType] = PrivateAttr(None)
 
     @property
-    def ref(self) -> Union[OMEType, None]:
+    def ref(self) -> Union[SOMEType, None]:
         if self._ref is None:
-            raise ValueError("references not yet resolved on root OME object")
+            raise ValueError("references not yet resolved on root SOME object")
         return self._ref()
 
     def __getstate__(self: Any) -> Dict[str, Any]:

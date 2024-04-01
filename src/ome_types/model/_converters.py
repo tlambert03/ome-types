@@ -2,10 +2,9 @@ import datetime
 import warnings
 from typing import Any
 
+from some_types.model._color import Color
 from xsdata.formats.converter import Converter, converter
 from xsdata.models.datatype import XmlDateTime
-
-from ome_types.model._color import Color
 
 
 class DateTimeConverter(Converter):

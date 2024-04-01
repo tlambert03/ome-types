@@ -4,11 +4,11 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, cast
 
+import some_autogen.overrides as ovr
+from some_autogen import _util
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
 
-import ome_autogen.overrides as ovr
-from ome_autogen import _util
 from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 if TYPE_CHECKING:
@@ -18,10 +18,10 @@ if TYPE_CHECKING:
     from xsdata.models.config import GeneratorConfig
 
 
-class OmeGenerator(DataclassGenerator):
+class SomeGenerator(DataclassGenerator):
     @classmethod
     def init_filters(cls, config: GeneratorConfig) -> Filters:
-        return OmeFilters(config)
+        return SomeFilters(config)
 
     def render_module(
         self, resolver: DependenciesResolver, classes: list[Class]
@@ -55,7 +55,7 @@ class OmeGenerator(DataclassGenerator):
         return mod
 
 
-class OmeFilters(PydanticBaseFilters):
+class SomeFilters(PydanticBaseFilters):
     def register(self, env: Environment) -> None:
         # add our own templates dir to the search path
         tpl_dir = Path(__file__).parent.joinpath("templates")
@@ -67,7 +67,7 @@ class OmeFilters(PydanticBaseFilters):
         super().__init__(config)
 
         # TODO: it would be nice to know how to get the schema we're processing from
-        # the config.  For now, we just assume it's the OME schema and that's the
+        # the config.  For now, we just assume it's the SOME schema and that's the
         # hardcoded default in _util.get_appinfo
         self.appinfo = _util.get_appinfo()
 

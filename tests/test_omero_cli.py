@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import pytest
-
-from ome_types import OME
+from some_types import SOME
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -18,7 +17,7 @@ if TYPE_CHECKING:
 
 # this test can be run with only `pip install omero-cli-transfer --no-deps`
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
-def test_populate_omero(monkeypatch: MonkeyPatch, full_ome_object: OME) -> None:
+def test_populate_omero(monkeypatch: MonkeyPatch, full_some_object: SOME) -> None:
     monkeypatch.setitem(sys.modules, "omero.gateway", MagicMock())
     monkeypatch.setitem(sys.modules, "omero.rtypes", MagicMock())
     monkeypatch.setitem(sys.modules, "omero.model", MagicMock())
@@ -32,7 +31,7 @@ def test_populate_omero(monkeypatch: MonkeyPatch, full_ome_object: OME) -> None:
     getId.return_value.val = 2
 
     gen_omero.populate_omero(
-        full_ome_object,
+        full_some_object,
         img_map={"Image:0": (1, 2, 3)},
         conn=conn,
         hash="somehash",
@@ -89,8 +88,8 @@ def test_populate_xml(
 ) -> None:
     from omero_cli_transfer import populate_xml
 
-    dest = data_dir / "new.ome.xml"
-    ome, _ = populate_xml(
+    dest = data_dir / "new.some.xml"
+    some, _ = populate_xml(
         datatype=datatype,
         id=id,
         filepath=str(dest),
@@ -99,7 +98,7 @@ def test_populate_xml(
         barchive=False,  # write the file
         metadata=[],
     )
-    assert isinstance(ome, OME)
+    assert isinstance(some, SOME)
     assert dest.exists()
-    ome2 = OME.from_xml(dest)
-    assert ome2 == ome
+    some2 = SOME.from_xml(dest)
+    assert some2 == some

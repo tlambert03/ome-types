@@ -8,23 +8,22 @@ from typing import Any
 
 import pytest
 from pydantic import ValidationError
-
-from ome_types import from_tiff, from_xml, model, to_xml
+from some_types import from_tiff, from_xml, model, to_xml
 
 DATA = Path(__file__).parent / "data"
 
 
 def test_from_tiff() -> None:
-    """Test that OME metadata extractions from Tiff headers works."""
-    _path = DATA / "ome.tiff"
-    ome = from_tiff(_path)
-    assert len(ome.images) == 1
-    assert ome.images[0].id == "Image:0"
-    assert ome.images[0].pixels.size_x == 6
-    assert ome.images[0].pixels.channels[0].samples_per_pixel == 1
+    """Test that SOME metadata extractions from Tiff headers works."""
+    _path = DATA / "some.tiff"
+    some = from_tiff(_path)
+    assert len(some.images) == 1
+    assert some.images[0].id == "Image:0"
+    assert some.images[0].pixels.size_x == 6
+    assert some.images[0].pixels.channels[0].samples_per_pixel == 1
 
     with open(_path, "rb") as fh:
-        assert model.OME.from_tiff(fh) == ome  # class method for coverage
+        assert model.SOME.from_tiff(fh) == some  # class method for coverage
 
 
 def test_required_missing() -> None:
@@ -37,9 +36,9 @@ def test_required_missing() -> None:
 
 
 def test_refs() -> None:
-    xml = DATA / "two-screens-two-plates-four-wells.ome.xml"
-    ome = from_xml(xml)
-    assert ome.screens[0].plate_refs[0].ref is ome.plates[0]
+    xml = DATA / "two-screens-two-plates-four-wells.some.xml"
+    some = from_xml(xml)
+    assert some.screens[0].plate_refs[0].ref is some.plates[0]
 
 
 def test_datetimes() -> None:
@@ -80,28 +79,28 @@ def test_metadata_only(only: bool) -> None:
 def test_deepcopy() -> None:
     from copy import deepcopy
 
-    ome = from_xml(DATA / "example.ome.xml")
-    newome = deepcopy(ome)
+    some = from_xml(DATA / "example.some.xml")
+    newome = deepcopy(some)
 
-    assert ome == newome
-    assert ome is not newome
+    assert some == newome
+    assert some is not newome
 
 
 def test_structured_annotations() -> None:
     long = model.LongAnnotation(value=1)
     annotations = [model.CommentAnnotation(value="test comment"), long]
-    ome = model.OME(structured_annotations=annotations)
-    assert ome
-    assert len(ome.structured_annotations) == 2
-    assert "Long" in ome.to_xml()
-    ome.structured_annotations.remove(long)
-    assert "Long" not in ome.to_xml()
+    some = model.SOME(structured_annotations=annotations)
+    assert some
+    assert len(some.structured_annotations) == 2
+    assert "Long" in some.to_xml()
+    some.structured_annotations.remove(long)
+    assert "Long" not in some.to_xml()
 
-    assert list(ome.structured_annotations) == ome.structured_annotations
+    assert list(some.structured_annotations) == some.structured_annotations
 
 
 def test_colors() -> None:
-    from ome_types.model.simple_types import Color
+    from some_types.model.simple_types import Color
 
     shape = model.Shape(fill_color="red", stroke_color="blue")
     assert isinstance(shape.fill_color, Color)
@@ -126,14 +125,14 @@ def test_xml_annotation() -> None:
 
 
 XML = """
-<OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">
+<SOME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06">
 <Image ID="Image:0">
     <AcquisitionDate>2020-09-08T17:26:16.769000000</AcquisitionDate>
     <Pixels DimensionOrder="XYCTZ" Type="uint8" SizeC="1" SizeT="1"
             SizeX="18" SizeY="24" SizeZ="5">
     </Pixels>
 </Image>
-</OME>
+</SOME>
 """
 
 
@@ -160,7 +159,7 @@ def test_source_types(source_type: str, single_xml: Path) -> None:
         xml = io.BytesIO(single_xml.read_bytes())
     elif source_type == "handle":
         xml = open(single_xml, "rb")
-    assert isinstance(from_xml(xml), model.OME)
+    assert isinstance(from_xml(xml), model.SOME)
 
 
 def test_numpy_pixel_types() -> None:
@@ -178,8 +177,8 @@ def test_xml_annotations_to_etree(with_xml_annotations: Path) -> None:
     except ImportError:
         from xml.etree.ElementTree import Element as Elem  # type: ignore
 
-    ome = from_xml(with_xml_annotations)
-    for anno in ome.structured_annotations:
+    some = from_xml(with_xml_annotations)
+    for anno in some.structured_annotations:
         if isinstance(anno, model.XMLAnnotation):
             for elem in anno.value.any_elements:
                 assert isinstance(elem, AnyElement)
@@ -188,39 +187,39 @@ def test_xml_annotations_to_etree(with_xml_annotations: Path) -> None:
 
 def test_update_unset(pixels: model.Pixels) -> None:
     """Make sure objects appended to mutable sequences are included in the xml."""
-    ome = model.OME()
+    some = model.SOME()
     pixels.channels.extend([model.Channel(), model.Channel()])
     img = model.Image(pixels=pixels)
-    ome.projects.append(model.Project())
-    ome.datasets.append(model.Dataset())
-    ome.images.append(img)
-    ome.structured_annotations.append(model.CommentAnnotation(value="test"))
+    some.projects.append(model.Project())
+    some.datasets.append(model.Dataset())
+    some.images.append(img)
+    some.structured_annotations.append(model.CommentAnnotation(value="test"))
 
-    xml = ome.to_xml(exclude_unset=True)
+    xml = some.to_xml(exclude_unset=True)
     assert "Pixels" in xml
     assert "Channel" in xml
     assert "Image" in xml
     assert "CommentAnnotation" in xml
 
-    assert from_xml(xml) == ome
+    assert from_xml(xml) == some
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_transformations() -> None:
-    from ome_types import etree_fixes
+    from some_types import etree_fixes
 
     # should not warn
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        from_xml(DATA / "MMStack.ome.xml", transformations=etree_fixes.ALL_FIXES)
+        from_xml(DATA / "MMStack.some.xml", transformations=etree_fixes.ALL_FIXES)
 
     # SHOULD warn
     with pytest.warns(match="Casting invalid"):
-        from_xml(DATA / "MMStack.ome.xml")
+        from_xml(DATA / "MMStack.some.xml")
 
 
 def test_map_annotations() -> None:
-    from ome_types.model import Map, MapAnnotation
+    from some_types.model import Map, MapAnnotation
 
     data = {"a": "string", "b": 2}
 

@@ -1,8 +1,8 @@
 - case: types_requiring_no_arguments
   main: |
-    import ome_types.model as m
+    import some_types.model as m
 
-    m.OME()
+    m.SOME()
     m.Annotation()
     m.BasicAnnotation()
     m.Dataset()
@@ -13,13 +13,13 @@
 
 - case: types_requiring_arguments
   main: |
-    import ome_types.model as m
+    import some_types.model as m
 
     m.BinData(value=b'213', length=1)  # ER: Missing named argument "big_endian" .*
     m.Image()  # ER: Missing named argument "pixels" .*
 
 - case: extra_arguments
   main: |
-    import ome_types.model as m
+    import some_types.model as m
 
     m.Channel(idd='123')  # ER: Unexpected keyword argument "idd" .*

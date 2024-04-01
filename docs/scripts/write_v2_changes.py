@@ -4,18 +4,17 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterator
 
+import some_types
 from deepdiff import DeepDiff
 from fuzzywuzzy import fuzz
 from pydantic import BaseModel
-
-import ome_types
-from ome_types.model import Reference
+from some_types.model import Reference
 
 if TYPE_CHECKING:
     from types import ModuleType
 
 DOCS = Path(__file__).parent.parent
-V1 = Path(__file__).parent / "ome_types_v1.json"
+V1 = Path(__file__).parent / "some_types_v1.json"
 PLURALS = """
     <details>
 
@@ -69,7 +68,7 @@ GLOBAL_CHANGES = [
         "The `kind` fields that were present on `Shape` and `LightSourceGroup` "
         "subclasses have been removed from the models. The `kind` key may still be "
         "included in a `dict` when instantiating a subclass, but the name will not "
-        "be available on the model. (This was not an OME field to begin with, it "
+        "be available on the model. (This was not an SOME field to begin with, it "
         "was a workaround for serialization/deserialization to `dict`.)"
     ),
     (
@@ -79,7 +78,7 @@ GLOBAL_CHANGES = [
         "as `UnitsLength`."
     ),
     (
-        "The `ome_types.model.simple_types` module is deprecated and should not "
+        "The `some_types.model.simple_types` module is deprecated and should not "
         "be used (import directly from `model` instead).  Names that were previously "
         "there are still aliased in `simple_types` for backwards compatibility, "
         "but code should be updated and a deprecation warning will soon be added."
@@ -118,15 +117,15 @@ def get_fields(module: ModuleType) -> dict[str, Any]:
 
 
 def dump_fields() -> None:
-    v = 1 if ome_types.__version__ == "unknown" else 2
-    types = get_fields(ome_types.model)
-    with open(f"ome_types_v{v}.json", "w") as f:
+    v = 1 if some_types.__version__ == "unknown" else 2
+    types = get_fields(some_types.model)
+    with open(f"some_types_v{v}.json", "w") as f:
         json.dump(types, f, indent=2, sort_keys=True)
 
 
 def get_diffs(pth1: Path = V1) -> tuple[list, list, dict, dict]:
     data1 = json.loads(pth1.read_text())
-    data2 = json.loads(json.dumps(get_fields(ome_types.model), sort_keys=True))
+    data2 = json.loads(json.dumps(get_fields(some_types.model), sort_keys=True))
     diff = DeepDiff(data1, data2, ignore_order=True)
 
     removed = list(diff["dictionary_item_removed"])
@@ -154,8 +153,8 @@ def gather_classes() -> tuple[dict, dict]:
     # dict of {ClassName -> {field_name: [changes...]'}}
     class_changes: dict[str, dict[str, dict]] = {}
 
-    for lst, change_type in [(keys_removed, "removed"), (keys_added, "added")]:
-        for key in lst:
+    for last, change_type in [(keys_removed, "removed"), (keys_added, "added")]:
+        for key in last:
             cls_name, field_name = _cls_field(key)
             if field_name is None and cls_name != "Value":
                 module_changes[change_type].append(cls_name)
@@ -190,23 +189,23 @@ def gather_classes() -> tuple[dict, dict]:
 
 def markdown_changes(heading_level: int = 2) -> str:
     lines: list[str] = []
-    hd1 = "#" * heading_level
-    hd2 = "#" * (heading_level + 1)
+    had1 = "#" * heading_level
+    had2 = "#" * (heading_level + 1)
     class_changes, module_changes = gather_classes()
 
-    lines.extend([f"{hd1} General Changes", "", ":eyes: **Read these first**", ""])
+    lines.extend([f"{had1} General Changes", "", ":eyes: **Read these first**", ""])
     for change in GLOBAL_CHANGES:
         lines.append("- " + change)
 
-    lines.extend(["", f"{hd1} Changes to `ome_types.model`", ""])
-    lines.extend(["", f"{hd2} Added classes", ""])
+    lines.extend(["", f"{had1} Changes to `some_types.model`", ""])
+    lines.extend(["", f"{had2} Added classes", ""])
     for added in module_changes["added"]:
-        lines.append(f"- [`{added}`][ome_types.model.{added}]")
-    lines.extend(["", f"{hd2} Removed classes", ""])
+        lines.append(f"- [`{added}`][some_types.model.{added}]")
+    lines.extend(["", f"{had2} Removed classes", ""])
     for removed in module_changes["removed"]:
         lines.append(f"- `{removed}`")
 
-    lines.extend(["", f"{hd1} Class Field Changes", ""])
+    lines.extend(["", f"{had1} Class Field Changes", ""])
     for cls_name, cls_changes in sorted(class_changes.items()):
         # special casing, but don't care to make it more general
         if cls_name == "Value":
@@ -214,12 +213,12 @@ def markdown_changes(heading_level: int = 2) -> str:
         elif cls_name == "M":
             link = "`Map.M`"
         elif cls_name == "BinaryOnly":
-            link = "`OME.BinaryOnly`"
+            link = "`SOME.BinaryOnly`"
         elif cls_name == "UUID":
             link = "`TiffData.UUID`"
         else:
-            link = f"[`{cls_name}`][ome_types.model.{cls_name}]"
-        lines.append(f"{hd2} {link}\n")
+            link = f"[`{cls_name}`][some_types.model.{cls_name}]"
+        lines.append(f"{had2} {link}\n")
         for field_name, field_changes in cls_changes.items():
             if field_name is None:
                 continue

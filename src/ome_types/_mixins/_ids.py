@@ -5,7 +5,7 @@ import warnings
 from contextlib import suppress
 from typing import TYPE_CHECKING, Any, cast
 
-from ome_types._pydantic_compat import field_regex
+from some_types._pydantic_compat import field_regex
 
 if TYPE_CHECKING:
     from typing import Final
@@ -18,8 +18,8 @@ AUTO_SEQUENCE: Final = "__auto_sequence__"
 ID_COUNTER: dict[str, int] = {}
 
 # map of (id_name, id_value) -> converted id
-# NOTE: this is cleared in OMEMixin.__init__, so that the set of converted IDs
-# is unique to each OME instance
+# NOTE: this is cleared in SOMEMixin.__init__, so that the set of converted IDs
+# is unique to each SOME instance
 CONVERTED_IDS: dict[tuple[str, str], str] = {}
 
 
@@ -32,7 +32,7 @@ def _get_id_name_and_pattern(cls: type[BaseModel]) -> tuple[str, str]:
 
 
 def validate_id(cls: type[BaseModel], value: int | str) -> Any:
-    """Pydantic validator for ID fields in OME models.
+    """Pydantic validator for ID fields in SOME models.
 
     This validator does the following:
     1. if it's valid string ID just use it, and updating the counter if necessary.

@@ -7,7 +7,7 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 class CustomBuildHook(BuildHookInterface):
     """Custom Plugin."""
 
-    PLUGIN_NAME = "ome_autogen"
+    PLUGIN_NAME = "some_autogen"
 
     def initialize(self, version: str, build_data: dict) -> None:
         """Init before the build process begins."""
@@ -16,6 +16,6 @@ class CustomBuildHook(BuildHookInterface):
 
         sys.path.append("src")
 
-        import ome_autogen.main
+        import some_autogen.main
 
-        ome_autogen.main.build_model(do_mypy=False)
+        some_autogen.main.build_model(do_mypy=False)

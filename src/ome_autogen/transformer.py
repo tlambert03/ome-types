@@ -53,17 +53,17 @@ def monkeypatched_display_help() -> Iterator[None]:
         Attribute.display_help = prev  # type: ignore
 
 
-class OMESchemaMapper(SchemaMapper):
+class SOMESchemaMapper(SchemaMapper):
     # may not need to override this... but here just in case
     pass
 
 
-class OMETransformer(ResourceTransformer):
+class SOMETransformer(ResourceTransformer):
     # overriding to use our own schema mapper
     def generate_classes(self, schema: Schema) -> list[Class]:
         """Convert the given schema tree to a list of classes."""
         with monkeypatched_display_help():
-            return OMESchemaMapper.map(schema)
+            return SOMESchemaMapper.map(schema)
 
     # overriding to remove the certain handlers
     def analyze_classes(self, classes: list[Class]) -> list[Class]:

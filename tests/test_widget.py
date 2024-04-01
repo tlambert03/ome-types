@@ -3,10 +3,10 @@ from pathlib import Path
 import pytest
 
 try:
-    from ome_types import widget
+    from some_types import widget
 except ImportError:
-    pytest.skip("ome_types not installed", allow_module_level=True)
+    pytest.skip("some_types not installed", allow_module_level=True)
 
 
 def test_widget(valid_xml: Path, qtbot):
-    widget.OMETree(str(valid_xml))
+    widget.SOMETree(str(valid_xml))

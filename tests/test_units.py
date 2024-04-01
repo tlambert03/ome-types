@@ -7,9 +7,8 @@ except ImportError:
     pytest.skip("Pint is not installed", allow_module_level=True)
 
 from pydantic import ValidationError
-
-from ome_types import ureg
-from ome_types.model import Channel, Laser, Plane, simple_types
+from some_types import ureg
+from some_types.model import Channel, Laser, Plane, simple_types
 
 
 def test_quantity_math() -> None:

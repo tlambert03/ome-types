@@ -1,9 +1,9 @@
-site_name: ome-types
+site_name: some-types
 site_author: Talley Lambert
 repo_name: tlambert03/ome-types
 repo_url: https://github.com/tlambert03/ome-types
 edit_uri: edit/main/docs/
-site_description: Python dataclasses for the OME data model
+site_description: Python dataclasses for the SOME data model
 copyright: "Talley Lambert &copy; 2023"
 strict: true
 

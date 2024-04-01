@@ -5,14 +5,14 @@ import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ome_types.model import OME
+from some_types.model import SOME
 
 try:
     from qtpy.QtCore import QMimeData, Qt
     from qtpy.QtWidgets import QTreeWidget, QTreeWidgetItem
 except ImportError as e:
     raise ImportError(
-        "qtpy and a Qt backend (pyside or pyqt) is required to use the OME widget:\n"
+        "qtpy and a Qt backend (pyside or pyqt) is required to use the SOME widget:\n"
         "pip install qtpy pyqt5"
     ) from e
 
@@ -22,15 +22,15 @@ if TYPE_CHECKING:
     import napari.viewer
     from qtpy.QtWidgets import QWidget
 
-METADATA_KEY = "ome_types"
+METADATA_KEY = "some_types"
 
 
-class OMETree(QTreeWidget):
-    """A Widget that can show OME XML."""
+class SOMETree(QTreeWidget):
+    """A Widget that can show SOME XML."""
 
     def __init__(
         self,
-        ome_meta: Path | OME | str | None | dict = None,
+        some_meta: Path | SOME | str | None | dict = None,
         viewer: napari.viewer.Viewer = None,
         parent: QWidget | None = None,
     ) -> None:
@@ -47,10 +47,10 @@ class OMETree(QTreeWidget):
         self.clear()
 
         self._current_path: str | None = None
-        if ome_meta:
-            if isinstance(ome_meta, Path):
-                ome_meta = str(ome_meta)
-            self.update(ome_meta)
+        if some_meta:
+            if isinstance(some_meta, Path):
+                some_meta = str(some_meta)
+            self.update(some_meta)
 
         if viewer is not None:
             viewer.layers.selection.events.active.connect(
@@ -70,79 +70,79 @@ class OMETree(QTreeWidget):
 
             # deprecated... don't do this ... it should be a dict
             if callable(layer.metadata):
-                ome_meta = layer.metadata()
-            elif isinstance(layer.metadata, OME):
-                ome_meta = layer.metadata
+                some_meta = layer.metadata()
+            elif isinstance(layer.metadata, SOME):
+                some_meta = layer.metadata
             else:
-                ome_meta = layer.metadata.get(METADATA_KEY)
-                if callable(ome_meta):
-                    ome_meta = ome_meta()
+                some_meta = layer.metadata.get(METADATA_KEY)
+                if callable(some_meta):
+                    some_meta = some_meta()
 
-            ome = None
-            if isinstance(ome_meta, OME):
-                ome = ome_meta
+            some = None
+            if isinstance(some_meta, SOME):
+                some = some_meta
             elif path.endswith((".tiff", ".tif")) and path != self._current_path:
                 try:
-                    ome = OME.from_tiff(path)
+                    some = SOME.from_tiff(path)
                 except Exception:
                     return
             elif path.endswith(".nd2"):
-                ome = self._try_from_nd2(path)
-                if ome is None:
+                some = self._try_from_nd2(path)
+                if some is None:
                     return
-            if isinstance(ome, OME):
+            if isinstance(some, SOME):
                 self._current_path = path
-                self.update(ome)
+                self.update(some)
                 self.headerItem().setText(0, os.path.basename(path))
         else:
             self._current_path = None
             self.clear()
 
-    def _try_from_nd2(self, path: str) -> OME | None:
+    def _try_from_nd2(self, path: str) -> SOME | None:
         try:
             import nd2
 
             with nd2.ND2File(path) as f:
-                return f.ome_metadata()
+                return f.some_metadata()
         except Exception:
             return None
 
-    def update(self, ome: OME | str | None | dict) -> None:
-        """Update the widget with a new OME object or path to an OME XML file."""
-        if not ome:
+    def update(self, some: SOME | str | None | dict) -> None:
+        """Update the widget with a new SOME object or path to an SOME XML file."""
+        if not some:
             return
-        if isinstance(ome, OME):
-            _ome = ome
-        elif isinstance(ome, dict):
-            _ome = OME(**ome)
-        elif isinstance(ome, str):
-            if ome == self._current_path:
+        if isinstance(some, SOME):
+            _some = some
+        elif isinstance(some, dict):
+            _some = SOME(**some)
+        elif isinstance(some, str):
+            if some == self._current_path:
                 return
             try:
-                if ome.endswith(".xml"):
-                    _ome = OME.from_xml(ome)
-                elif ome.lower().endswith((".tif", ".tiff")):
-                    _ome = OME.from_tiff(ome)
-                elif ome.lower().endswith(".nd2"):
-                    _ome = self._try_from_nd2(ome)  # type: ignore
-                    if _ome is None:
+                if some.endswith(".xml"):
+                    _some = SOME.from_xml(some)
+                elif some.lower().endswith((".tif", ".tiff")):
+                    _some = SOME.from_tiff(some)
+                elif some.lower().endswith(".nd2"):
+                    _some = self._try_from_nd2(some)  # type: ignore
+                    if _some is None:
                         raise Exception()
                 else:
-                    warnings.warn(f"Unrecognized file type: {ome}", stacklevel=2)
+                    warnings.warn(f"Unrecognized file type: {some}", stacklevel=2)
                     return
             except Exception as e:
                 warnings.warn(
-                    f"Could not parse OME metadata from {ome}: {e}", stacklevel=2
+                    f"Could not parse SOME metadata from {some}: {e}", stacklevel=2
                 )
                 return
-            self.headerItem().setText(0, os.path.basename(ome))
-            self._current_path = ome
+            self.headerItem().setText(0, os.path.basename(some))
+            self._current_path = some
         else:
-            raise TypeError("must be OME object or string")
-        if hasattr(_ome, "model_dump"):
-            data = _ome.model_dump(exclude_unset=True)
+            raise TypeError("must be SOME object or string")
+        if hasattr(_some, "model_dump"):
+            data = _some.model_dump(exclude_unset=True)
         else:
-            data = _ome.dict(exclude_unset=True)
+            data = _some.dict(exclude_unset=True)
         self._fill_item(data)
 
     def _fill_item(self, obj: Any, item: QTreeWidgetItem = None) -> None:
@@ -167,7 +167,7 @@ class OMETree(QTreeWidget):
     def dropMimeData(
         self, parent: QTreeWidgetItem, index: int, data: QMimeData, _: Any
     ) -> bool:
-        """Handle drag/drop events to load OME XML files."""
+        """Handle drag/drop events to load SOME XML files."""
         if data.hasUrls():
             for url in data.urls():
                 lf = url.toLocalFile()
@@ -190,7 +190,7 @@ if __name__ == "__main__":
 
     app = QApplication([])
 
-    widget = OMETree()
+    widget = SOMETree()
     widget.show()
 
     app.exec()

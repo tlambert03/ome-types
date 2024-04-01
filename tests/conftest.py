@@ -5,28 +5,27 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, DefaultDict
 
 import pytest
-
-from ome_types import model
-from ome_types._mixins import _base_type
+from some_types import model
+from some_types._mixins import _base_type
 
 if TYPE_CHECKING:
     from collections import defaultdict
 
 DATA = Path(__file__).parent / "data"
-ALL_XML = set(DATA.glob("*.ome.xml"))
+ALL_XML = set(DATA.glob("*.some.xml"))
 INVALID = {
-    DATA / "invalid_xml_annotation.ome.xml",
-    DATA / "bad.ome.xml",
-    DATA / "MMStack.ome.xml",
+    DATA / "invalid_xml_annotation.some.xml",
+    DATA / "bad.some.xml",
+    DATA / "MMStack.some.xml",
 }
-OLD_SCHEMA = {DATA / "seq0000xy01c1.ome.xml", DATA / "2008_instrument.ome.xml"}
+OLD_SCHEMA = {DATA / "seq0000xy01c1.some.xml", DATA / "2008_instrument.some.xml"}
 WITH_XML_ANNOTATIONS = {
-    DATA / "ome_ns.ome.xml",
-    DATA / "OverViewScan.ome.xml",
-    DATA / "spim.ome.xml",
-    DATA / "xmlannotation-svg.ome.xml",
-    DATA / "xmlannotation-multi-value.ome.xml",
-    DATA / "xmlannotation-body-space.ome.xml",
+    DATA / "some_ns.some.xml",
+    DATA / "OverViewScan.some.xml",
+    DATA / "spim.some.xml",
+    DATA / "xmlannotation-svg.some.xml",
+    DATA / "xmlannotation-multi-value.some.xml",
+    DATA / "xmlannotation-body-space.some.xml",
 }
 
 
@@ -58,15 +57,15 @@ def with_xml_annotations(request: pytest.FixtureRequest) -> Path:
 
 @pytest.fixture
 def single_xml() -> Path:
-    return DATA / "example.ome.xml"
+    return DATA / "example.some.xml"
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
-        "--ome-watch",
+        "--some-watch",
         action="store_true",
         default=False,
-        help="Monitor instantiation of all OME objects.",
+        help="Monitor instantiation of all SOME objects.",
     )
 
 
@@ -75,21 +74,21 @@ USED_CLASS_KWARGS: defaultdict[str, set[str]] = DefaultDict(set)
 
 @pytest.fixture(autouse=True, scope="session")
 def _monitor(request: pytest.FixtureRequest) -> None:
-    """Monitor instantiation of all OME objects.
+    """Monitor instantiation of all SOME objects.
 
     This is another form of coverage... to see what fields are actually being tested
     by our data
     """
-    if not request.config.getoption("--ome-watch"):
+    if not request.config.getoption("--some-watch"):
         return
 
-    original = _base_type.OMEType.__init__
+    original = _base_type.SOMEType.__init__
 
     def patched(__pydantic_self__, **kwargs: Any) -> None:
         original(__pydantic_self__, **kwargs)
         USED_CLASS_KWARGS[__pydantic_self__.__class__.__name__].update(kwargs)
 
-    _base_type.OMEType.__init__ = patched
+    _base_type.SOMEType.__init__ = patched
 
 
 def print_unused_kwargs() -> None:
@@ -144,7 +143,7 @@ def print_unused_kwargs() -> None:
 
 @pytest.hookimpl(trylast=True)
 def pytest_configure(config: pytest.Config) -> None:
-    if not config.getoption("--ome-watch"):
+    if not config.getoption("--some-watch"):
         return
 
     from _pytest.terminal import TerminalReporter
@@ -175,8 +174,8 @@ def pixels() -> model.Pixels:
 
 
 @pytest.fixture
-def full_ome_object(pixels: model.Pixels) -> model.OME:
-    """Mostly used for the omero test, a fully populated OME object."""
+def full_some_object(pixels: model.Pixels) -> model.SOME:
+    """Mostly used for the omero test, a fully populated SOME object."""
     comment_ann = model.CommentAnnotation(value="test comment", id="Annotation:-123")
     comment2 = model.CommentAnnotation(value="test comment", id="Annotation:-1233")
     roi = model.ROI(
@@ -211,7 +210,7 @@ def full_ome_object(pixels: model.Pixels) -> model.OME:
     )
     project = model.Project(name="MyProject", description="Project description")
     dataset = model.Dataset(name="MyDataset", image_refs=[model.ImageRef(id=img.id)])
-    return model.OME(
+    return model.SOME(
         images=[img],
         plates=[plate],
         rois=[roi],

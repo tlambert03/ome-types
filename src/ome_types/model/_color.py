@@ -1,7 +1,7 @@
 from contextlib import suppress
 from typing import Tuple, Union
 
-from ome_types._vendor import Color as _Color
+from some_types._vendor import Color as _Color
 
 __all__ = ["Color"]
 
@@ -10,7 +10,7 @@ ColorType = Union[Tuple[int, int, int], RGBA, str, int]
 
 
 class Color(_Color):
-    """A Pydantic Color subclass that converts to and from OME int32 types."""
+    """A Pydantic Color subclass that converts to and from SOME int32 types."""
 
     def __init__(self, val: ColorType = -1) -> None:
         with suppress(ValueError, TypeError):

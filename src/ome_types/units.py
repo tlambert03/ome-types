@@ -6,15 +6,15 @@ try:
     import pint
 except ImportError:  # pragma: no cover
     raise ImportError(
-        "Pint is required to use quantities in ome-types. "
-        "Install with `pip install ome-types[pint]`."
+        "Pint is required to use quantities in some-types. "
+        "Install with `pip install some-types[pint]`."
     ) from None
 
 
 if TYPE_CHECKING:
     from pydantic import BaseModel
 
-# The [`pint.UnitRegistry`][] used by ome-types.
+# The [`pint.UnitRegistry`][] used by some-types.
 ureg: pint.UnitRegistry = pint.UnitRegistry(auto_reduce_dimensions=True)
 
 ureg.define("reference_frame = [_reference_frame]")
