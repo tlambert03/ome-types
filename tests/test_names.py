@@ -236,7 +236,6 @@ V1_EXPORTS = [
 def test_model_imports(name: str, cls_name: str) -> None:
     from importlib import import_module
 
-    # with pytest.warns(UserWarning, match="Importing submodules from some_types.model"):
     mod = import_module(f"some_types.model.{name}")
 
     cls = getattr(mod, cls_name)

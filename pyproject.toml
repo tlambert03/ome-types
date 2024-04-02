@@ -28,7 +28,11 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 dynamic = ["version"]
-dependencies = ["pydantic >=1.9.0", "pydantic-compat >=0.1.0", "xsdata >=23.6,<24.4"]
+dependencies = [
+  "pydantic >=1.9.0",
+  "pydantic-compat >=0.1.0",
+  "xsdata >=23.6,<24.4",
+]
 
 [project.urls]
 Source = "https://github.com/tlambert03/ome-types"
@@ -210,7 +214,7 @@ omit = [
 ]
 
 [tool.typos.default]
-extend-ignore-identifiers-re = ["nd2?.*", "ND2?.*", ".*ser_schema"]
+extend-ignore-identifiers-re = ["nd2?.*", "ND2?.*", ".*ser_schema", "ome.*", "OME.*", "Ome.*"]
 
 [tool.typos.files]
 extend-exclude = ["*.xsd", "*.xml", "*.xsl", "*.json"]
