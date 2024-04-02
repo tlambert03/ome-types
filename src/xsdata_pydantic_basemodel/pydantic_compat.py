@@ -81,12 +81,12 @@ def _pydantic_field_to_dataclass_field(
             # class name to a class object
             if "type" in choice and isinstance(choice["type"], str):
                 try:
-                    from some_types import model
+                    from ome_types import model
 
                     choice["type"] = getattr(model, choice["type"])
                 except AttributeError:
                     warnings.warn(
-                        f"Could not find {choice['type']} in some_types.model",
+                        f"Could not find {choice['type']} in ome_types.model",
                         stacklevel=2,
                     )
 

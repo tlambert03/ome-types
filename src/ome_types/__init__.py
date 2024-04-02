@@ -1,25 +1,25 @@
 from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = version("some-types")
+    __version__ = version("ome-types")
 except PackageNotFoundError:  # pragma: no cover
     __version__ = "unknown"
 
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from some_types.units import ureg  # noqa: TCH004
+    from ome_types.units import ureg  # noqa: TCH004
 
-from some_types import model
-from some_types._conversion import from_tiff, from_xml, to_dict, to_xml, validate_xml
-from some_types.model import SOME
+from ome_types import model
+from ome_types._conversion import from_tiff, from_xml, to_dict, to_xml, validate_xml
+from ome_types.model import OME
 
 __all__ = [
     "__version__",
     "from_tiff",
     "from_xml",
     "model",
-    "SOME",
+    "OME",
     "to_dict",
     "to_xml",
     "ureg",
@@ -29,7 +29,7 @@ __all__ = [
 
 def __getattr__(name: str) -> Any:
     if name == "ureg":
-        from some_types.units import ureg
+        from ome_types.units import ureg
 
         return ureg
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

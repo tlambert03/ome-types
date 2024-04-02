@@ -17,18 +17,19 @@ from typing import (
 )
 
 from pydantic_compat import PYDANTIC2, BaseModel, field_validator
-from some_types._mixins._ids import validate_id
-from some_types._pydantic_compat import field_type, update_set_fields
+
+from ome_types._mixins._ids import validate_id
+from ome_types._pydantic_compat import field_type, update_set_fields
 
 try:
-    from some_types.units import add_quantity_properties
+    from ome_types.units import add_quantity_properties
 except ImportError:
     add_quantity_properties = lambda cls: None  # noqa: E731
 
 if TYPE_CHECKING:
-    from some_types._conversion import XMLSource
+    from ome_types._conversion import XMLSource
 
-T = TypeVar("T", bound="SOMEType")
+T = TypeVar("T", bound="OMEType")
 # Default value to support automatic numbering for id field values.
 AUTO_SEQUENCE = "__auto_sequence__"
 
@@ -66,8 +67,8 @@ def _move_deprecated_fields(data: Dict[str, Any], field_names: Set[str]) -> None
             data[DEPRECATED_NAMES[key]] = data.pop(key)
 
 
-class SOMEType(BaseModel):
-    """The base class that all SOME Types inherit from.
+class OMEType(BaseModel):
+    """The base class that all OME Types inherit from.
 
     This provides some global conveniences around auto-setting ids. (i.e., making them
     optional in the class constructor, but never `None` after initialization.).
@@ -169,24 +170,24 @@ class SOMEType(BaseModel):
     def to_xml(self, **kwargs: Any) -> str:
         """Serialize this object to XML.
 
-        See docstring of [`some_types.to_xml`][] for kwargs.
+        See docstring of [`ome_types.to_xml`][] for kwargs.
         """
-        from some_types._conversion import to_xml
+        from ome_types._conversion import to_xml
 
         return to_xml(self, **kwargs)
 
     @classmethod
     def from_xml(cls: Type[T], xml: "XMLSource", **kwargs: Any) -> T:
-        """Read an some-types class from XML.
+        """Read an ome-types class from XML.
 
-        See docstring of [`some_types.from_xml`][] for kwargs.
+        See docstring of [`ome_types.from_xml`][] for kwargs.
 
         Note: this will return an instance of whatever the top node is in the XML.
         so technically, the return type here could be incorrect.  But when used
         properly (`Image.from_xml()`, `Pixels.from_xml()`, etc.) on an unusual xml
         document it can provide additional typing information.
         """
-        from some_types._conversion import from_xml
+        from ome_types._conversion import from_xml
 
         return cast(T, from_xml(xml, **kwargs))
 

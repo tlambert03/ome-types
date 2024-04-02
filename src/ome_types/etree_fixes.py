@@ -2,20 +2,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from some_types._conversion import SOME_2016_06_URI
+from ome_types._conversion import OME_2016_06_URI
 
 if TYPE_CHECKING:
-    from some_types._conversion import AnyElementTree
+    from ome_types._conversion import AnyElementTree
 
 
-NSMAP = {"": SOME_2016_06_URI, "some": SOME_2016_06_URI}
+NSMAP = {"": OME_2016_06_URI, "ome": OME_2016_06_URI}
 
 
 # See note before using...
 def fix_micro_manager_instrument(tree: AnyElementTree) -> AnyElementTree:
     """Fix MicroManager Instrument and Detector IDs and References.
 
-    Some versions of SOME-XML produced by MicroManager have invalid IDs (and references)
+    Some versions of OME-XML produced by MicroManager have invalid IDs (and references)
     for Instruments and Detectors. This function fixes those IDs and references.
 
     NOTE: as of v0.4.0, bad IDs and references are caught during ID validation anyway,

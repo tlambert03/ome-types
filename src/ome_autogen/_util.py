@@ -10,7 +10,7 @@ from typing import Any, Iterator, NamedTuple, cast
 from xml.etree import ElementTree as ET
 
 SRC_PATH = Path(__file__).parent.parent
-SCHEMA_FILE = (SRC_PATH / "some_types" / "some-2016-06.xsd").absolute()
+SCHEMA_FILE = (SRC_PATH / "ome_types" / "ome-2016-06.xsd").absolute()
 
 
 @contextmanager
@@ -72,7 +72,7 @@ def get_appinfo(schema: Path | str = SCHEMA_FILE) -> AppInfo:
     return AppInfo(plurals, dict(enums), abstract)
 
 
-CAMEL_SNAKE_OVERRIDES = {"TOIs": "rois"}
+CAMEL_SNAKE_OVERRIDES = {"ROIs": "rois"}
 camel_snake_registry: dict[str, str] = {}
 
 
