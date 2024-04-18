@@ -43,7 +43,6 @@ ome-types = "ome_types:napari.yaml"
 [project.optional-dependencies]
 pint = ["Pint >=0.15"]
 lxml = ["lxml >=4.8.0"]
-dev = ["pre-commit"]
 docs = ["mkdocs-material", "mkdocstrings-python"]
 test = [
   "lxml",
@@ -62,6 +61,7 @@ test = [
 test-qt = ["qtpy", "pytest-qt"]
 # pin ruff for builds because it changes often
 build = ["ruff ==0.3.0", "xsdata[cli]==24.2.1"]
+dev = ["ome-types[test]", "ome-types[build]", "ome-types[docs]", "pre-commit"]
 
 # https://hatch.pypa.io/latest/plugins/build-hook/custom/
 [tool.hatch.build.targets.wheel.hooks.custom]
