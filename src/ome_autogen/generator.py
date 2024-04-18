@@ -89,16 +89,18 @@ class OmeFilters(PydanticBaseFilters):
         # The type ignore is because xsdata returns an iterator of 2-tuples
         # but we want to return a 3-tuple.
         for attr in obj.attrs:
-            name = attr.name
-            name = (
-                self.constant_name(name, obj.name)
-                if obj.is_enumeration
-                else self.field_name(name, obj.name)
-            )
+            # IMPORTANT:
+            # self.field_type must be called before getting attr.name, since that
+            # is currently where plural names are corrected.  (This is a hack.)
             with self._modern_typing():
                 type_ = self.field_type(attr, [obj.name])
-            help_ = attr.help
-            if not help_:
+
+            name = (
+                self.constant_name(attr.name, obj.name)
+                if obj.is_enumeration
+                else self.field_name(attr.name, obj.name)
+            )
+            if not (help_ := attr.help):
                 help_ = f"(The {obj.name} {attr.name})."
             yield name, type_, self.clean_docstring(help_)
 
