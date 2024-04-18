@@ -24,12 +24,16 @@ def test_populate_omero(monkeypatch: MonkeyPatch, full_ome_object: OME) -> None:
     monkeypatch.setitem(sys.modules, "omero.model", MagicMock())
     monkeypatch.setitem(sys.modules, "omero.sys", MagicMock())
     monkeypatch.setitem(sys.modules, "ezomero", MagicMock())
-
-    gen_omero = pytest.importorskip("generate_omero_objects")
+    if TYPE_CHECKING:
+        import generate_omero_objects as gen_omero
+    else:
+        gen_omero = pytest.importorskip("generate_omero_objects")
 
     conn = MagicMock()
     getId = conn.getUpdateService.return_value.saveAndReturnObject.return_value.getId
     getId.return_value.val = 2
+
+    gen_omero.get_server_path = MagicMock(return_value="/")
 
     gen_omero.populate_omero(
         full_ome_object,
@@ -39,6 +43,7 @@ def test_populate_omero(monkeypatch: MonkeyPatch, full_ome_object: OME) -> None:
         folder="",
         metadata=["md5", "img_id", "plate_id", "timestamp"],
         merge=False,
+        figure=False,
     )
     assert conn.method_calls
 

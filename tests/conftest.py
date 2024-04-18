@@ -204,9 +204,13 @@ def full_ome_object(pixels: model.Pixels) -> model.OME:
         row=5,
         well_samples=[model.WellSample(index=1, image_ref=model.ImageRef(id=img.id))],
     )
+    xml_ann = model.XMLAnnotation(value=model.XMLAnnotation.Value())
     plate = model.Plate(
         name="MyPlate",
-        annotation_refs=[model.AnnotationRef(id=comment_ann.id)],
+        annotation_refs=[
+            model.AnnotationRef(id=comment_ann.id),
+            model.AnnotationRef(id=xml_ann.id),
+        ],
         wells=[well],
     )
     project = model.Project(name="MyProject", description="Project description")
@@ -240,6 +244,7 @@ def full_ome_object(pixels: model.Pixels) -> model.OME:
             model.MapAnnotation(
                 value={"ms": [{"value": "v3", "k": "k"}]}, id="Annotation:3"
             ),
+            xml_ann,
         ],
         projects=[project],
         datasets=[dataset],
