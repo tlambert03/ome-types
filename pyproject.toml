@@ -210,7 +210,7 @@ omit = [
 ]
 
 [tool.typos.default]
-extend-ignore-identifiers-re = ["nd2?.*", "ND2?.*", ".*ser_schema"]
+extend-ignore-identifiers-re = ["(?i)nd2?.*", "(?i)ome", ".*ser_schema"]
 
 [tool.typos.files]
 extend-exclude = ["*.xsd", "*.xml", "*.xsl", "*.json"]
