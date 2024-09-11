@@ -49,16 +49,16 @@ pint = ["Pint >=0.15"]
 lxml = ["lxml >=4.8.0"]
 docs = ["mkdocs-material", "mkdocstrings-python"]
 test = [
-  "lxml",
   "mypy",
   "numpy",
-  "pint",
+  "ome-types[lxml]; python_version < '3.13'",
+  "ome-types[pint]; python_version < '3.13'",
   "pytest-codspeed",
   "pytest-cov",
   "pytest-mypy-plugins",
   "pytest",
   "ruff",
-  "xmlschema <2.5",      # FIXME: determine why
+  "xmlschema <2.5",                           # FIXME: determine why
   "xsdata[cli]",
   "types-lxml",
 ]
