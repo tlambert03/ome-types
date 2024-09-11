@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, MutableMapping, Optional
+from collections.abc import Iterator, MutableMapping
+from typing import TYPE_CHECKING, Any, Optional
 
 try:
     from pydantic import model_serializer
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
 
     class HasMsProtocol(Protocol):
         @property
-        def ms(self) -> List["Map.M"]: ...
+        def ms(self) -> list["Map.M"]: ...
 
 
 class MapMixin(MutableMapping[str, Optional[str]]):
@@ -41,10 +42,10 @@ class MapMixin(MutableMapping[str, Optional[str]]):
 
         self.ms.append(Map.M(k=key, value=value))
 
-    def _pydict(self: "HasMsProtocol", **kwargs: Any) -> Dict[str, str]:
+    def _pydict(self: "HasMsProtocol", **kwargs: Any) -> dict[str, str]:
         return {m.k: m.value for m in self.ms if m.k is not None}
 
-    def dict(self, **kwargs: Any) -> Dict[str, Any]:
+    def dict(self, **kwargs: Any) -> dict[str, Any]:
         return self._pydict()  # type: ignore
 
     if model_serializer is not None:

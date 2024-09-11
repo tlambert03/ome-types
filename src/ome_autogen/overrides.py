@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 # from ome_types._mixins._base_type import AUTO_SEQUENCE
 # avoiding import to avoid build-time dependency on the ome-types package

@@ -4,7 +4,8 @@ that logic is in the `methods` method in ome_autogen/_generator.py
 """
 
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Sequence
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ome_types.model import (  # type: ignore
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
 
 
 # @model_validator(mode='before')
-def bin_data_root_validator(cls: "BinData", values: dict) -> Dict[str, Any]:
+def bin_data_root_validator(cls: "BinData", values: dict) -> dict[str, Any]:
     # This catches the case of <BinData Length="0"/>, where the parser may have
     # omitted value from the dict, and sets value to b""
     # seems like it could be done in a default_factory, but that would
@@ -52,8 +53,8 @@ def pixels_root_validator(cls: "Pixels", value: dict) -> dict:
 
 # @validator("any_elements")
 def any_elements_validator(
-    cls: "XMLAnnotation.Value", v: List[Any]
-) -> List["AnyElement"]:
+    cls: "XMLAnnotation.Value", v: list[Any]
+) -> list["AnyElement"]:
     # This validator is used because XMLAnnotation.Value.any_elements is
     # annotated as List[object]. So pydantic won't coerce dicts to AnyElement
     # automatically (which is important when constructing OME objects from dicts)

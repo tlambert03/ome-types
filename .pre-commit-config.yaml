@@ -32,4 +32,4 @@ repos:
           - pydantic-compat
           - xsdata==24.2.1
           - Pint
-          - types-lxml; python_version > '3.8'
+          - types-lxml
