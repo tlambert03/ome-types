@@ -51,8 +51,8 @@ docs = ["mkdocs-material", "mkdocstrings-python"]
 test = [
   "mypy",
   "numpy",
-  "ome-types[lxml]; python_version < '3.13'",
-  "ome-types[pint]; python_version < '3.13'",
+  "ome-types[lxml]; python_version <= '3.12'",
+  "ome-types[pint]; python_version <= '3.12'",
   "pytest-codspeed",
   "pytest-cov",
   "pytest-mypy-plugins",
