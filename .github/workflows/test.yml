@@ -66,6 +66,8 @@ jobs:
   test-min-reqs:
     name: Test min reqs
     uses: pyapp-kit/workflows/.github/workflows/test-pyrepo.yml@v2
+    secrets:
+      codecov_token: ${{ secrets.CODECOV_TOKEN }}
     with:
       os: ubuntu-latest
       python-version: ${{ matrix.python-version }}
