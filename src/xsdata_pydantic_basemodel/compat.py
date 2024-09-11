@@ -1,16 +1,13 @@
 import dataclasses as dc
+from collections.abc import Iterator
 from contextlib import suppress
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
     ClassVar,
-    Dict,
     Generic,
-    Iterator,
-    List,
     Optional,
-    Type,
     TypeVar,
 )
 
@@ -46,11 +43,11 @@ class AnyElement(PydanticCompatMixin, BaseModel):
     qname: Optional[str] = Field(default=None)
     text: Optional[str] = Field(default=None)
     tail: Optional[str] = Field(default=None)
-    children: List["AnyElement"] = Field(
+    children: list["AnyElement"] = Field(
         default_factory=list,
         metadata={"type": XmlType.WILDCARD},  # type: ignore [call-arg]
     )
-    attributes: Dict[str, str] = Field(
+    attributes: dict[str, str] = Field(
         default_factory=dict,
         metadata={"type": XmlType.ATTRIBUTES},  # type: ignore [call-arg]
     )
@@ -85,11 +82,11 @@ class DerivedElement(PydanticCompatMixin, BaseModel, Generic[T]):
 
 class PydanticBaseModel(Dataclasses):
     @property
-    def any_element(self) -> Type:
+    def any_element(self) -> type:
         return AnyElement
 
     @property
-    def derived_element(self) -> Type:
+    def derived_element(self) -> type:
         return DerivedElement
 
     def is_model(self, obj: Any) -> bool:
@@ -111,7 +108,7 @@ class PydanticBaseModel(Dataclasses):
 class_types.register("pydantic-basemodel", PydanticBaseModel())
 
 
-def make_validators(tp: Type, factory: Callable) -> List[Callable]:
+def make_validators(tp: type, factory: Callable) -> list[Callable]:
     def validator(value: Any) -> Any:
         if isinstance(value, tp):
             return value

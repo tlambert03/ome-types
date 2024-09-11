@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, MutableSequence, cast
+from collections.abc import MutableSequence
+from typing import TYPE_CHECKING, Any, cast
 
 import pydantic.version
 from pydantic import BaseModel
