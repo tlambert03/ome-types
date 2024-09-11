@@ -64,12 +64,11 @@ jobs:
 
   test-min-reqs:
     name: Test min reqs
-    uses: pyapp-kit/workflows/.github/workflows/test-pyrepo.yml@main
+    uses: pyapp-kit/workflows/.github/workflows/test-pyrepo.yml@v2
     with:
       os: ubuntu-latest
       python-version: ${{ matrix.python-version }}
       pip-install-min-reqs: true
-      pytest-cov-flags: ""
     strategy:
       fail-fast: false
       matrix:
