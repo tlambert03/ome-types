@@ -51,14 +51,14 @@ docs = ["mkdocs-material", "mkdocstrings-python"]
 test = [
   "mypy",
   "numpy",
-  "ome-types[lxml]; python_version <= '3.12'",
-  "ome-types[pint]; python_version <= '3.12'",
+  "lxml; python_version <= '3.12'",
+  "pint; python_version <= '3.12'",
   "pytest-codspeed",
   "pytest-cov",
   "pytest-mypy-plugins",
   "pytest",
   "ruff",
-  "xmlschema <2.5",                           # FIXME: determine why
+  "xmlschema <2.5",                 # FIXME: determine why
   "xsdata[cli]",
   "types-lxml",
 ]
