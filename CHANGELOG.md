@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.5.2](https://github.com/tlambert03/ome-types/tree/v0.5.2) (2024-09-23)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.5.1.post1...v0.5.2)
+
+**Fixed bugs:**
+
+- fix: swallow exceptions on is\_model [\#262](https://github.com/tlambert03/ome-types/pull/262) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- ci\(dependabot\): bump CodSpeedHQ/action from 2 to 3 [\#259](https://github.com/tlambert03/ome-types/pull/259) ([dependabot[bot]](https://github.com/apps/dependabot))
+- style: add back typos to pre-commit, update [\#257](https://github.com/tlambert03/ome-types/pull/257) ([tlambert03](https://github.com/tlambert03))
+- docs: fix plural names in docs [\#256](https://github.com/tlambert03/ome-types/pull/256) ([tlambert03](https://github.com/tlambert03))
+
+## [v0.5.1.post1](https://github.com/tlambert03/ome-types/tree/v0.5.1.post1) (2024-04-01)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.5.1...v0.5.1.post1)
+
 ## [v0.5.1](https://github.com/tlambert03/ome-types/tree/v0.5.1) (2024-03-16)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.5.0...v0.5.1)

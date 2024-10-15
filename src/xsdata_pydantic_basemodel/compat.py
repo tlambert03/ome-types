@@ -90,13 +90,13 @@ class PydanticBaseModel(Dataclasses):
         return DerivedElement
 
     def is_model(self, obj: Any) -> bool:
-        clazz = obj if isinstance(obj, type) else type(obj)
-        if issubclass(clazz, BaseModel) and clazz != BaseModel:
-            rebuild = getattr(clazz, "model_rebuild", None)
-            if callable(rebuild):
-                rebuild()
-            return True
-
+        with suppress(Exception):
+            clazz = obj if isinstance(obj, type) else type(obj)
+            if issubclass(clazz, BaseModel) and clazz != BaseModel:
+                rebuild = getattr(clazz, "model_rebuild", None)
+                if callable(rebuild):
+                    rebuild()
+                return True
         return False
 
     #
