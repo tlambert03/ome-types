@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import contextlib
 from contextlib import nullcontext
-from typing import TYPE_CHECKING, Callable, ContextManager
+from typing import TYPE_CHECKING, Callable
 
 import pytest
 
@@ -29,10 +29,10 @@ REQUIRES_TRANSFORM = {"seq0000xy01c1.ome.xml", "2008_instrument.ome.xml"}
 @pytest.mark.filterwarnings("ignore:unclosed file")
 @pytest.mark.parametrize("backend", VALIDATORS)
 def test_validation_good(valid_xml: Path, backend: str) -> None:
-    if valid_xml.name in REQUIRES_TRANSFORM:
-        ctx: ContextManager = pytest.warns(match="Transformed source from")
-    else:
+    if valid_xml.name not in REQUIRES_TRANSFORM:
         ctx = nullcontext()
+    else:
+        ctx = pytest.warns(match="Transformed source from")
     with ctx:
         VALIDATORS[backend](valid_xml)
 

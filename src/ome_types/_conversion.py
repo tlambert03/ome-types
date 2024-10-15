@@ -4,11 +4,11 @@ import io
 import operator
 import os
 import warnings
-from contextlib import nullcontext, suppress
-from functools import lru_cache
+from contextlib import AbstractContextManager, nullcontext, suppress
+from functools import cache
 from pathlib import Path
 from struct import Struct
-from typing import TYPE_CHECKING, Callable, Iterable, cast, overload
+from typing import TYPE_CHECKING, Callable, cast, overload
 
 from pydantic import BaseModel
 from xsdata.formats.dataclass.parsers.config import ParserConfig
@@ -26,7 +26,8 @@ except ImportError:  # pragma: no cover
 
 
 if TYPE_CHECKING:
-    from typing import Any, BinaryIO, ContextManager, Literal, TypedDict
+    from collections.abc import Iterable
+    from typing import Any, BinaryIO, Literal, TypedDict
     from xml.etree import ElementTree
 
     import xmlschema
@@ -174,7 +175,7 @@ def _unpack(fh: BinaryIO, strct: Struct) -> int:
 def tiff2xml(path: Path | str | BinaryIO) -> bytes:
     """Extract the OME-XML from a TIFF file."""
     if hasattr(path, "read"):
-        ctx: ContextManager[BinaryIO] = nullcontext(path)  # type: ignore[arg-type]
+        ctx: AbstractContextManager = nullcontext(path)
     else:
         ctx = Path(path).open(mode="rb")
 
@@ -389,7 +390,7 @@ def validate_xml_with_xmlschema(
     return tree
 
 
-@lru_cache(maxsize=None)
+@cache
 def _get_XMLSchema(schema: Path | str) -> xmlschema.XMLSchema:
     import xmlschema
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any
 
 from deepdiff import DeepDiff
 from fuzzywuzzy import fuzz
@@ -12,6 +12,7 @@ import ome_types
 from ome_types.model import Reference
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from types import ModuleType
 
 DOCS = Path(__file__).parent.parent

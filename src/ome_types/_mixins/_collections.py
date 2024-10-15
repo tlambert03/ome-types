@@ -1,5 +1,6 @@
 import itertools
-from typing import Any, Generic, Iterator, List, TypeVar, Union, cast, no_type_check
+from collections.abc import Iterator
+from typing import Any, Generic, TypeVar, Union, cast, no_type_check
 
 from pydantic import BaseModel
 
@@ -50,7 +51,7 @@ class CollectionMixin(BaseModel, Generic[T]):
         """Append an item to the appropriate field list."""
         cast(list, getattr(self, self._field_name(item))).append(item)
 
-    def extend(self, items: List[T]) -> None:
+    def extend(self, items: list[T]) -> None:
         """Extend the appropriate field list with the given items."""
         for item in items:
             self.append(item)
