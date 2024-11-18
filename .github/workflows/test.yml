@@ -58,7 +58,7 @@ jobs:
           pip uninstall -y lxml xmlschema
           pytest --cov --cov-report=xml --cov-append
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -132,7 +132,7 @@ jobs:
           python -m pip install 'pydantic>=2'
           pytest --cov --cov-report=xml --cov-append
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -152,7 +152,7 @@ jobs:
         run: pytest --cov --cov-report=xml --cov-append -k test_autogen
         env:
           TEST_AUTOGEN: "1"
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
