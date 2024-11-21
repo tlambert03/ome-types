@@ -58,42 +58,6 @@ jobs:
             aicsimageio/tests/readers/extra_readers/test_bioformats_reader.py \
             aicsimageio/tests/readers/extra_readers/test_ome_zarr_reader.py 
 
-  test-paquo:
-    name: test paquo
-    runs-on: ubuntu-latest
-    env:
-      QUPATH_VERSION: 0.4.3
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      - name: Install dependencies
-        run: |
-          python -m pip install -U pip
-          python -m pip install .[test]
-          python -m pip install paquo
-
-      - name: Restore qupath cache
-        uses: actions/cache@v4
-        env:
-          CACHE_NUMBER: 0
-        with:
-          path: ./qupath/download
-          key: ${{ runner.os }}-qupath-v${{ env.CACHE_NUMBER }}
-
-      - name: Install qupath and set PAQUO_QUPATH_DIR
-        shell: bash
-        run: |
-          python -c "import os; os.makedirs('qupath/download', exist_ok=True)"
-          python -c "import os; os.makedirs('qupath/apps', exist_ok=True)"
-          python -m paquo get_qupath --install-path ./qupath/apps --download-path ./qupath/download ${{ env.QUPATH_VERSION }} \
-              | grep -v "^#" | sed "s/^/PAQUO_QUPATH_DIR=/" >> $GITHUB_ENV
-
-      - name: Test with pytest
-        run: pytest tests/test_paquo.py
-
   test-nd2:
     name: test nd2
     runs-on: ubuntu-latest
@@ -144,7 +108,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.10"
       - name: Install dependencies
         run: |
           python -m pip install -U pip

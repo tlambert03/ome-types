@@ -9,8 +9,12 @@ from pydantic import BaseModel
 if TYPE_CHECKING:
     from pydantic.fields import FieldInfo
 
+pydantic_version: tuple[int, ...] = tuple(
+    int(x) for x in pydantic.version.VERSION.split(".")[:2]
+)
 
-if pydantic.version.VERSION.startswith("2"):
+
+if pydantic_version >= (2,):
     try:
         from pydantic_extra_types.color import Color as Color
     except ImportError:
@@ -20,7 +24,8 @@ if pydantic.version.VERSION.startswith("2"):
         return field.annotation
 
     def field_regex(obj: type[BaseModel], field_name: str) -> str | None:
-        field_info = obj.model_fields[field_name]
+        # typing is incorrect at the moment, but may indicate breakage in pydantic 3
+        field_info = obj.model_fields[field_name]  # type: ignore [index]
         meta = field_info.json_schema_extra or {}
         # if a "metadata" key exists... use it.
         # After pydantic-compat 0.2, this is where it will be.
@@ -30,9 +35,10 @@ if pydantic.version.VERSION.startswith("2"):
             return meta.get("pattern")  # type: ignore
         return None
 
-    def get_default(f: FieldInfo) -> Any:
-        return f.get_default(call_default_factory=True)
+    kw: dict = {"validated_data": {}} if pydantic_version >= (2, 10) else {}
 
+    def get_default(f: FieldInfo) -> Any:
+        return f.get_default(call_default_factory=True, **kw)
 else:
     from pydantic.color import Color as Color  # type: ignore [no-redef]
 
