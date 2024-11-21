@@ -61,7 +61,7 @@ test = [
   "xmlschema <2.5",                      # FIXME: determine why
   "xsdata[cli]",
   "types-lxml; python_version >= '3.8'",
-  "pdbpp",
+  "pdbpp; not sys_platform == 'win32'",  # for debugging
 ]
 test-qt = ["qtpy", "pytest-qt"]
 # pin ruff for builds because it changes often
