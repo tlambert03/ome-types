@@ -48,11 +48,11 @@ class AnyElement(PydanticCompatMixin, BaseModel):
     tail: Optional[str] = Field(default=None)
     children: List["AnyElement"] = Field(
         default_factory=list,
-        metadata={"type": XmlType.WILDCARD},  # type: ignore [call-arg]
+        metadata={"type": XmlType.WILDCARD},  # type: ignore [call-arg,call-overload]
     )
     attributes: Dict[str, str] = Field(
         default_factory=dict,
-        metadata={"type": XmlType.ATTRIBUTES},  # type: ignore [call-arg]
+        metadata={"type": XmlType.ATTRIBUTES},  # type: ignore [call-arg,call-overload]
     )
 
     model_config: ClassVar["ConfigDict"] = {"arbitrary_types_allowed": True}

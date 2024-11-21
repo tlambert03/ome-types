@@ -23,7 +23,8 @@ if pydantic_version >= (2,):
         return field.annotation
 
     def field_regex(obj: type[BaseModel], field_name: str) -> str | None:
-        field_info = obj.model_fields[field_name]
+        # typing is incorrect at the moment, but may indicate breakage in pydantic 3
+        field_info = obj.model_fields[field_name]  # type: ignore [index]
         meta = field_info.json_schema_extra or {}
         # if a "metadata" key exists... use it.
         # After pydantic-compat 0.2, this is where it will be.
@@ -34,6 +35,10 @@ if pydantic_version >= (2,):
         return None
 
     kw: dict = {"validated_data": {}} if pydantic_version >= (2, 10) else {}
+
+    def get_default(f: FieldInfo) -> Any:
+        return f.get_default(call_default_factory=True, **kw)
+
 
     def get_default(f: FieldInfo) -> Any:
         return f.get_default(call_default_factory=True, **kw)
