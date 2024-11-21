@@ -5,18 +5,18 @@ ci:
 
 repos:
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.22
+    rev: v0.23
     hooks:
       - id: validate-pyproject
 
   - repo: https://github.com/crate-ci/typos
-    rev: v1.27.0
+    rev: typos-dict-v0.11.35
     hooks:
       - id: typos
         args: [--force-exclude]  # omit --write-changes
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.7.2
+    rev: v0.7.4
     hooks:
       - id: ruff
         args: [--fix, --unsafe-fixes]
@@ -28,7 +28,7 @@ repos:
       - id: mypy
         exclude: ^tests|^docs|_napari_plugin|widgets
         additional_dependencies:
-          - pydantic>=2
+          - pydantic>=2.10
           - pydantic-compat
           - xsdata==24.2.1
           - Pint
