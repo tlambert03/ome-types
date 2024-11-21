@@ -561,7 +561,7 @@ def _get_ns_elem(elem: ET._Element | AnyElementTree) -> str:
     """Get namespace from an element or element tree."""
     root = elem.getroot() if hasattr(elem, "getroot") else elem
     # return root.nsmap[root.prefix]  this only works for lxml
-    return root.tag.split("}", 1)[0].lstrip("{")
+    return str(root.tag).split("}", 1)[0].lstrip("{")
 
 
 def _get_ns_file(source: FileLike) -> str:
@@ -582,7 +582,7 @@ def _get_root_ome_type(xml: FileLike | AnyElementTree) -> type[OMEType]:
         if hasattr(xml, "seek"):
             xml.seek(0)
         _, root = next(ET.iterparse(xml, events=("start",)))
-    localname = cast("ET._Element", root).tag.rsplit("}", 1)[-1]
+    localname = str(root.tag).rsplit("}", 1)[-1]
 
     if hasattr(xml, "seek"):
         xml.seek(0)
