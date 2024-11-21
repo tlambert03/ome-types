@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, cast
+from typing import TYPE_CHECKING, cast
 
 from xsdata.formats.dataclass.filters import Filters
 from xsdata.formats.dataclass.generator import DataclassGenerator
@@ -12,6 +12,8 @@ from ome_autogen import _util
 from xsdata_pydantic_basemodel.generator import PydanticBaseFilters
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from jinja2 import Environment, FileSystemLoader
     from xsdata.codegen.models import Attr, Class
     from xsdata.codegen.resolver import DependenciesResolver

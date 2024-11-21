@@ -1,12 +1,12 @@
 from contextlib import suppress
-from typing import Tuple, Union
+from typing import Union
 
 from ome_types._vendor import Color as _Color
 
 __all__ = ["Color"]
 
-RGBA = Tuple[int, int, int, float]
-ColorType = Union[Tuple[int, int, int], RGBA, str, int]
+RGBA = tuple[int, int, int, float]
+ColorType = Union[tuple[int, int, int], RGBA, str, int]
 
 
 class Color(_Color):
