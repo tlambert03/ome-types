@@ -105,5 +105,5 @@ def dataclass_fields(obj: type[M]) -> tuple[dc.Field, ...]:
     """Return a tuple of dataclass fields for the given pydantic model class."""
     return tuple(
         _pydantic_field_to_dataclass_field(name, f)
-        for name, f in obj.model_fields.items()
+        for name, f in obj.model_fields.items()  # type: ignore
     )

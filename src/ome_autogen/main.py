@@ -221,7 +221,9 @@ def _build_typed_dicts(package_dir: str) -> None:
         else:
             _fields = [
                 f"{k}: {_disp_type(v.annotation)}"
-                for k, v in sorted(m.model_fields.items())
+                # this type ignore indicates something that may break in pydantic 3
+                # but for now, it's confusing and I think it's an error
+                for k, v in sorted(m.model_fields.items())  # type: ignore
             ]
             if _fields:
                 module += CLASS.format(
