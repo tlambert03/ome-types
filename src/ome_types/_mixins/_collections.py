@@ -106,8 +106,18 @@ class StructuredAnnotationsMixin(CollectionMixin[AnnotationType]):
             raise TypeError(  # pragma: no cover
                 f"Expected an instance of {AnnotationInstances}, got {item!r}"
             )
+
+        item_type = type(item)
         # where 10 is the length of "Annotation"
-        return item.__class__.__name__[:-10].lower() + "_annotations"
+        field_name = item_type.__name__[:-10].lower() + "_annotations"
+        if hasattr(cls, field_name):
+            return field_name
+        for annotation_type in AnnotationInstances:
+            if issubclass(item_type, annotation_type):
+                return annotation_type.__name__[:-10].lower() + "_annotations"
+        raise TypeError(  # pragma: no cover
+            f"Could not find field name for {item_type.__name__}"
+        )
 
 
 ShapeType = Union[Rectangle, Mask, Point, Ellipse, Line, Polyline, Polygon, Label]

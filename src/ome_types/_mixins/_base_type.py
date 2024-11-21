@@ -160,8 +160,7 @@ class OMEType(BaseModel):
                 stacklevel=2,
             )
             return getattr(self, new_key)
-
-        return super().__getattr__(key)  # type: ignore
+        return object.__getattribute__(self, key)
 
     def to_xml(self, **kwargs: Any) -> str:
         """Serialize this object to XML.
