@@ -142,7 +142,8 @@ def _fix_formatting(package_dir: str, ruff_ignore: list[str] = RUFF_IGNORE) -> N
 def _check_mypy(package_dir: str) -> None:
     _print_gray("Running mypy ...")
 
-    mypy = ["mypy", package_dir, "--strict"]
+    # FIXME: the call-overload disable is due to Field() in pydantic/pydantic-compat.
+    mypy = ["mypy", package_dir, "--strict", "--disable-error-code", "call-overload"]
     try:
         subprocess.check_output(mypy, stderr=subprocess.STDOUT)  # noqa S
     except subprocess.CalledProcessError as e:  # pragma: no cover
