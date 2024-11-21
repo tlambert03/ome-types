@@ -28,7 +28,11 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 dynamic = ["version"]
-dependencies = ["pydantic >=1.10.0", "pydantic-compat >=0.1.0", "xsdata >=23.6,<24.4"]
+dependencies = [
+  "pydantic >=1.10.16, !=2.0.*, !=2.1.*, !=2.2.*, !=2.3.*",
+  "pydantic-compat >=0.1.0",
+  "xsdata >=23.6,<24.4",
+]
 
 [project.urls]
 Source = "https://github.com/tlambert03/ome-types"
