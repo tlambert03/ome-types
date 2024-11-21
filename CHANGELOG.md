@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.5.3](https://github.com/tlambert03/ome-types/tree/v0.5.3) (2024-11-21)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.5.2...v0.5.3)
+
+**Fixed bugs:**
+
+- fix: fix pydantic 2.10 [\#267](https://github.com/tlambert03/ome-types/pull/267) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
+- ci\(dependabot\): bump codecov/codecov-action from 4 to 5 [\#264](https://github.com/tlambert03/ome-types/pull/264) ([dependabot[bot]](https://github.com/apps/dependabot))
+- ci\(pre-commit.ci\): autoupdate [\#263](https://github.com/tlambert03/ome-types/pull/263) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
+
 ## [v0.5.2](https://github.com/tlambert03/ome-types/tree/v0.5.2) (2024-09-23)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.5.1.post1...v0.5.2)
