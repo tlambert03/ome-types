@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import pickle
 import re
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 from xml.dom import minidom
@@ -138,7 +138,7 @@ def _canonicalize(xml: str | bytes, pretty: bool = False) -> str:
     return xml_out
 
 
-@lru_cache(maxsize=None)
+@cache
 def _get_schema() -> xmlschema.XMLSchemaBase:
     xmlschema = pytest.importorskip("xmlschema")
 

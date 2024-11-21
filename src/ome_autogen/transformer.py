@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 
 from xsdata.codegen.analyzer import ClassAnalyzer
 from xsdata.codegen.container import ClassContainer
@@ -9,6 +9,8 @@ from xsdata.codegen.handlers import RenameDuplicateAttributes
 from xsdata.codegen.mappers.schema import SchemaMapper
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from xsdata.codegen.transformer import ResourceTransformer
 
 else:

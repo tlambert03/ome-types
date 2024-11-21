@@ -1,4 +1,5 @@
 import warnings
+from collections.abc import Sequence
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
@@ -6,12 +7,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
-    Dict,
     Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
     TypeVar,
     cast,
 )
@@ -53,7 +49,7 @@ DEPRECATED_NAMES = {
 }
 
 
-def _move_deprecated_fields(data: Dict[str, Any], field_names: Set[str]) -> None:
+def _move_deprecated_fields(data: dict[str, Any], field_names: set[str]) -> None:
     for key in list(data):
         if (
             key not in field_names
@@ -90,7 +86,7 @@ class OMEType(BaseModel):
 
     # allow use with weakref
     if not PYDANTIC2:
-        __slots__: ClassVar[Set[str]] = {"__weakref__"}  # type: ignore
+        __slots__: ClassVar[set[str]] = {"__weakref__"}  # type: ignore
 
     _vid = field_validator("id", mode="before", check_fields=False)(validate_id)
 
@@ -121,7 +117,7 @@ class OMEType(BaseModel):
         """
         add_quantity_properties(cls)
 
-    def __repr_args__(self) -> Sequence[Tuple[Optional[str], Any]]:
+    def __repr_args__(self) -> Sequence[tuple[Optional[str], Any]]:
         """Repr with only set values, and truncated sequences."""
         args = []
         for k, v in self.model_dump(exclude_defaults=True).items():
@@ -177,7 +173,7 @@ class OMEType(BaseModel):
         return to_xml(self, **kwargs)
 
     @classmethod
-    def from_xml(cls: Type[T], xml: "XMLSource", **kwargs: Any) -> T:
+    def from_xml(cls: type[T], xml: "XMLSource", **kwargs: Any) -> T:
         """Read an ome-types class from XML.
 
         See docstring of [`ome_types.from_xml`][] for kwargs.

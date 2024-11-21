@@ -4,10 +4,13 @@ import os
 import re
 from collections import defaultdict
 from contextlib import contextmanager
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
-from typing import Any, Iterator, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 from xml.etree import ElementTree as ET
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 SRC_PATH = Path(__file__).parent.parent
 SCHEMA_FILE = (SRC_PATH / "ome_types" / "ome-2016-06.xsd").absolute()
@@ -40,7 +43,7 @@ class AppInfo(NamedTuple):
     abstract: list[str]
 
 
-@lru_cache(maxsize=None)
+@cache
 def get_appinfo(schema: Path | str = SCHEMA_FILE) -> AppInfo:
     """Gather all the <xsd:appinfo> stuff from the schema.
 

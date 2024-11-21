@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Sequence
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from pydantic import BaseModel, version
 
 import ome_types
 from ome_types import model
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 PYDANTIC2 = version.VERSION.startswith("2")
 TESTS = Path(__file__).parent

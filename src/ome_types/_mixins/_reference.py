@@ -1,5 +1,5 @@
 import weakref
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 from pydantic import PrivateAttr
 
@@ -15,7 +15,7 @@ class ReferenceMixin(OMEType):
             raise ValueError("references not yet resolved on root OME object")
         return self._ref()
 
-    def __getstate__(self: Any) -> Dict[str, Any]:
+    def __getstate__(self: Any) -> dict[str, Any]:
         """Support pickle of our weakref references."""
         state = super().__getstate__()
         if "__private_attribute_values__" in state:
