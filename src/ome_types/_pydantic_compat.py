@@ -38,9 +38,6 @@ if pydantic_version >= (2,):
 
     def get_default(f: FieldInfo) -> Any:
         return f.get_default(call_default_factory=True, **kw)
-
-    def get_default(f: FieldInfo) -> Any:
-        return f.get_default(call_default_factory=True, **kw)
 else:
     from pydantic.color import Color as Color  # type: ignore [no-redef]
 
