@@ -52,7 +52,7 @@ if TYPE_CHECKING:
         handler: type[XmlHandler]
 
 
-__all__ = ["from_xml", "to_xml", "to_dict", "from_tiff", "tiff2xml"]
+__all__ = ["from_tiff", "from_xml", "tiff2xml", "to_dict", "to_xml"]
 
 OME_ROOT = "http://www.openmicroscopy.org/Schemas/OME"
 OME_2016_06_URI = f"{OME_ROOT}/2016-06"
