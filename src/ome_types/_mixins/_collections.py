@@ -1,5 +1,4 @@
 import itertools
-from collections.abc import Iterator
 from typing import Any, Generic, TypeVar, Union, cast, no_type_check
 
 from pydantic import BaseModel

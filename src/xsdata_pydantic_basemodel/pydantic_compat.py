@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from pydantic_compat import PYDANTIC2, Field
 
-__all__ = ["Field", "PYDANTIC2"]
+__all__ = ["PYDANTIC2", "Field"]
 
 if TYPE_CHECKING:
     from pydantic import BaseModel
