@@ -15,7 +15,9 @@ if TYPE_CHECKING:
     from pydantic import BaseModel
 
 # The [`pint.UnitRegistry`][] used by ome-types.
-ureg: pint.UnitRegistry = pint.UnitRegistry(auto_reduce_dimensions=True)
+ureg: pint.UnitRegistry = pint.UnitRegistry(
+    auto_reduce_dimensions=True, on_redefinition="ignore"
+)
 
 ureg.define("reference_frame = [_reference_frame]")
 ureg.define("@alias grade = gradian")
@@ -23,6 +25,7 @@ ureg.define("@alias astronomical_unit = ua")
 ureg.define("line = inch / 12")
 ureg.define("millitorr = torr / 1000 = mTorr")
 ureg.define("@alias torr = Torr")
+ureg.define("@alias point = pt")
 
 _UNIT_FIELD = "{}_unit"
 
