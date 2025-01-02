@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import datetime
 import io
 import warnings
@@ -10,6 +11,7 @@ import pytest
 from pydantic import ValidationError
 
 from ome_types import from_tiff, from_xml, model, to_xml
+from ome_types.model import OME, AnnotationRef, CommentAnnotation, Instrument
 
 DATA = Path(__file__).parent / "data"
 
@@ -40,6 +42,27 @@ def test_refs() -> None:
     xml = DATA / "two-screens-two-plates-four-wells.ome.xml"
     ome = from_xml(xml)
     assert ome.screens[0].plate_refs[0].ref is ome.plates[0]
+
+
+def test_ref_copy() -> None:
+    aref = AnnotationRef(id=1)
+    ome = OME(
+        instruments=[Instrument(annotation_refs=[aref])],
+        structured_annotations=[CommentAnnotation(id=1, value="test")],
+    )
+
+    ome2 = ome.model_copy(deep=True)
+    assert ome2.instruments[0].annotation_refs[0].ref is not aref.ref
+
+    ome3 = copy.deepcopy(ome)
+    assert ome3.instruments[0].annotation_refs[0].ref is not aref.ref
+    ome4 = OME(**ome.dict())
+    assert ome4.instruments[0].annotation_refs[0].ref is not aref.ref
+
+    del ome, aref
+    assert ome2.instruments[0].annotation_refs[0].ref is not None
+    assert ome3.instruments[0].annotation_refs[0].ref is not None
+    assert ome4.instruments[0].annotation_refs[0].ref is not None
 
 
 def test_datetimes() -> None:
