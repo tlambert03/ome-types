@@ -61,7 +61,7 @@ test = [
   "xmlschema <2.5",                 # FIXME: determine why
   "xsdata[cli]",
   "types-lxml",
-  "pdbpp; sys_platform != 'win32'",      # for debugging
+  "pdbpp; sys_platform != 'win32'", # for debugging
 ]
 test-qt = ["qtpy", "pytest-qt"]
 # pin ruff for builds because it changes often
@@ -159,9 +159,10 @@ filterwarnings = [
   "ignore:Casting invalid AnnotationID:UserWarning",
   # FIXME: i think this might be an xsdata issue?
   "ignore::ResourceWarning",
-  "ignore:pkg_resources is deprecated",  # paquo tests
-  "ignore:::paquo",                      # paquo tests
-  "ignore:the imp module is deprecated", # omero tests
+  "ignore:pkg_resources is deprecated",                # paquo tests
+  "ignore:::paquo",                                    # paquo tests
+  "ignore:the imp module is deprecated",               # omero tests
+  "ignore:Failing to pass a value:DeprecationWarning", # xsdata
 ]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html

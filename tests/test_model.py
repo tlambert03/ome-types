@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import io
+import sys
 import warnings
 from pathlib import Path
 from typing import Any
@@ -212,6 +213,9 @@ def test_transformations() -> None:
     # should not warn
     with warnings.catch_warnings():
         warnings.simplefilter("error")
+        # this is needed for xsdata usage of private typing attribute
+        if sys.version_info >= (3, 13):
+            warnings.simplefilter("ignore", DeprecationWarning)
         from_xml(DATA / "MMStack.ome.xml", transformations=etree_fixes.ALL_FIXES)
 
     # SHOULD warn
