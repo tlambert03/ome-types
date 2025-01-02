@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 import weakref
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, BinaryIO
+from typing import TYPE_CHECKING, Any, BinaryIO, no_type_check
 
 from ome_types._mixins._base_type import OMEType
 from ome_types._mixins._ids import CONVERTED_IDS
@@ -32,10 +32,12 @@ class OMEMixin:
             else:
                 warnings.warn(f"Reference to unknown ID: {ref.id}", stacklevel=2)
 
-    def __deepcopy__(self, memo: dict[int, Any] | None = None) -> Self:
-        copy = super().__deepcopy__(memo)  # type: ignore
-        copy._link_refs()
-        return copy
+    if not TYPE_CHECKING:
+
+        def __deepcopy__(self, memo: dict[int, Any] | None = None) -> Self:
+            copy = super().__deepcopy__(memo)
+            copy._link_refs()
+            return copy
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Support unpickle of our weakref references."""
