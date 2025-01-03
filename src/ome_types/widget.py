@@ -139,10 +139,7 @@ class OMETree(QTreeWidget):
             self._current_path = ome
         else:
             raise TypeError("must be OME object or string")
-        if hasattr(_ome, "model_dump"):
-            data = _ome.model_dump(exclude_unset=True)
-        else:
-            data = _ome.dict(exclude_unset=True)
+        data = _ome.model_dump(exclude_unset=True)
         self._fill_item(data)
 
     def _fill_item(self, obj: Any, item: QTreeWidgetItem = None) -> None:

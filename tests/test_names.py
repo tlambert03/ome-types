@@ -1,19 +1,12 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
 
 import pytest
-from pydantic import BaseModel, version
 
 import ome_types
 from ome_types import model
 
-if TYPE_CHECKING:
-    from collections.abc import Sequence
-
-PYDANTIC2 = version.VERSION.startswith("2")
 TESTS = Path(__file__).parent
 KNOWN_CHANGES: dict[str, list[tuple[str, str | None]]] = {
     "OME.datasets": [
@@ -86,51 +79,6 @@ KNOWN_CHANGES: dict[str, list[tuple[str, str | None]]] = {
         ("namespace", None),
     ],
 }
-
-
-def _assert_names_match(
-    old: dict[str, Any], new: dict[str, Any], path: Sequence[str] = ()
-) -> None:
-    """Make sure every key in old is in new, or that it's in KNOWN_CHANGES."""
-    for old_key, value in old.items():
-        new_key = old_key
-        if old_key not in new:
-            _path = ".".join(path)
-            if _path in KNOWN_CHANGES:
-                for from_, new_key in KNOWN_CHANGES[_path]:  # type: ignore
-                    if old_key == from_ and (new_key in new or new_key is None):
-                        break
-                else:
-                    raise AssertionError(
-                        f"Key {old_key!r} not in new model at {_path}: {list(new)}"
-                    )
-            else:
-                raise AssertionError(f"{_path!r} not in KNOWN_CHANGES")
-
-        if isinstance(value, dict) and new_key in new:
-            _assert_names_match(value, new[new_key], (*path, old_key))
-
-
-def _get_fields(cls: type[BaseModel]) -> dict[str, Any]:
-    from pydantic.typing import display_as_type
-
-    fields = {}
-    for name, field in cls.__fields__.items():
-        if name.startswith("_"):
-            continue
-        if isinstance(field.type_, type) and issubclass(field.type_, BaseModel):
-            fields[name] = _get_fields(field.type_)
-        else:
-            fields[name] = display_as_type(field.outer_type_)  # type: ignore
-    return fields
-
-
-@pytest.mark.skipif(PYDANTIC2, reason="no need to check pydantic 2")
-def test_names() -> None:
-    with (TESTS / "data" / "old_model.json").open() as f:
-        old_names = json.load(f)
-    new_names = _get_fields(ome_types.model.OME)
-    _assert_names_match(old_names, new_names, ("OME",))
 
 
 V1_EXPORTS = [

@@ -40,7 +40,7 @@ def update_set_fields(self: BaseModel) -> None:
 
     Because pydantic isn't aware of mutations to sequences, it can't tell when
     a field has been "set" by mutating a sequence.  This method updates the
-    self.__fields_set__ attribute to reflect that.  We assume that if an attribute
+    `model_fields_set` attribute to reflect that.  We assume that if an attribute
     is not None, and is not equal to the default value, then it has been set.
     """
     for field_name, field in self.model_fields.items():
