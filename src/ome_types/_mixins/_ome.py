@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 import weakref
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, BinaryIO, no_type_check
+from typing import TYPE_CHECKING, Any, BinaryIO
 
 from ome_types._mixins._base_type import OMEType
 from ome_types._mixins._ids import CONVERTED_IDS
@@ -36,6 +36,12 @@ class OMEMixin:
 
         def __deepcopy__(self, memo: dict[int, Any] | None = None) -> Self:
             copy = super().__deepcopy__(memo)
+            copy._link_refs()
+            return copy
+
+        # only needed for pydantic-compat with pydantic v1
+        def model_copy(self, *args, **kwargs) -> Self:
+            copy = super().model_copy(*args, **kwargs)
             copy._link_refs()
             return copy
 
