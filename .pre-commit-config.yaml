@@ -10,13 +10,13 @@ repos:
       - id: validate-pyproject
 
   - repo: https://github.com/crate-ci/typos
-    rev: codespell-dict-v0.5.0
+    rev: v1.29.4
     hooks:
       - id: typos
         args: [--force-exclude]  # omit --write-changes
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    rev: v0.8.5
     hooks:
       - id: ruff
         args: [--fix, --unsafe-fixes]
@@ -29,7 +29,6 @@ repos:
         exclude: ^tests|^docs|_napari_plugin|widgets
         additional_dependencies:
           - pydantic>=2.10
-          - pydantic-compat
           - xsdata==24.2.1
           - Pint
           - types-lxml

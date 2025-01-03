@@ -1,15 +1,7 @@
 import dataclasses as dc
 from collections.abc import Iterator
 from contextlib import suppress
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    ClassVar,
-    Generic,
-    Optional,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Generic, Optional, TypeVar
 
 from pydantic import BaseModel, Field
 from pydantic_core import core_schema as cs
@@ -133,7 +125,7 @@ _validators = {
 
 def _make_get_core_schema(validator: Callable) -> Callable:
     def get_core_schema(*args: Any) -> cs.PlainValidatorFunctionSchema:
-        return cs.general_plain_validator_function(validator)
+        return cs.with_info_plain_validator_function(validator)
 
     return get_core_schema
 
