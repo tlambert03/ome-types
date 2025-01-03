@@ -39,12 +39,6 @@ class OMEMixin:
             copy._link_refs()
             return copy
 
-        # only needed for pydantic-compat with pydantic v1
-        def model_copy(self, *args, **kwargs) -> Self:
-            copy = super().model_copy(*args, **kwargs)
-            copy._link_refs()
-            return copy
-
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Support unpickle of our weakref references."""
         super().__setstate__(state)  # type: ignore
