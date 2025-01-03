@@ -149,11 +149,7 @@ class OMEType(BaseModel):
                 stacklevel=2,
             )
             return getattr(self, new_key)
-        # pydantic v2+ has __getattr__
-        if hasattr(BaseModel, "__getattr__"):
-            return super().__getattr__(key)  # type: ignore
-        else:
-            return object.__getattribute__(self, key)
+        return super().__getattr__(key)  # type: ignore
 
     def to_xml(self, **kwargs: Any) -> str:
         """Serialize this object to XML.
