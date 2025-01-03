@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 import weakref
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, BinaryIO, no_type_check
+from typing import TYPE_CHECKING, Any, BinaryIO
 
 from ome_types._mixins._base_type import OMEType
 from ome_types._mixins._ids import CONVERTED_IDS
