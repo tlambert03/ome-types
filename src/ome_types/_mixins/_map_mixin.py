@@ -1,11 +1,7 @@
 from collections.abc import Iterator, MutableMapping
 from typing import TYPE_CHECKING, Any, Optional
 
-try:
-    from pydantic import model_serializer
-except ImportError:
-    model_serializer = None  # type: ignore
-
+from pydantic import model_serializer
 
 if TYPE_CHECKING:
     from typing import Protocol
@@ -45,11 +41,11 @@ class MapMixin(MutableMapping[str, Optional[str]]):
     def _pydict(self: "HasMsProtocol", **kwargs: Any) -> dict[str, str]:
         return {m.k: m.value for m in self.ms if m.k is not None}
 
-    def dict(self, **kwargs: Any) -> dict[str, Any]:
-        return self._pydict()  # type: ignore
+    if not TYPE_CHECKING:
 
-    if model_serializer is not None:
-
-        @model_serializer(mode="wrap")
-        def serialize_root(self, handler, _info) -> dict:  # type: ignore
+        def model_dump(self, **kwargs: Any) -> dict[str, Any]:
             return self._pydict()  # type: ignore
+
+    @model_serializer(mode="wrap")
+    def serialize_root(self, handler, _info) -> dict:  # type: ignore
+        return self._pydict()  # type: ignore
