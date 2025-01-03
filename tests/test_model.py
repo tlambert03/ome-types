@@ -10,7 +10,6 @@ from typing import Any
 
 import pytest
 from pydantic import ValidationError
-from pydantic_compat import PYDANTIC2
 
 from ome_types import from_tiff, from_xml, model, to_xml
 from ome_types.model import OME, AnnotationRef, CommentAnnotation, Instrument
@@ -46,7 +45,6 @@ def test_refs() -> None:
     assert ome.screens[0].plate_refs[0].ref is ome.plates[0]
 
 
-@pytest.mark.skipif(not PYDANTIC2, reason="pydantic v1 has poor support for deepcopy")
 def test_ref_copy() -> None:
     aref = AnnotationRef(id=1)
     ome = OME(
@@ -60,7 +58,7 @@ def test_ref_copy() -> None:
 
     ome3 = copy.deepcopy(ome)
     assert ome3.instruments[0].annotation_refs[0].ref is not aref.ref
-    ome4 = OME(**ome.dict())
+    ome4 = OME(**ome.model_dump())
     assert ome4.instruments[0].annotation_refs[0].ref is not aref.ref
 
     del ome, aref

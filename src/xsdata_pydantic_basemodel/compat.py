@@ -11,18 +11,18 @@ from typing import (
     TypeVar,
 )
 
-try:
-    from lxml import etree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET  # type: ignore
-
-from pydantic import BaseModel, validators
-from pydantic_compat import PYDANTIC2, PydanticCompatMixin
+from pydantic import BaseModel, Field
+from pydantic_core import core_schema as cs
 from xsdata.formats.dataclass.compat import Dataclasses, class_types
 from xsdata.formats.dataclass.models.elements import XmlType
 from xsdata.models.datatype import XmlDate, XmlDateTime, XmlDuration, XmlPeriod, XmlTime
 
-from xsdata_pydantic_basemodel.pydantic_compat import Field, dataclass_fields
+from xsdata_pydantic_basemodel.pydantic_compat import dataclass_fields
+
+try:
+    from lxml import etree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET  # type: ignore
 
 T = TypeVar("T", bound=object)
 
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from pydantic import ConfigDict
 
 
-class AnyElement(PydanticCompatMixin, BaseModel):
+class AnyElement(BaseModel):
     """Generic model to bind xml document data to wildcard fields.
 
     :param qname: The element's qualified name
@@ -45,11 +45,11 @@ class AnyElement(PydanticCompatMixin, BaseModel):
     tail: Optional[str] = Field(default=None)
     children: list["AnyElement"] = Field(
         default_factory=list,
-        metadata={"type": XmlType.WILDCARD},  # type: ignore [call-arg,call-overload]
+        json_schema_extra={"type": XmlType.WILDCARD},
     )
     attributes: dict[str, str] = Field(
         default_factory=dict,
-        metadata={"type": XmlType.ATTRIBUTES},  # type: ignore [call-arg,call-overload]
+        json_schema_extra={"type": XmlType.ATTRIBUTES},
     )
 
     model_config: ClassVar["ConfigDict"] = {"arbitrary_types_allowed": True}
@@ -63,7 +63,7 @@ class AnyElement(PydanticCompatMixin, BaseModel):
         return elem
 
 
-class DerivedElement(PydanticCompatMixin, BaseModel, Generic[T]):
+class DerivedElement(BaseModel, Generic[T]):
     """Generic model wrapper for type substituted elements.
 
     Example: eg. <b xsi:type="a">...</b>
@@ -130,19 +130,15 @@ _validators = {
     ET.QName: make_validators(ET.QName, ET.QName),
 }
 
-if not PYDANTIC2:
-    validators._VALIDATORS.extend(list(_validators.items()))
-else:
-    from pydantic import BaseModel
-    from pydantic_core import core_schema as cs
 
-    def _make_get_core_schema(validator: Callable) -> Callable:
-        def get_core_schema(*args: Any) -> cs.PlainValidatorFunctionSchema:
-            return cs.general_plain_validator_function(validator)
+def _make_get_core_schema(validator: Callable) -> Callable:
+    def get_core_schema(*args: Any) -> cs.PlainValidatorFunctionSchema:
+        return cs.general_plain_validator_function(validator)
 
-        return get_core_schema
+    return get_core_schema
 
-    for type_, val in _validators.items():
-        get_schema = _make_get_core_schema(val[0])
-        with suppress(TypeError):
-            type_.__get_pydantic_core_schema__ = get_schema  # type: ignore
+
+for type_, val in _validators.items():
+    get_schema = _make_get_core_schema(val[0])
+    with suppress(TypeError):
+        type_.__get_pydantic_core_schema__ = get_schema  # type: ignore

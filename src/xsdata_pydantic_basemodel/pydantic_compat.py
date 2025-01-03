@@ -5,41 +5,27 @@ import warnings
 from functools import cache
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
-from pydantic_compat import PYDANTIC2, Field
-
-__all__ = ["PYDANTIC2", "Field"]
+from pydantic_core import PydanticUndefined
 
 if TYPE_CHECKING:
     from pydantic import BaseModel
+    from pydantic.fields import FieldInfo
 
     M = TypeVar("M", bound=BaseModel)
     C = TypeVar("C", bound=Callable[..., Any])
 
 
-if PYDANTIC2:
-    from pydantic.fields import FieldInfo
-    from pydantic_core import PydanticUndefined as Undefined
-
-    def _get_metadata(pydantic_field: FieldInfo) -> dict[str, Any]:
-        meta = (
-            pydantic_field.json_schema_extra
-            if isinstance(pydantic_field.json_schema_extra, dict)
-            else {}
-        )
-        # if a "metadata" key exists... use it.
-        # After pydantic-compat 0.2, this is where it will be.
-        if "metadata" in meta:
-            meta = meta["metadata"]  # type: ignore
-        return meta
-
-else:
-    from pydantic.fields import Undefined as Undefined  # type: ignore
-
-    def _get_metadata(pydantic_field) -> dict:  # type: ignore
-        extra = pydantic_field.field_info.extra
-        if "json_schema_extra" in extra:
-            return extra["json_schema_extra"]
-        return extra.get("metadata", {})
+def _get_metadata(pydantic_field: FieldInfo) -> dict[str, Any]:
+    meta = (
+        pydantic_field.json_schema_extra
+        if isinstance(pydantic_field.json_schema_extra, dict)
+        else {}
+    )
+    # if a "metadata" key exists... use it.
+    # After pydantic-compat 0.2, this is where it will be.
+    if "metadata" in meta:
+        meta = meta["metadata"]  # type: ignore
+    return meta
 
 
 def _get_defaults(pydantic_field: FieldInfo) -> tuple[Any, Any]:
@@ -50,7 +36,7 @@ def _get_defaults(pydantic_field: FieldInfo) -> tuple[Any, Any]:
         default_factory = dc.MISSING
         default = (
             dc.MISSING
-            if pydantic_field.default in (Undefined, Ellipsis)
+            if pydantic_field.default in (PydanticUndefined, Ellipsis)
             else pydantic_field.default
         )
     return default_factory, default

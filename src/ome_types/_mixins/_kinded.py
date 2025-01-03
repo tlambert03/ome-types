@@ -1,7 +1,7 @@
 import builtins
 from typing import Any
 
-from pydantic_compat import BaseModel
+from pydantic import BaseModel
 
 try:
     from pydantic import model_serializer

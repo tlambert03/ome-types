@@ -124,8 +124,8 @@ IMPORT_PATTERNS: dict[str, dict[str, list[str]]] = {
     "typing": {"ClassVar": [": ClassVar"]},
     "ome_types._mixins._util": {"new_uuid": ["default_factory=new_uuid"]},
     "datetime": {"datetime": ["datetime"]},
-    "pydantic": {"validator": ["validator("]},
-    "pydantic_compat": {
+    "pydantic": {
+        "validator": ["validator("],
         "model_validator": ["model_validator("],
         "field_validator": ["field_validator("],
     },
