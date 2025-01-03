@@ -49,7 +49,7 @@ def test_populate_omero(monkeypatch: MonkeyPatch, full_ome_object: OME) -> None:
         assert conn.method_calls
     except ValueError as e:
         # remove this when omero-cli-transfer updates
-        if str(e) != 'list.remove(x): x not in list':
+        if str(e) != "list.remove(x): x not in list":
             raise
 
 
