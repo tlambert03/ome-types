@@ -8,8 +8,6 @@ from xsdata.formats.dataclass.generator import DataclassGenerator
 from xsdata.utils import text
 from xsdata.utils.collections import unique_sequence
 
-from xsdata_pydantic_basemodel.pydantic_compat import PYDANTIC2
-
 if TYPE_CHECKING:
     from xsdata.codegen.models import Attr, Class
     from xsdata.models.config import GeneratorConfig, OutputFormat
@@ -28,12 +26,6 @@ class PydanticBaseGenerator(DataclassGenerator):
 class PydanticBaseFilters(Filters):
     def __init__(self, config: GeneratorConfig):
         super().__init__(config)
-        self.pydantic_support = getattr(config.output, "pydantic_support", False)
-        if self.pydantic_support == "both":
-            self.import_patterns["pydantic"].pop("Field")
-            self.import_patterns["xsdata_pydantic_basemodel.pydantic_compat"] = {
-                "Field": {" = Field("}
-            }
 
     @classmethod
     def build_import_patterns(cls) -> dict[str, dict]:
@@ -73,26 +65,13 @@ class PydanticBaseFilters(Filters):
         if "metadata" not in kwargs:  # pragma: no cover
             return
 
-        # The choice to use v1 syntax for cross-compatible mode has to do with
-        # https://docs.pydantic.dev/usage/schema/#unenforced-field-constraints
-        # There were more fields in v1 than in v2, so "min_length" is degenerate in v2
-        # NOTE: ... this might be fixed by using pydantic_compat?
-        if self.pydantic_support == "v2":
-            use_v2 = True
-        elif self.pydantic_support == "auto":
-            use_v2 = PYDANTIC2
-        else:  # v1 or both
-            use_v2 = False
-
-        restriction_map = V2_RESTRICTION_MAP if use_v2 else V1_RESTRICTION_MAP
-
         metadata: dict = kwargs["metadata"]
         getitem = metadata.pop if pop else metadata.get
-        for from_, to_ in restriction_map.items():
+        for from_, to_ in V2_RESTRICTION_MAP.items():
             if from_ in metadata:
                 kwargs[to_] = getitem(from_)
 
-        if use_v2 and "metadata" in kwargs:
+        if "metadata" in kwargs:
             kwargs["json_schema_extra"] = kwargs.pop("metadata")
 
     # note, this method is the same as the base class implementation before it

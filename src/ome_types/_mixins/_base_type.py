@@ -3,16 +3,9 @@ from collections.abc import Sequence
 from datetime import datetime
 from enum import Enum
 from textwrap import indent
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    Optional,
-    TypeVar,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, TypeVar, cast
 
-from pydantic_compat import PYDANTIC2, BaseModel, field_validator
+from pydantic import BaseModel, field_validator
 
 from ome_types._mixins._ids import validate_id
 from ome_types._pydantic_compat import field_type, update_set_fields
@@ -83,10 +76,6 @@ class OMEType(BaseModel):
         "validate_default": True,
         "coerce_numbers_to_str": True,
     }
-
-    # allow use with weakref
-    if not PYDANTIC2:
-        __slots__: ClassVar[set[str]] = {"__weakref__"}  # type: ignore
 
     _vid = field_validator("id", mode="before", check_fields=False)(validate_id)
 
@@ -160,11 +149,7 @@ class OMEType(BaseModel):
                 stacklevel=2,
             )
             return getattr(self, new_key)
-        # pydantic v2+ has __getattr__
-        if hasattr(BaseModel, "__getattr__"):
-            return super().__getattr__(key)  # type: ignore
-        else:
-            return object.__getattribute__(self, key)
+        return super().__getattr__(key)  # type: ignore
 
     def to_xml(self, **kwargs: Any) -> str:
         """Serialize this object to XML.
@@ -195,7 +180,7 @@ class OMEType(BaseModel):
 
         Because pydantic isn't aware of mutations to sequences, it can't tell when
         a field has been "set" by mutating a sequence.  This method updates the
-        self.__fields_set__ attribute to reflect that.  We assume that if an attribute
+        `model_fields_set` attribute to reflect that.  We assume that if an attribute
         is not None, and is not equal to the default value, then it has been set.
         """
         update_set_fields(self)
