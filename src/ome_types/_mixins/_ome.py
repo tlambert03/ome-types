@@ -35,7 +35,10 @@ class OMEMixin:
     if not TYPE_CHECKING:
 
         def __deepcopy__(self, memo: dict[int, Any] | None = None) -> Self:
-            copy = super().__deepcopy__(memo)
+            try:
+                copy = super().__deepcopy__(memo)
+            except AttributeError:
+                copy = self.copy(deep=True)
             copy._link_refs()
             return copy
 
