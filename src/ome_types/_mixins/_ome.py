@@ -38,6 +38,7 @@ class OMEMixin:
             try:
                 copy = super().__deepcopy__(memo)
             except AttributeError:
+                # pydantic v1
                 copy = self.copy(deep=True)
             copy._link_refs()
             return copy
