@@ -176,3 +176,59 @@ In [23]: print(to_xml(ome))  # or ome.to_xml()
     </Image>
 </OME>
 ```
+
+## Writing companion OME files
+
+The writing capability can be used to generate OME-TIFF filesets as
+described in the [OME-TIFF](https://ome-model.readthedocs.io/en/stable/ome-tiff/specification.html)
+by storing the metadata as OME-XML into a companion file.
+
+The following code demonstrates how to write  companion files for the
+multi-channel fluorescent images published in
+[IDR](https://idr.openmicroscopy.org/) under the accession idr0052 and
+available at [10.17867/10000123a](https://doi.org/10.17867/10000123a).
+
+The associated raw TIFF files can be downloaded from
+[here](https://ftp.ebi.ac.uk/pub/databases/IDR/idr0052-walther-condensinmap/20181113-ftp/MitoSys/160719_NCAPD2gfpc272c78_MitoSys2/cell0005_R0001/rawtif/)
+
+```python
+from ome_types.model import Channel
+from ome_types.model import Image
+from ome_types.model import OME
+from ome_types.model import Pixels
+from ome_types.model import TiffData
+import uuid
+
+ome = OME(uuid=f"urn:uuid:{uuid.uuid4()}")
+pixels = Pixels(
+    dimension_order='XYZCT',
+    physical_size_x="0.2516",
+    physical_size_y="0.2516",
+    physical_size_z="0.75",
+    size_x=256,
+    size_y=256,
+    size_z=31,
+    size_c=3,
+    size_t=40,
+    type='uint16')
+pixels.channels.extend([
+  Channel(color="16711935", name="NCAPD2", samples_per_pixel=1),
+  Channel(color="65535", name="DNA", samples_per_pixel=1),
+  Channel(color="-1", name="NEG_Dextran", samples_per_pixel=1)])
+ome.images.append(Image(name="cell0005_R0001", pixels=pixels))
+
+for t in range(40):
+    filename = "TR1_2_W0001_P0001_T%04g.tif" % (t+1)
+    tiff_uuid = f"urn:uuid:{uuid.uuid4()}"
+    tiff = TiffData(
+        first_c=0,
+        first_t=t,
+        first_z=0,
+        plane_count=93,
+        uuid=TiffData.UUID(value=tiff_uuid, file_name=filename)
+    )
+    pixels.tiff_data_blocks.append(tiff)
+
+with open("cell0005_R0001.companion.ome", 'w') as f:
+    f.write(ome.to_xml())
+```
