@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.6.0](https://github.com/tlambert03/ome-types/tree/v0.6.0) (2025-02-26)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.5.3...v0.6.0)
+
+**Fixed bugs:**
+
+- fix: ReferenceMixin.\_ref weakrefs after deep copy [\#272](https://github.com/tlambert03/ome-types/pull/272) ([tlambert03](https://github.com/tlambert03))
+- Fix pt unit being misinterpreted as pints [\#271](https://github.com/tlambert03/ome-types/pull/271) ([jmuhlich](https://github.com/jmuhlich))
+
+**Merged pull requests:**
+
+- docs: Add example of writing companion files using ome-types [\#277](https://github.com/tlambert03/ome-types/pull/277) ([sbesson](https://github.com/sbesson))
+- refactor: remove support for pydantic v1 [\#275](https://github.com/tlambert03/ome-types/pull/275) ([tlambert03](https://github.com/tlambert03))
+- build: drop python 3.8 [\#268](https://github.com/tlambert03/ome-types/pull/268) ([tlambert03](https://github.com/tlambert03))
+- build: drop python 3.8, support python 3.13 [\#260](https://github.com/tlambert03/ome-types/pull/260) ([tlambert03](https://github.com/tlambert03))
+
 ## [v0.5.3](https://github.com/tlambert03/ome-types/tree/v0.5.3) (2024-11-21)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.5.2...v0.5.3)
