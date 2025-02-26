@@ -8,7 +8,7 @@ except PackageNotFoundError:  # pragma: no cover
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from ome_types.units import ureg  # noqa: TC004
+    from ome_types.units import ureg
 
 from ome_types import model
 from ome_types._conversion import from_tiff, from_xml, to_dict, to_xml, validate_xml
