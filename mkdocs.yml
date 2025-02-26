@@ -54,6 +54,8 @@ markdown_extensions:
 
 plugins:
   - search
+  - autorefs:
+      resolve_closest: true
   - mkdocstrings:
       handlers:
         python:
@@ -68,7 +70,7 @@ plugins:
             filters:
               - "!^__"
               - "!^_"
-          import:
+          inventories:
             - https://docs.python.org/3/objects.inv
             - https://pint.readthedocs.io/en/stable/objects.inv
 

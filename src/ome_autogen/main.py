@@ -98,7 +98,7 @@ def build_model(
     config = get_config(target_package)
     transformer = OMETransformer(print=False, config=config)
 
-    _print_gray(f"Processing {getattr(schema_file ,'name', schema_file)}...")
+    _print_gray(f"Processing {getattr(schema_file, 'name', schema_file)}...")
     transformer.process_sources([Path(schema_file).resolve().as_uri()])
 
     package_dir = str(Path(output_dir) / OUTPUT_PACKAGE.replace(".", "/"))
