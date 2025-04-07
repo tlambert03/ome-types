@@ -173,7 +173,7 @@ class OMEType(BaseModel):
         """
         from ome_types._conversion import from_xml
 
-        return cast(T, from_xml(xml, **kwargs))
+        return cast("T", from_xml(xml, **kwargs))
 
     def _update_set_fields(self) -> None:
         """Update set fields with populated mutable sequences.

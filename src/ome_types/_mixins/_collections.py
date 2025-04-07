@@ -49,7 +49,7 @@ class CollectionMixin(BaseModel, Generic[T]):
 
     def append(self, item: T) -> None:
         """Append an item to the appropriate field list."""
-        cast(list, getattr(self, self._field_name(item))).append(item)
+        cast("list", getattr(self, self._field_name(item))).append(item)
 
     def extend(self, items: list[T]) -> None:
         """Extend the appropriate field list with the given items."""
@@ -58,7 +58,7 @@ class CollectionMixin(BaseModel, Generic[T]):
 
     def remove(self, item: T) -> None:
         """Remove an item from the appropriate field list."""
-        cast(list, getattr(self, self._field_name(item))).remove(item)
+        cast("list", getattr(self, self._field_name(item))).remove(item)
 
     # This one is a bit hacky... perhaps deprecate and remove
     def __getitem__(self, i: int) -> T:

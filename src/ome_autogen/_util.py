@@ -58,7 +58,7 @@ def get_appinfo(schema: Path | str = SCHEMA_FILE) -> AppInfo:
     abstract = []
     for node in tree.iter():
         if node.tag == "plural":  # <plural>
-            plurals[in_name] = cast(str, node.text)
+            plurals[in_name] = cast("str", node.text)
         elif node.tag == "enum":  # <enum>
             enums[in_name][in_value] = EnumInfo(
                 node.get("name", ""),
