@@ -121,7 +121,7 @@ def _canonicalize(xml: str | bytes, pretty: bool = False) -> str:
     # once that is fixed, we can remove xmlschema entirely
     schema = _get_schema()
     decoded = schema.decode(xml)
-    root = cast(ET.Element, schema.encode(decoded, path=f"{OME_2016_06_NS}OME"))
+    root = cast("ET.Element", schema.encode(decoded, path=f"{OME_2016_06_NS}OME"))
 
     # Strip extra whitespace in the schemaLocation value.
     SCHEMA_LOCATION = "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"
@@ -147,7 +147,7 @@ def _get_schema() -> xmlschema.XMLSchemaBase:
     # substitution groups.  This can be removed, if decode(validation='skip') is used.
     ls_sgs = schema.maps.substitution_groups[f"{OME_2016_06_NS}LightSourceGroup"]
     ls_id_maps = schema.maps.identities[f"{OME_2016_06_NS}LightSourceIDKey"]
-    ls_id_maps.elements = {e: None for e in ls_sgs}
+    ls_id_maps.elements = dict.fromkeys(ls_sgs)
     return schema
 
 

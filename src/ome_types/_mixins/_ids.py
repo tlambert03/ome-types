@@ -26,7 +26,7 @@ CONVERTED_IDS: dict[tuple[str, str], str] = {}
 def _get_id_name_and_pattern(cls: type[BaseModel]) -> tuple[str, str]:
     # let this raise if it doesn't exist...
     # this should only be used on classes that have an id field
-    id_pattern = cast(str, field_regex(cls, "id"))
+    id_pattern = cast("str", field_regex(cls, "id"))
     id_name = id_pattern.split(":")[-3]
     return id_name, id_pattern
 

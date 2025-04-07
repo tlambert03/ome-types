@@ -400,7 +400,7 @@ def _get_XMLSchema(schema: Path | str) -> xmlschema.XMLSchema:
     # substitution groups
     ls_sgs = xml_schema.maps.substitution_groups[f"{OME_2016_06_NS}LightSourceGroup"]
     ls_id_maps = xml_schema.maps.identities[f"{OME_2016_06_NS}LightSourceIDKey"]
-    ls_id_maps.elements = {e: None for e in ls_sgs}
+    ls_id_maps.elements = dict.fromkeys(ls_sgs)
     return xml_schema
 
 
