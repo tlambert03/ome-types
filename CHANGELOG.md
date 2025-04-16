@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.6.1](https://github.com/tlambert03/ome-types/tree/v0.6.1) (2025-04-16)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.6.0...v0.6.1)
+
+**Merged pull requests:**
+
+- fix: fix pydantic deprecations [\#281](https://github.com/tlambert03/ome-types/pull/281) ([tlambert03](https://github.com/tlambert03))
+- ci\(pre-commit.ci\): autoupdate [\#279](https://github.com/tlambert03/ome-types/pull/279) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
+
 ## [v0.6.0](https://github.com/tlambert03/ome-types/tree/v0.6.0) (2025-02-26)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.5.3...v0.6.0)
