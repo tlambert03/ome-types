@@ -42,7 +42,7 @@ class CollectionMixin(BaseModel, Generic[T]):
 
     @no_type_check
     def __iter__(self) -> Iterator[T]:
-        return itertools.chain(*(getattr(self, f) for f in self.model_fields))
+        return itertools.chain(*(getattr(self, f) for f in type(self).model_fields))
 
     def __len__(self) -> int:
         return sum(1 for _ in self)

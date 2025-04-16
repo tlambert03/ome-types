@@ -61,7 +61,7 @@ test = [
 ]
 test-qt = ["qtpy", "pytest-qt"]
 # pin ruff for builds because it changes often
-build = ["ruff ==0.3.0", "xsdata[cli]==24.2.1"]
+build = ["ruff ==0.11.5", "xsdata[cli]==24.2.1"]
 dev = ["ome-types[test]", "ome-types[build]", "ome-types[docs]", "pre-commit"]
 
 # https://hatch.pypa.io/latest/plugins/build-hook/custom/
@@ -108,7 +108,7 @@ select = [
   "RUF",    # ruff-specific rules
   "SIM105", # contextlib.suppress
   "TID",    # tidy imports
-  "TCH",    # flake8-type-checking
+  "TC",    # flake8-type-checking
 ]
 ignore = [
   "D104", #  Missing docstring in public package

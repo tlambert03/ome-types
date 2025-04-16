@@ -43,7 +43,7 @@ def update_set_fields(self: BaseModel) -> None:
     `model_fields_set` attribute to reflect that.  We assume that if an attribute
     is not None, and is not equal to the default value, then it has been set.
     """
-    for field_name, field in self.model_fields.items():
+    for field_name, field in type(self).model_fields.items():
         current = getattr(self, field_name)
         if not current:
             continue

@@ -72,7 +72,7 @@ def collect_ids(value: Any) -> dict[str, OMEType]:
         for v in value:
             ids.update(collect_ids(v))
     elif isinstance(value, OMEType):
-        for fname in value.model_fields:
+        for fname in type(value).model_fields:
             if fname == "id" and not isinstance(value, Reference):
                 # We don't need to recurse on the id string, so just record it
                 # and move on.
@@ -100,7 +100,7 @@ def collect_references(value: Any) -> list[Reference]:
         for v in value:
             references.extend(collect_references(v))
     elif isinstance(value, OMEType):
-        for f in value.model_fields:
+        for f in type(value).model_fields:
             references.extend(collect_references(getattr(value, f)))
     # Do nothing for uninteresting types
     return references
