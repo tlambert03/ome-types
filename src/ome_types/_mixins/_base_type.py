@@ -84,7 +84,7 @@ class OMEType(BaseModel):
 
     def __init__(self, **data: Any) -> None:
         warn_extra = data.pop("warn_extra", True)
-        field_names = set(self.model_fields)
+        field_names = set(type(self).model_fields)
         _move_deprecated_fields(data, field_names)
         super().__init__(**data)
         if type(self).__name__ == "Map":
@@ -118,7 +118,7 @@ class OMEType(BaseModel):
                 # if this is a sequence with a long repr, just show the length
                 # and type
                 if len(repr(v).split(",")) > 5:
-                    ftype = field_type(self.model_fields[k])
+                    ftype = field_type(type(self).model_fields[k])
                     type_name = getattr(field_type, "__name__", str(ftype))
                     v = _RawRepr(f"[<{len(v)} {type_name}>]")
             elif isinstance(v, Enum):
