@@ -114,3 +114,6 @@ docs/source/_autosummary
 _build/
 qupath/
 uv.lock
+
+original.xml
+rewritten.xml

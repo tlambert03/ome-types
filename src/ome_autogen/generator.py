@@ -77,12 +77,10 @@ class OmeFilters(PydanticBaseFilters):
     def _modern_typing(self) -> Iterator[None]:
         """Context manager to use modern typing syntax."""
         prev_u, self.union_type = self.union_type, True
-        prev_s, self.subscriptable_types = self.subscriptable_types, True
         try:
             yield
         finally:
             self.union_type = prev_u
-            self.subscriptable_types = prev_s
 
     def class_params(self, obj: Class) -> Iterator[tuple[str, str, str]]:  # type: ignore[override]
         # This method override goes along with the docstring jinja template override
@@ -95,7 +93,7 @@ class OmeFilters(PydanticBaseFilters):
             # self.field_type must be called before getting attr.name, since that
             # is currently where plural names are corrected.  (This is a hack.)
             with self._modern_typing():
-                type_ = self.field_type(attr, [obj.name])
+                type_ = self.field_type(obj, attr)
 
             name = (
                 self.constant_name(attr.name, obj.name)
@@ -124,7 +122,7 @@ class OmeFilters(PydanticBaseFilters):
             return f"None | {result}" if self.union_type else f"Optional[{result}]"
         return result
 
-    def field_type(self, attr: Attr, parents: list[str]) -> str:
+    def field_type(self, obj: Class, attr: Attr) -> str:
         if attr.is_list and not getattr(attr, "_plural_set", False):
             # HACK
             # It would be nicer to put this in the self.field_name method...but that
@@ -138,7 +136,7 @@ class OmeFilters(PydanticBaseFilters):
         if attr.name in ovr.OVERRIDE_ELEM_TO_CLASS:
             return self._format_type(attr, ovr.OVERRIDE_ELEM_TO_CLASS[attr.name])
 
-        type_name = super().field_type(attr, parents)
+        type_name = super().field_type(obj, attr)
         # we want to use datetime.datetime instead of XmlDateTime
         return type_name.replace("XmlDateTime", "datetime")
 
@@ -178,7 +176,9 @@ class OmeFilters(PydanticBaseFilters):
     def constant_name(self, name: str, class_name: str) -> str:
         if class_name in self.appinfo.enums:
             # use the enum names found in appinfo/xsdfu/enum
-            return self.appinfo.enums[class_name][name].enum
+            enum_values = self.appinfo.enums[class_name]
+            if name in enum_values:
+                return enum_values[name].enum
         return super().constant_name(name, class_name)
 
     def methods(self, obj: Class) -> list[str]:

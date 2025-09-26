@@ -41,9 +41,12 @@ class PydanticBaseFilters(Filters):
         return ""
 
     def field_definition(
-        self, attr: Attr, ns_map: dict, parent_namespace: str | None, parents: list[str]
+        self,
+        obj: Class,
+        attr: Attr,
+        parent_namespace: str | None,
     ) -> str:
-        defn = super().field_definition(attr, ns_map, parent_namespace, parents)
+        defn = super().field_definition(obj, attr, parent_namespace)
         return defn.replace("field(", "Field(")
 
     def format_arguments(self, kwargs: dict, indent: int = 0) -> str:
