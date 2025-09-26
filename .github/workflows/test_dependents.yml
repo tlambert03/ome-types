@@ -24,15 +24,13 @@ jobs:
           path: ome-types
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.11"
+          enable-cache: true
+          python-version: "3.12"
 
       - name: Install nd2
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install .[test]
+        run: uv pip install -e .[test]
 
       - uses: actions/cache@v4
         id: cache
@@ -43,11 +41,11 @@ jobs:
       - name: Download Samples
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install requests
+          uv pip install requests
           python scripts/download_samples.py
 
       - name: Install ome-types
-        run: pip install .
+        run: uv pip install -e .
         working-directory: ome-types
 
       - name: Run Tests
@@ -58,15 +56,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v6
         with:
+          enable-cache: true
           python-version: "3.10"
+
       - name: Install dependencies
         run: |
-          python -m pip install -U pip
-          python -m pip install .[test]
-          python -m pip install omero-cli-transfer --no-deps
+          uv sync --group test
+          uv pip install omero-cli-transfer --no-deps
 
       - name: Test
-        run: pytest tests/test_omero_cli.py -v
+        run: uv run --no-sync pytest tests/test_omero_cli.py -v

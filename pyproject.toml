@@ -28,7 +28,12 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 dynamic = ["version"]
-dependencies = ["pydantic >=2.4", "pydantic_extra_types", "xsdata >=23.6,<24.4"]
+dependencies = [
+  "pydantic >=2.4.0",
+  "pydantic-core>=2.20.0; python_version>='3.13'",
+  "pydantic_extra_types >=2.0.0",
+  "xsdata >=23.6,<24.4",
+]
 
 [project.urls]
 Source = "https://github.com/tlambert03/ome-types"
@@ -42,27 +47,36 @@ ome-types = "ome_types:napari.yaml"
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
 pint = ["Pint >=0.15"]
-lxml = ["lxml >=4.8.0"]
-docs = ["mkdocs-material", "mkdocstrings-python"]
+lxml = ["lxml >=4.8.0", "lxml >=5.3; python_version >= '3.13'"]
+# Keep build here for hatch compatibility
+build = ["ruff ==0.11.5", "xsdata[cli] ==24.2.1"]
+
+# https://peps.python.org/pep-0735/
+[dependency-groups]
 test = [
-  "mypy",
-  "numpy",
-  "lxml; python_version <= '3.12'",
-  "pint; python_version <= '3.12'",
-  "pytest-codspeed",
-  "pytest-cov",
-  "pytest-mypy-plugins",
-  "pytest",
-  "ruff",
-  "xmlschema <2.5",                 # FIXME: determine why
-  "xsdata[cli]",
-  "types-lxml",
-  "pdbpp; sys_platform != 'win32'", # for debugging
+  "numpy >=1.26.0",
+  "numpy >=2.1; python_version >= '3.13'",
+  "lxml >=4.8.0; python_version <= '3.12'",
+  "pint >=0.15; python_version <= '3.12'",
+  "pytest-codspeed >=2.4.0",
+  "pytest-cov >=4.0.0",
+  "pytest-mypy-plugins >=3.0.0",
+  "pytest >=7.0.0",
+  "xmlschema >=2.0.0,<2.5",
+  "xmlschema >=2.3.0,<2.5; python_version >= '3.13'",
+  "xsdata[cli] >=23.6",
+  "types-lxml >=2023.1.1",
 ]
-test-qt = ["qtpy", "pytest-qt==4.4.0"]
-# pin ruff for builds because it changes often
-build = ["ruff ==0.11.5", "xsdata[cli]==24.2.1"]
-dev = ["ome-types[test]", "ome-types[build]", "ome-types[docs]", "pre-commit"]
+test-qt = [{ include-group = 'test' }, "qtpy >=2.4.0", "pytest-qt >=4.4.0"]
+docs = ["mkdocs-material >=9.0.0", "mkdocstrings-python >=1.0.0"]
+dev = [
+  { include-group = "test" },
+  { include-group = "docs" },
+  "pre-commit >=3.0.0",
+  "pdbpp >=0.10.0; sys_platform != 'win32'",
+  "ruff>=0.11.5",
+  "mypy>=1.18.2",
+]
 
 # https://hatch.pypa.io/latest/plugins/build-hook/custom/
 [tool.hatch.build.targets.wheel.hooks.custom]
@@ -108,7 +122,7 @@ select = [
   "RUF",    # ruff-specific rules
   "SIM105", # contextlib.suppress
   "TID",    # tidy imports
-  "TC",    # flake8-type-checking
+  "TC",     # flake8-type-checking
 ]
 ignore = [
   "D104", #  Missing docstring in public package
