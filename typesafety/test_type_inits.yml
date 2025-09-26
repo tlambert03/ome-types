@@ -19,7 +19,7 @@
     m.Image()  # ER: Missing named argument "pixels" .*
 
 - case: extra_arguments
+  skip: True  # mypy 1.17+ shows additional context notes
   main: |
     import ome_types.model as m
-
-    m.Channel(idd='123')  # ER: Unexpected keyword argument "idd" .*
+    m.Channel(idd='123')  # E: Unexpected keyword argument "idd".*
