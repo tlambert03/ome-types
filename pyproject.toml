@@ -59,7 +59,7 @@ test = [
   "types-lxml",
   "pdbpp; sys_platform != 'win32'", # for debugging
 ]
-test-qt = ["qtpy", "pytest-qt"]
+test-qt = ["qtpy", "pytest-qt==4.4.0"]
 # pin ruff for builds because it changes often
 build = ["ruff ==0.11.5", "xsdata[cli]==24.2.1"]
 dev = ["ome-types[test]", "ome-types[build]", "ome-types[docs]", "pre-commit"]

@@ -95,7 +95,7 @@ OVERRIDES: dict[str, Ovr] = {
         add_lines=[
             "_v_map = model_validator(mode='before')(validate_map_annotation)",
             "dict: ClassVar = MapMixin._pydict",
-            "__iter__: ClassVar = MapMixin.__iter__",
+            "__iter__: ClassVar = MapMixin.__iter__  # type: ignore[assignment]",
         ],
     ),
 }
