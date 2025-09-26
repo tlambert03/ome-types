@@ -47,7 +47,11 @@ ome-types = "ome_types:napari.yaml"
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
 pint = ["Pint >=0.15"]
-lxml = ["lxml >=4.8.0", "lxml >=5.3; python_version >= '3.13'"]
+lxml = [
+  "lxml >=4.8.0",
+  "lxml >=5.0; python_version >= '3.11'",
+  "lxml >=5.3; python_version >= '3.13'",
+]
 # Keep build here for hatch compatibility
 build = ["ruff ==0.11.5", "xsdata[cli] ==24.2.1"]
 
@@ -63,7 +67,7 @@ test = [
   "pytest-mypy-plugins >=3.0.0",
   "pytest >=7.0.0",
   "xmlschema >=2.0.0,<2.5",
-  "xmlschema >=2.3.0,<2.5; python_version >= '3.13'",
+  "xmlschema >=2.3.0,<2.5; python_version >= '3.12'",
   "xsdata[cli] >=23.6",
   "types-lxml >=2023.1.1",
 ]
