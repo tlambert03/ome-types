@@ -24,13 +24,15 @@ jobs:
           path: ome-types
           fetch-depth: 0
 
-      - uses: astral-sh/setup-uv@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          enable-cache: true
-          python-version: "3.12"
+          python-version: "3.11"
 
       - name: Install nd2
-        run: uv pip install -e .[test]
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .[test]
 
       - uses: actions/cache@v4
         id: cache
@@ -41,11 +43,11 @@ jobs:
       - name: Download Samples
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          uv pip install requests
+          pip install requests
           python scripts/download_samples.py
 
       - name: Install ome-types
-        run: uv pip install -e .
+        run: pip install .
         working-directory: ome-types
 
       - name: Run Tests
