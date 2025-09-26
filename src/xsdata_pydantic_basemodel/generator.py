@@ -40,10 +40,10 @@ class PydanticBaseFilters(Filters):
         # remove the @dataclass decorator
         return ""
 
-    def field_definition(
+    def field_definition(  # type: ignore[override]
         self, attr: Attr, ns_map: dict, parent_namespace: str | None, parents: list[str]
     ) -> str:
-        defn = super().field_definition(attr, ns_map, parent_namespace, parents)
+        defn = super().field_definition(attr, ns_map, parent_namespace, parents)  # type: ignore
         return defn.replace("field(", "Field(")
 
     def format_arguments(self, kwargs: dict, indent: int = 0) -> str:

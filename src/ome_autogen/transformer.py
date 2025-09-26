@@ -3,21 +3,13 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
-from xsdata.codegen.analyzer import ClassAnalyzer
 from xsdata.codegen.container import ClassContainer
 from xsdata.codegen.handlers import RenameDuplicateAttributes
 from xsdata.codegen.mappers.schema import SchemaMapper
+from xsdata.codegen.transformer import ResourceTransformer
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-
-    from xsdata.codegen.transformer import ResourceTransformer
-
-else:
-    try:
-        from xsdata.codegen.transformer import ResourceTransformer
-    except ImportError:
-        from xsdata.codegen.transformer import SchemaTransformer as ResourceTransformer
 
 from xsdata.models.xsd import Attribute
 
@@ -81,4 +73,5 @@ class OMETransformer(ResourceTransformer):
 
         container.extend(classes)
 
-        return ClassAnalyzer.process(container)
+        container.process()
+        return list(container)

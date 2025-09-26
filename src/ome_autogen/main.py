@@ -96,7 +96,7 @@ def build_model(
 ) -> None:
     """Convert the OME schema to a python model."""
     config = get_config(target_package)
-    transformer = OMETransformer(print=False, config=config)
+    transformer = OMETransformer(config=config)
 
     _print_gray(f"Processing {getattr(schema_file, 'name', schema_file)}...")
     transformer.process_sources([Path(schema_file).resolve().as_uri()])

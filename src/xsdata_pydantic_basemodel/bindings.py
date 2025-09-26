@@ -56,7 +56,7 @@ class XmlSerializer(serializers.XmlSerializer):
 
     # overriding so we can pass the args we want to next_attribute
     # and so that we can skip unset values
-    def write_dataclass(
+    def convert_dataclass(
         self,
         obj: BaseModel,
         namespace: str | None = None,
@@ -96,7 +96,7 @@ class XmlSerializer(serializers.XmlSerializer):
             # XXX: reason 2 for overriding.
             if ignore_unset and var.name not in obj.model_fields_set:
                 continue
-            yield from self.write_value(value, var, namespace)
+            yield from self.convert_value(value, var, namespace)
 
         yield XmlWriterEvent.END, qname
 
@@ -143,7 +143,15 @@ class XmlSerializer(serializers.XmlSerializer):
                     or (ignore_unset and var.name not in set_fields)  # new
                 ):
                     continue
-                yield var.qname, cls.encode(value, var)
+                # Use encode_primitive for newer xsdata versions, fallback to encode
+                encode_method = getattr(
+                    cls, "encode_primitive", getattr(cls, "encode", None)
+                )
+                if encode_method:
+                    yield var.qname, encode_method(value, var)
+                else:
+                    # Fallback if neither method exists
+                    yield var.qname, str(value)
             else:
                 yield from getattr(obj, var.name, EMPTY_MAP).items()
 
