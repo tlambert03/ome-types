@@ -46,7 +46,10 @@ ome-types = "ome_types:napari.yaml"
 # extras
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
-pint = ["Pint >=0.15"]
+pint = [
+  "Pint >=0.15",
+  "pint >=0.25; python_version >= '3.13'", # pint has issues with older numpy...
+]
 lxml = [
   "lxml >=4.8.0",
   "lxml >=5.0; python_version >= '3.11'",
