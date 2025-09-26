@@ -80,7 +80,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        backend: ["PyQt5", "PySide2", "PySide6", "PyQt6"]
+        backend: ["PyQt5", "PySide6", "PyQt6"]
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v6

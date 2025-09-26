@@ -73,7 +73,7 @@ test = [
   "xmlschema >=2.3.0,<2.5; python_version >= '3.12'",
   "xsdata[cli] >=23.6",
 ]
-test-qt = [{ include-group = 'test' }, "qtpy >=2.4.0", "pytest-qt ==4.4.0"]
+test-qt = [{ include-group = 'test' }, "qtpy >=2.4.0", "pytest-qt >=4.4.0"]
 docs = ["mkdocs-material >=9.0.0", "mkdocstrings-python >=1.0.0"]
 dev = [
   { include-group = "test" },
