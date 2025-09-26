@@ -143,15 +143,7 @@ class XmlSerializer(serializers.XmlSerializer):
                     or (ignore_unset and var.name not in set_fields)  # new
                 ):
                     continue
-                # Use encode_primitive for newer xsdata versions, fallback to encode
-                encode_method = getattr(
-                    cls, "encode_primitive", getattr(cls, "encode", None)
-                )
-                if encode_method:
-                    yield var.qname, encode_method(value, var)
-                else:
-                    # Fallback if neither method exists
-                    yield var.qname, str(value)
+                yield var.qname, cls.encode_primitive(value, var)
             else:
                 yield from getattr(obj, var.name, EMPTY_MAP).items()
 

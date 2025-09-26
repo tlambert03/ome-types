@@ -7,13 +7,11 @@ from xsdata.codegen.container import ClassContainer
 from xsdata.codegen.handlers import RenameDuplicateAttributes
 from xsdata.codegen.mappers.schema import SchemaMapper
 from xsdata.codegen.transformer import ResourceTransformer
+from xsdata.models.xsd import Attribute
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-from xsdata.models.xsd import Attribute
-
-if TYPE_CHECKING:
     from xsdata.codegen.models import Class
     from xsdata.models.xsd import Schema
 
