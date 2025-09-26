@@ -19,63 +19,60 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: 3.9
-      - name: check-manifest
-        run: |
-          pip install check-manifest
-          check-manifest
+          enable-cache: true
+      - run: uvx check-manifest
 
   test:
-    name: test ${{ matrix.platform }} (${{ matrix.python-version }})
+    name: ${{ matrix.platform }} (${{ matrix.python-version }}) [${{ matrix.resolution }}]
     runs-on: ${{ matrix.platform }}
+    env:
+      UV_PRERELEASE: ${{ github.event_name == 'schedule' && 'allow' || 'if-necessary-or-explicit' }}
+      PYTEST_ADDOPTS: ${{ matrix.resolution == 'lowest-direct' && '-W ignore' || '' }}
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         platform: [ubuntu-latest, macos-latest, windows-latest]
+        resolution: ["highest", "lowest-direct"]
 
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+      - name: 🐍 Set up Python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
-          allow-prereleases: true
+          enable-cache: true
 
-      - name: Install
-        run: |
-          python -m pip install -U pip
-          python -m pip install .[test]
+      - name: Install Dependencies
+        run: uv sync --no-dev --group test
+        env:
+          UV_RESOLUTION: ${{ matrix.resolution }}
 
-      - name: Test
-        run: pytest --cov --cov-report=xml
+      - name: 🧪 Run Tests
+        run: uv run --no-sync coverage run -p -m pytest -v
 
       - name: retest without lxml or xmlschema
         if: matrix.platform == 'ubuntu-latest'
         run: |
-          pip uninstall -y lxml xmlschema
-          pytest --cov --cov-report=xml --cov-append
+          uv pip uninstall lxml xmlschema
+          uv run --no-sync pytest --cov --cov-report=xml --cov-append
 
-      - uses: codecov/codecov-action@v5
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: covreport-${{ matrix.platform }}-py${{ matrix.python-version }}-${{ matrix.resolution }}
+          path: ./.coverage*
+          include-hidden-files: true
 
-  test-min-reqs:
-    name: Test min reqs
-    uses: pyapp-kit/workflows/.github/workflows/test-pyrepo.yml@v2
+  upload_coverage:
+    if: always()
+    needs: [test]
+    uses: pyapp-kit/workflows/.github/workflows/upload-coverage.yml@v2
     secrets:
       codecov_token: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      os: ubuntu-latest
-      python-version: ${{ matrix.python-version }}
-      pip-install-min-reqs: true
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.9", "3.10", "3.12"]
 
   test-widget:
     name: test-widget
@@ -83,37 +80,35 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        backend: ["PyQt5", "PySide2", "PySide6", "PyQt6"]
+        backend: ["PyQt5", "PySide6", "PyQt6"]
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v6
         with:
+          enable-cache: true
           python-version: "3.11"
       - uses: tlambert03/setup-qt-libs@v1
       - name: Install
         run: |
-          python -m pip install -U pip
-          python -m pip install .[test,test-qt]
-          python -m pip install "${{ matrix.backend }}"
+          uv sync --group test-qt
+          uv pip install "${{ matrix.backend }}"
       - name: Test
         uses: aganders3/headless-gui@v2
         with:
-          run: pytest tests/test_widget.py
+          run: uv run --no-sync pytest tests/test_widget.py
 
   test-build:
     name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.12"
+          enable-cache: true
       - name: Install
-        run: |
-          python -m pip install -U pip
-          python -m pip install .[test,build]
+        run: uv sync --group test --extra build
       - name: Build
-        run: pytest --cov --cov-report=xml --cov-append -k test_autogen
+        run: uv run --no-sync pytest --cov --cov-report=xml --cov-append -k test_autogen
         env:
           TEST_AUTOGEN: "1"
       - uses: codecov/codecov-action@v5
@@ -125,33 +120,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.11"
+          enable-cache: true
+
       - name: Install dependencies
-        run: |
-          python -m pip install -U pip
-          python -m pip install pytest pytest-mypy-plugins
-          python -m pip install .
+        run: uv sync --group test
 
       - name: Test
-        run: pytest typesafety -v
+        run: uv run --no-sync pytest typesafety -v
 
   benchmarks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v6
         with:
+          enable-cache: true
           python-version: "3.11"
 
       - name: install
-        run: python -m pip install .[test]
+        run: uv sync --group test
 
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v4
         with:
-          run: pytest --codspeed -v --color=yes
+          run: uv run pytest --codspeed -v --color=yes
           mode: instrumentation
 
   deploy:
@@ -165,15 +159,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.x"
+          enable-cache: true
 
       - name: Build
-        run: |
-          pip install -U pip build
-          python -m build .
+        run: uv build
 
       - name: Publish PyPI Package
         uses: pypa/gh-action-pypi-publish@release/v1
