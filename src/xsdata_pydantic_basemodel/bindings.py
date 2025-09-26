@@ -75,7 +75,7 @@ class XmlSerializer(serializers.XmlSerializer):
         )
         qname = qname or meta.qname
         nillable = nillable or meta.nillable
-        namespace, tag = namespaces.split_qname(qname)
+        namespace, _tag = namespaces.split_qname(qname)
 
         yield XmlWriterEvent.START, qname
 

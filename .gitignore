@@ -113,3 +113,4 @@ docs/source/_autosummary
 .benchmarks/
 _build/
 qupath/
+uv.lock
