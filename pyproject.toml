@@ -58,10 +58,10 @@ build = ["ruff ==0.11.5", "xsdata[cli] ==24.2.1"]
 # https://peps.python.org/pep-0735/
 [dependency-groups]
 test = [
+  "ome-types[lxml,pint]",
+  "coverage >=6.4.4",
   "numpy >=1.26.0",
   "numpy >=2.1; python_version >= '3.13'",
-  "lxml >=4.8.0; python_version <= '3.12'",
-  "pint >=0.15; python_version <= '3.12'",
   "pytest-codspeed >=2.4.0",
   "pytest-cov >=4.0.0",
   "pytest-mypy-plugins >=3.0.0",
@@ -69,18 +69,21 @@ test = [
   "xmlschema >=2.0.0,<2.5",
   "xmlschema >=2.3.0,<2.5; python_version >= '3.12'",
   "xsdata[cli] >=23.6",
-  "types-lxml >=2023.1.1",
 ]
 test-qt = [{ include-group = 'test' }, "qtpy >=2.4.0", "pytest-qt ==4.4.0"]
 docs = ["mkdocs-material >=9.0.0", "mkdocstrings-python >=1.0.0"]
 dev = [
   { include-group = "test" },
   { include-group = "docs" },
-  "pre-commit >=3.0.0",
   "pdbpp >=0.10.0; sys_platform != 'win32'",
+  "types-lxml >=2023.1.1",
   "ruff>=0.11.5",
   "mypy>=1.18.2",
+  "pre-commit-uv>=4.1.5",
 ]
+
+[tool.uv.sources]
+ome-types = { workspace = true }
 
 # https://hatch.pypa.io/latest/plugins/build-hook/custom/
 [tool.hatch.build.targets.wheel.hooks.custom]
