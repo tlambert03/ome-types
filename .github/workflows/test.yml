@@ -29,6 +29,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     env:
       UV_PRERELEASE: ${{ github.event_name == 'schedule' && 'allow' || 'if-necessary-or-explicit' }}
+      PYTEST_ADDOPTS: ${{ matrix.resolution == 'lowest-direct' && '-W ignore' || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -52,8 +53,6 @@ jobs:
 
       - name: 🧪 Run Tests
         run: uv run --no-sync coverage run -p -m pytest -v
-        env:
-          PYTEST_ADDOPTS: ${{ matrix.resolution == 'lowest-direct' && '-W ignore' || '' }}
 
       - name: retest without lxml or xmlschema
         if: matrix.platform == 'ubuntu-latest'
