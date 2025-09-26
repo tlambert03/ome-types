@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from pathlib import Path
-from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
 from xsdata.formats.dataclass.filters import Filters
@@ -181,36 +180,6 @@ class OmeFilters(PydanticBaseFilters):
             if name in enum_values:
                 return enum_values[name].enum
         return super().constant_name(name, class_name)
-
-    def field_definition(  # type: ignore[override]
-        self, attr: Attr, ns_map: dict, parent_namespace: str | None, parents: list[str]
-    ) -> str:
-        """Override to work with new xsdata API and maintain PydanticBaseFilters behavior."""
-        # We need to work around the API change in Filters.field_definition
-        # The new API expects (obj, attr, parent_namespace) but we have the old signature
-
-        # Create a mock obj with the necessary attributes
-        # Create a simple obj-like namespace
-        mock_obj = SimpleNamespace()
-        mock_obj.name = parents[0] if parents else "Unknown"
-        mock_obj.ns_map = ns_map
-
-        try:
-            # Try the new API first
-            from xsdata.formats.dataclass.filters import Filters
-
-            defn = Filters.field_definition(self, mock_obj, attr, parent_namespace)  # type: ignore
-        except TypeError:
-            # If that fails, call the grandparent method directly (skipping PydanticBaseFilters)
-            from xsdata.formats.dataclass.filters import Filters
-
-            # Manually call the base implementation
-            defn = f"field(default={attr.default!r}" + (
-                ")" if attr.default is not None else ", default=None)"
-            )
-
-        # Apply the PydanticBaseFilters transformation
-        return defn.replace("field(", "Field(")
 
     def methods(self, obj: Class) -> list[str]:
         if (override := ovr.get(obj.name)) and (lines := override.add_lines):
