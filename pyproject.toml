@@ -26,6 +26,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dynamic = ["version"]
 dependencies = [
@@ -183,6 +184,7 @@ filterwarnings = [
   "ignore:::paquo",                                    # paquo tests
   "ignore:the imp module is deprecated",               # omero tests
   "ignore:Failing to pass a value:DeprecationWarning", # xsdata
+  "ignore:pathlib.PurePath.as_uri\\(\\) is deprecated:DeprecationWarning", # xmlschema on Python 3.14+
 ]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
