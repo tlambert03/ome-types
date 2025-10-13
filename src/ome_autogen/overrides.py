@@ -37,7 +37,7 @@ class Ovr:
     # that we don't have more than one override for a given name in the XSD.)
     name: str = ""
     # additional lines to add to generated classes
-    # Note: imports for these methods must be added to the IMPORT_PATTERNS elswhere.
+    # Note: imports for these methods must be added to the IMPORT_PATTERNS elsewhere.
     add_lines: Sequence[str] = ()
     # when name is found as a type in the XSD, the type will be overridden with this
     # e.g. "Color" -> ("ome_types.model._color", "Color")
