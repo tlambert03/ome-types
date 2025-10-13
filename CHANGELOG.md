@@ -1,12 +1,26 @@
 # Changelog
 
+## [v0.6.2](https://github.com/tlambert03/ome-types/tree/v0.6.2) (2025-10-13)
+
+[Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.6.1...v0.6.2)
+
+**Merged pull requests:**
+
+- ci\(pre-commit.ci\): autoupdate [\#289](https://github.com/tlambert03/ome-types/pull/289) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
+- build: unpin xsdata [\#288](https://github.com/tlambert03/ome-types/pull/288) ([tlambert03](https://github.com/tlambert03))
+- build: update to uv [\#287](https://github.com/tlambert03/ome-types/pull/287) ([tlambert03](https://github.com/tlambert03))
+- chore: merge dependency updates from PRs \#282, \#283, \#284, \#285 [\#286](https://github.com/tlambert03/ome-types/pull/286) ([tlambert03](https://github.com/tlambert03))
+
 ## [v0.6.1](https://github.com/tlambert03/ome-types/tree/v0.6.1) (2025-04-16)
 
 [Full Changelog](https://github.com/tlambert03/ome-types/compare/v0.6.0...v0.6.1)
 
-**Merged pull requests:**
+**Fixed bugs:**
 
 - fix: fix pydantic deprecations [\#281](https://github.com/tlambert03/ome-types/pull/281) ([tlambert03](https://github.com/tlambert03))
+
+**Merged pull requests:**
+
 - ci\(pre-commit.ci\): autoupdate [\#279](https://github.com/tlambert03/ome-types/pull/279) ([pre-commit-ci[bot]](https://github.com/apps/pre-commit-ci))
 
 ## [v0.6.0](https://github.com/tlambert03/ome-types/tree/v0.6.0) (2025-02-26)
