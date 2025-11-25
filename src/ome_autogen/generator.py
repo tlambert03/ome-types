@@ -96,7 +96,9 @@ class OmeFilters(PydanticBaseFilters):
                 type_ = self.field_type(obj, attr)
 
             name = (
-                self.constant_name(attr.name, obj.name)
+                # use local_name for enums to preserve original XML value (e.g. "Å")
+                # xsdata 24.4+ transforms attr.name to Unicode char names for non-ASCII
+                self.constant_name(attr.local_name, obj.name)
                 if obj.is_enumeration
                 else self.field_name(attr.name, obj.name)
             )
