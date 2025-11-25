@@ -15,11 +15,11 @@ jobs:
     name: test nd2
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: tlambert03/nd2
           fetch-depth: 0
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           path: ome-types
           fetch-depth: 0
@@ -57,7 +57,7 @@ jobs:
     name: test omero-cli-transfer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
