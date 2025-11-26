@@ -8,13 +8,14 @@ class {{ class_name }}(Enum):
 {%- if help %}
 {{ help | indent(4, first=True) }}
 {%- endif -%}
+{# use local_name to preserve original XML value (e.g. "Å" -> ANGSTROM) #}
 {%- for attr in obj.attrs %}
-    {{ attr.name | constant_name(obj.name) }} = {{ attr | field_default(obj.ns_map) }}
+    {{ attr.local_name | constant_name(obj.name) }} = {{ attr | field_default(obj.ns_map) }}
 {%- endfor -%}
 {% if docstring_name == "accessible" -%}
 {{ "\n\n" if level == 0 else "\n" }}
 {%- for attr in obj.attrs if attr.help %}
-{% set member_name = "{}.{}.__doc__ = ".format(class_name, attr.name | constant_name(obj.name)) -%}
+{% set member_name = "{}.{}.__doc__ = ".format(class_name, attr.local_name | constant_name(obj.name)) -%}
 {{ member_name }}{{ attr.help | clean_docstring(false) | format_string(indent=0, key=member_name) }}
 {%- endfor -%}
 {%- endif -%}

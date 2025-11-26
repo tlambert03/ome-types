@@ -15,24 +15,20 @@ jobs:
     name: test nd2
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           repository: tlambert03/nd2
           fetch-depth: 0
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           path: ome-types
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.11"
-
-      - name: Install nd2
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install .[test]
+          enable-cache: true
 
       - uses: actions/cache@v4
         id: cache
@@ -42,23 +38,23 @@ jobs:
 
       - name: Download Samples
         if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install requests
-          python scripts/download_samples.py
+        run: uv run scripts/download_samples.py
 
-      - name: Install ome-types
-        run: pip install .
-        working-directory: ome-types
+      - name: Install nd2
+        run: uv sync --no-dev --group test
+
+      - name: Install local ome-types
+        run: uv pip install ./ome-types
 
       - name: Run Tests
-        run: pytest --color=yes -v tests/test_ome.py
+        run: uv run --no-sync pytest --color=yes -v tests/test_ome.py
 
   test_omero_cli:
     name: test omero-cli-transfer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           python-version: "3.10"
