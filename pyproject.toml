@@ -36,8 +36,8 @@ dependencies = [
 ]
 
 [project.urls]
-Source = "https://github.com/tlambert03/ome-types"
-Tracker = "https://github.com/tlambert03/ome-types/issues"
+Source = "https://github.com/imaging-formats/ome-types"
+Tracker = "https://github.com/imaging-formats/ome-types/issues"
 Documentation = "https://ome-types.readthedocs.io/en/latest/"
 
 [project.entry-points."napari.manifest"]
