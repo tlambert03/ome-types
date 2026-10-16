@@ -1,6 +1,6 @@
 import itertools
 from collections.abc import Iterator
-from typing import Any, Generic, TypeVar, cast, no_type_check
+from typing import Any, Generic, TypeAlias, TypeVar, cast, no_type_check
 
 from pydantic import BaseModel
 
@@ -82,7 +82,7 @@ class CollectionMixin(BaseModel, Generic[T]):
 
 # ------------------------ StructuredAnnotations ------------------------
 
-AnnotationType = (
+AnnotationType: TypeAlias = (
     XMLAnnotation
     | FileAnnotation
     | ListAnnotation
@@ -110,7 +110,9 @@ class StructuredAnnotationsMixin(CollectionMixin[AnnotationType]):
         return item.__class__.__name__[:-10].lower() + "_annotations"
 
 
-ShapeType = Rectangle | Mask | Point | Ellipse | Line | Polyline | Polygon | Label
+ShapeType: TypeAlias = (
+    Rectangle | Mask | Point | Ellipse | Line | Polyline | Polygon | Label
+)
 ShapeInstances = ShapeType.__args__  # type: ignore
 
 
